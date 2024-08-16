@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: MultiWarehouse
+  datasource:
+    url: jdbc:postgresql://${DB_URL}:${DB_PORT}/${DB_NAME}?prepareThreshold=0
+    username: ${DB_USERNAME_DEV}
+    password: ${DB_PWD_DEV}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  config:
+    import: optional:file:.env[.properties]
