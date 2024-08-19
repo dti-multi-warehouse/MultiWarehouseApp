@@ -57,7 +57,7 @@ public class Product {
 
     public HashMap<String, Object> toDocument() {
         HashMap<String, Object> document = new HashMap<>();
-        document.put("id", id);
+        document.put("id", id.toString());
         document.put("name", name);
         document.put("description", description);
         document.put("price", price);

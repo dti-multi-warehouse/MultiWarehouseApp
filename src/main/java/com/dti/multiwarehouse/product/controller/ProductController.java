@@ -6,8 +6,6 @@ import com.dti.multiwarehouse.product.dto.request.ProductSummaryRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,10 +29,10 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<?> displayProducts(
-            ProductSummaryRequestDto requestDto,
+            @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) throws Exception {
-        productService.displayProducts(requestDto, PageRequest.of(page, size));
+            @RequestParam(defaultValue = "20") int perPage) throws Exception {
+        productService.displayProducts(query, page, perPage);
         return ResponseEntity.ok().build();
     }
 }

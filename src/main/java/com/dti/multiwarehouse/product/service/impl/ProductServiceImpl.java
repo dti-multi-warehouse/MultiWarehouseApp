@@ -48,12 +48,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductSummaryResponseDto> displayProducts(ProductSummaryRequestDto requestDto, Pageable pageable) throws Exception {
+    public Page<ProductSummaryResponseDto> displayProducts(String query, int page, int perPage) throws Exception {
         var searchParameters = new SearchParameters()
-                .q("GeiSHa")
+                .q(query)
                 .queryBy("name,description")
-                .page(0)
-                .perPage(5);
+                .page(page)
+                .perPage(perPage);
         var searchResult = typeSense.client().collections("products").documents().search(searchParameters);
         searchResult.getHits().forEach(searchResultHit -> System.out.println(searchResultHit.getDocument()));
         return null;
