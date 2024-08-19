@@ -34,10 +34,13 @@ public class Product {
     private BigDecimal price;
 
     @Column(name = "stock", nullable = false)
-    private Long stock;
+    private int stock;
+
+    @Column(name = "category_id", nullable = false)
+    private Long categoryId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
 
     @CreationTimestamp
