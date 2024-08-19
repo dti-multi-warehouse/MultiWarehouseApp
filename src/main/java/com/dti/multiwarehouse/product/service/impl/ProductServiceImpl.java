@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -48,10 +50,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductSummaryResponseDto> displayProducts(String query, int page, int perPage) throws Exception {
+    public Page<ProductSummaryResponseDto> displayProducts(String query, List<Integer> category, int page, int perPage) throws Exception {
         var searchParameters = new SearchParameters()
                 .q(query)
                 .queryBy("name,description")
+                .filterBy(category.isEmpty() ? "categoryId:>=0" : "categoryId:" + category)
                 .page(page)
                 .perPage(perPage);
         var searchResult = typeSense.client().collections("products").documents().search(searchParameters);

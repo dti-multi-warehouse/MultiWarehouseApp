@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product")
@@ -29,10 +31,11 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<?> displayProducts(
-            @RequestParam String query,
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "") List<Integer> category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int perPage) throws Exception {
-        productService.displayProducts(query, page, perPage);
+        productService.displayProducts(query, category, page, perPage);
         return ResponseEntity.ok().build();
     }
 }
