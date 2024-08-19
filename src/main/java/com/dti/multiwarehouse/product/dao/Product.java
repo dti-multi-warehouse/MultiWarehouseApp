@@ -1,21 +1,19 @@
 package com.dti.multiwarehouse.product.dao;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Currency;
+import java.util.HashMap;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 @Table(name = "product")
 public class Product {
@@ -56,4 +54,15 @@ public class Product {
 
     @Column(name = "archivedAt")
     private Instant archivedAt;
+
+    public HashMap<String, Object> toDocument() {
+        HashMap<String, Object> document = new HashMap<>();
+        document.put("id", id);
+        document.put("name", name);
+        document.put("description", description);
+        document.put("price", price);
+        document.put("stock", stock);
+        document.put("categoryId", categoryId);
+        return document;
+    }
 }

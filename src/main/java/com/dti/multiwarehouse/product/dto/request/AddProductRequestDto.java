@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.product.dto.request;
 
+import com.dti.multiwarehouse.product.dao.Product;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 
 @Getter
 @Setter
@@ -31,4 +33,15 @@ public class AddProductRequestDto {
     @NotNull
     @Positive
     private Long categoryId;
+
+    public Product toProduct() {
+        return Product
+                .builder()
+                .name(name)
+                .description(description)
+                .price(price)
+                .stock(stock)
+                .categoryId(categoryId)
+                .build();
+    }
 }

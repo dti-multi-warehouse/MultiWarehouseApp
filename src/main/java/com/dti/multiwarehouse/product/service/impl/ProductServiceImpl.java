@@ -30,24 +30,31 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
-//    @PostConstruct
-//    public void init() throws Exception {
-//        CollectionSchema productCollectionSchema = new CollectionSchema();
-//        productCollectionSchema.name("products")
-////                .defaultSortingField("name")
-//                .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
-//                .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
-//                .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
-//                .addFieldsItem(new Field().name("category").type(FieldTypes.INT64));
-//        CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
-//    }
+    @PostConstruct
+    public void init() throws Exception {
+        try {
+            typeSense.client().collections("products").retrieve();
+        } catch (Exception e) {
+            CollectionSchema productCollectionSchema = new CollectionSchema();
+            productCollectionSchema.name("products")
+//                .defaultSortingField("name")
+                    .addFieldsItem(new Field().name("id").type(FieldTypes.INT64))
+                    .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
+                    .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
+                    .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
+                    .addFieldsItem(new Field().name("categoryId").type(FieldTypes.INT64));
+            CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
+        }
+    }
 
     @Override
     public Page<ProductSummaryResponseDto> displayProducts(ProductSummaryRequestDto requestDto, Pageable pageable) throws Exception {
-        SearchParameters searchParameters = new SearchParameters()
+        var searchParameters = new SearchParameters()
                 .q("GeiSHa")
-                .queryBy("name");
-        SearchResult searchResult = typeSense.client().collections("products").documents().search(searchParameters);
+                .queryBy("name,description")
+                .page(0)
+                .perPage(5);
+        var searchResult = typeSense.client().collections("products").documents().search(searchParameters);
         searchResult.getHits().forEach(searchResultHit -> System.out.println(searchResultHit.getDocument()));
         return null;
     }
@@ -59,21 +66,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDetailsResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
-        Product product = new Product();
-        product.setName(requestDto.getName());
-        product.setDescription(requestDto.getDescription());
-        product.setPrice(requestDto.getPrice());
-        product.setStock(requestDto.getStock());
-        product.setCategoryId(requestDto.getCategoryId());
-        productRepository.save(product);
+        var product = productRepository.save(requestDto.toProduct());
 
-        HashMap<String, Object> document = new HashMap<>();
-        document.put("name", requestDto.getName());
-        document.put("description", requestDto.getDescription());
-        document.put("price", requestDto.getPrice());
-        document.put("category",requestDto.getCategoryId());
-
-        typeSense.client().collections("products").documents().create(document);
+        typeSense.client().collections("products").documents().create(product.toDocument());
 
         return null;
     }
