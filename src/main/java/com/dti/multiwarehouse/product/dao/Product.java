@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.product.dao;
 
+import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -55,14 +56,4 @@ public class Product {
     @Column(name = "archivedAt")
     private Instant archivedAt;
 
-    public HashMap<String, Object> toDocument() {
-        HashMap<String, Object> document = new HashMap<>();
-        document.put("id", id.toString());
-        document.put("name", name);
-        document.put("description", description);
-        document.put("price", price);
-        document.put("stock", stock);
-        document.put("categoryId", categoryId);
-        return document;
-    }
 }

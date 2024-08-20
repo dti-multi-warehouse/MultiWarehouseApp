@@ -2,8 +2,8 @@ package com.dti.multiwarehouse.product.controller;
 
 import com.dti.multiwarehouse.product.dto.request.AddCategoryRequestDto;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
-import com.dti.multiwarehouse.product.dto.request.ProductSummaryRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
+import com.dti.multiwarehouse.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,22 +20,28 @@ public class ProductController {
     @PostMapping("/category")
     public ResponseEntity<?> createCategory(@Valid @RequestBody AddCategoryRequestDto requestDto) {
         productService.addCategory(requestDto);
-        return ResponseEntity.ok().build();
+        return Response.success("Category successfully created");
     }
 
     @PostMapping
     public ResponseEntity<?> addProduct(@Valid @RequestBody AddProductRequestDto requestDto) throws Exception {
-        productService.addProduct(requestDto);
-        return ResponseEntity.ok().build();
+        var res = productService.addProduct(requestDto);
+        return Response.success("Product successfully added", res);
     }
 
     @GetMapping
     public ResponseEntity<?> displayProducts(
             @RequestParam(defaultValue = "") String query,
             @RequestParam(defaultValue = "") List<Integer> category,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int perPage) throws Exception {
-        productService.displayProducts(query, category, page, perPage);
-        return ResponseEntity.ok().build();
+        var res = productService.displayProducts(query, category, page, perPage);
+        return Response.success("Products successfully retrieved", res);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProductDetails(@PathVariable Long id) {
+        var res = productService.getProductDetails(id);
+        return Response.success("Product successfully retrieved", res);
     }
 }

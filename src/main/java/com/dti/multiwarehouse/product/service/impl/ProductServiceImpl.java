@@ -7,12 +7,15 @@ import com.dti.multiwarehouse.product.dto.request.AddCategoryRequestDto;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.ProductSummaryRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
+import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
+import com.dti.multiwarehouse.product.helper.ProductMapper;
 import com.dti.multiwarehouse.product.repository.CategoryRepository;
 import com.dti.multiwarehouse.product.repository.ProductRepository;
 import com.dti.multiwarehouse.product.service.ProductService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,7 +53,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductSummaryResponseDto> displayProducts(String query, List<Integer> category, int page, int perPage) throws Exception {
+    public ProductSearchResponseDto displayProducts(String query, List<Integer> category, int page, int perPage) throws Exception {
         var searchParameters = new SearchParameters()
                 .q(query)
                 .queryBy("name,description")
@@ -58,22 +61,22 @@ public class ProductServiceImpl implements ProductService {
                 .page(page)
                 .perPage(perPage);
         var searchResult = typeSense.client().collections("products").documents().search(searchParameters);
-        searchResult.getHits().forEach(searchResultHit -> System.out.println(searchResultHit.getDocument()));
-        return null;
+        return ProductMapper.toSearchResponseDto(searchResult);
     }
 
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
-        return null;
+        var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        return ProductMapper.toDetailsResponseDto(product);
     }
 
     @Override
     public ProductDetailsResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
-        var product = productRepository.save(requestDto.toProduct());
+        var product = productRepository.save(ProductMapper.toEntity(requestDto));
 
-        typeSense.client().collections("products").documents().create(product.toDocument());
+        typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
 
-        return null;
+        return ProductMapper.toDetailsResponseDto(product);
     }
 
     @Override

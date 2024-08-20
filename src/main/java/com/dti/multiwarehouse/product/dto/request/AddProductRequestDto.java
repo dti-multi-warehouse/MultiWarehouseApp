@@ -34,14 +34,4 @@ public class AddProductRequestDto {
     @Positive
     private Long categoryId;
 
-    public Product toProduct() {
-        return Product
-                .builder()
-                .name(name)
-                .description(description)
-                .price(price)
-                .stock(stock)
-                .categoryId(categoryId)
-                .build();
-    }
 }
