@@ -7,9 +7,7 @@ import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import org.typesense.model.SearchResult;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class ProductMapper {
     public static Product toEntity(AddProductRequestDto requestDto) {
@@ -38,10 +36,9 @@ public class ProductMapper {
         return ProductSummaryResponseDto.builder()
                 .id(product.getId())
                 .name(product.getName())
-                .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
-                .categoryId(product.getCategoryId())
+                .categoryId(product.getCategory().getName())
                 .build();
     }
 
@@ -52,7 +49,7 @@ public class ProductMapper {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
-                .categoryId(product.getCategoryId())
+                .category(product.getCategory().getName())
                 .build();
     }
 

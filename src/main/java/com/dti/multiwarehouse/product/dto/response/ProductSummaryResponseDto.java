@@ -14,8 +14,7 @@ import java.math.BigDecimal;
 public class ProductSummaryResponseDto {
     private Long id;
     private String name;
-    private String description;
     private BigDecimal price;
     private int stock;
-    private Long categoryId;
+    private String categoryId;
 }

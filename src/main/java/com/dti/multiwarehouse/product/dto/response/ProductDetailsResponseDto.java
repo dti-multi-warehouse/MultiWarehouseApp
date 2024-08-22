@@ -15,5 +15,5 @@ public class ProductDetailsResponseDto {
     private String description;
     private BigDecimal price;
     private int stock;
-    private Long categoryId;
+    private String category;
 }
