@@ -35,6 +35,9 @@ public class Product {
     @Column(name = "stock", nullable = false)
     private int stock;
 
+    @Column(name = "sold", nullable = false)
+    private int sold;
+
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
 

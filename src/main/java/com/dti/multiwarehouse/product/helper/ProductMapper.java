@@ -18,6 +18,7 @@ public class ProductMapper {
                 .price(requestDto.getPrice())
                 .stock(requestDto.getStock())
                 .categoryId(requestDto.getCategoryId())
+                .sold(0)
                 .build();
     }
 
@@ -29,6 +30,7 @@ public class ProductMapper {
         document.put("price", product.getPrice());
         document.put("stock", product.getStock());
         document.put("categoryId", product.getCategoryId());
+        document.put("sold", product.getSold());
         return document;
     }
 

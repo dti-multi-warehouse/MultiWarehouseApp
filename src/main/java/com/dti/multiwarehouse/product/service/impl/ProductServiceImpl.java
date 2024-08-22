@@ -42,12 +42,13 @@ public class ProductServiceImpl implements ProductService {
         } catch (Exception e) {
             CollectionSchema productCollectionSchema = new CollectionSchema();
             productCollectionSchema.name("products")
-//                .defaultSortingField("name")
                     .addFieldsItem(new Field().name("id").type(FieldTypes.INT64))
                     .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
-                    .addFieldsItem(new Field().name("categoryId").type(FieldTypes.INT64));
+                    .addFieldsItem(new Field().name("category").type(FieldTypes.STRING))
+                    .addFieldsItem(new Field().name("sold").type(FieldTypes.INT32))
+                    .defaultSortingField("sold");
             CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
         }
     }
