@@ -1,6 +1,5 @@
 package com.dti.multiwarehouse.user.controller;
 
-import com.dti.multiwarehouse.exception.BadRequestException;
 import com.dti.multiwarehouse.exception.ResourceNotFoundException;
 import com.dti.multiwarehouse.response.Response;
 import com.dti.multiwarehouse.user.dto.UserConfirmationRequest;
@@ -8,6 +7,7 @@ import com.dti.multiwarehouse.user.dto.UserRegistrationRequest;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -33,8 +33,15 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<Response> register(@RequestBody UserRegistrationRequest request) {
         Optional<User> existingUser = userService.findByEmail(request.getEmail());
+
         if (existingUser.isPresent()) {
-            throw new BadRequestException("Email is already in use");
+            User user = existingUser.get();
+            if (!user.isVerified()) {
+                sendVerificationEmail(request.getEmail());
+                return ResponseEntity.ok(new Response(true, "Email is already registered but not verified. Verification email resent."));
+            } else {
+                throw new ResourceNotFoundException("Email is already in use and verified.");
+            }
         }
 
         User user = new User();
@@ -49,33 +56,44 @@ public class UserController {
 
     @PostMapping("/register/confirm")
     public ResponseEntity<Response> confirmRegistration(@RequestBody UserConfirmationRequest request) {
-        System.out.println("Received confirmation request for email: " + request.getEmail());
+        String email = request.getEmail().toLowerCase();
+        System.out.println("Received confirmation request for email: " + email);
         System.out.println("Received token: " + request.getToken());
 
-        Optional<User> userOptional = userService.findByEmail(request.getEmail());
+        Optional<User> userOptional = userService.findByEmail(email);
         if (userOptional.isEmpty()) {
-            System.out.println("User not found for email: " + request.getEmail());
+            System.out.println("User not found for email: " + email);
             throw new ResourceNotFoundException("User not found");
         }
 
         User user = userOptional.get();
         if (user.isVerified()) {
-            System.out.println("User already verified: " + request.getEmail());
-            throw new BadRequestException("User already verified");
+            System.out.println("User already verified: " + email);
+            throw new ResourceNotFoundException("User already verified");
         }
 
         boolean isTokenValid = validateVerificationToken(request.getToken(), user);
         if (!isTokenValid) {
-            System.out.println("Invalid or expired token for email: " + request.getEmail());
-            throw new BadRequestException("Invalid or expired token");
+            String decodedToken = new String(Base64.getDecoder().decode(padBase64Token(request.getToken())));
+            String[] parts = decodedToken.split("\\|");
+            Instant expiryDate = Instant.parse(parts[2]);
+
+            if (Instant.now().isAfter(expiryDate)) {
+                System.out.println("Token Expired for email: " + email);
+                sendVerificationEmail(email);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
+            }
+
+            System.out.println("Invalid or expired token for email: " + email);
+            throw new ResourceNotFoundException("Invalid or expired token");
         }
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(request.getPassword());
         user.setVerified(true);
         user.setRole("user");
         userService.save(user);
 
-        System.out.println("Registration successful for email: " + request.getEmail());
+        System.out.println("Registration successful for email: " + email);
         return ResponseEntity.ok(new Response(true, "Registration successful"));
     }
 
@@ -84,7 +102,7 @@ public class UserController {
         String token = generateVerificationToken(user);
         String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
-        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail+"&token=" + encodedToken ;
+        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + encodedToken;
 
         System.out.println("Verification link: " + verificationLink);
 

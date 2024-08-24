@@ -1,7 +1,8 @@
 package com.dti.multiwarehouse.auth.service;
 
-import com.dti.multiwarehouse.user.repository.UserRepository;
+import com.dti.multiwarehouse.auth.entity.UserAuth;
 import com.dti.multiwarehouse.user.entity.User;
+import com.dti.multiwarehouse.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,17 +19,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-       User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getEmail())
-                .password(user.getPassword())
-                .authorities(user.getRole())
-                .accountExpired(false)
-                .accountLocked(false)
-                .credentialsExpired(false)
-                .disabled(false)
-                .build();
+        // Log the retrieved encoded password
+        System.out.println("Retrieved encoded password from DB: " + user.getPassword());
+
+        return new UserAuth(user);
     }
 }
