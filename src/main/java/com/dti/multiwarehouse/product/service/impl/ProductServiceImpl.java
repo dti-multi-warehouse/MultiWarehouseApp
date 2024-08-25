@@ -40,7 +40,7 @@ public class ProductServiceImpl implements ProductService {
                     .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
-                    .addFieldsItem(new Field().name("categoryId").type(FieldTypes.INT32))
+                    .addFieldsItem(new Field().name("category").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("sold").type(FieldTypes.INT32))
                     .defaultSortingField("sold");
             CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
@@ -48,13 +48,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductSearchResponseDto displayProducts(String query, List<Integer> category, int page, int perPage) throws Exception {
+    public ProductSearchResponseDto displayProducts(String query, List<String> category, int page, int perPage) throws Exception {
         var searchParameters = new SearchParameters()
                 .q(query)
                 .queryBy("name,description")
-                .filterBy(category.isEmpty() ? "categoryId:>=0" : "categoryId:" + category)
+//                .filterBy(category.isEmpty() ? "category:*" : "category:" + category)
                 .page(page)
                 .perPage(perPage);
+        System.out.println(category.isEmpty());
+        if (!category.isEmpty()) {
+            searchParameters.filterBy("category:" + category);
+        }
         var searchResult = typeSense.client().collections("products").documents().search(searchParameters);
         return ProductMapper.toSearchResponseDto(searchResult);
     }
@@ -67,7 +71,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
-        var product = productRepository.save(ProductMapper.toEntity(requestDto));
+        var category = getCategory(requestDto.getCategoryId());
+        var product = productRepository.save(ProductMapper.toEntity(requestDto, category));
 
         typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
 
@@ -79,5 +84,9 @@ public class ProductServiceImpl implements ProductService {
         Category category = new Category();
         category.setName(requestDto.getName());
         categoryRepository.save(category);
+    }
+
+    private Category getCategory(Long categoryId) {
+        return categoryRepository.findById(categoryId).orElseThrow(() -> new EntityNotFoundException("Category with id " + categoryId + " not found"));
     }
 }

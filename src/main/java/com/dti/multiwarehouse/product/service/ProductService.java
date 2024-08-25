@@ -9,7 +9,7 @@ import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import java.util.List;
 
 public interface ProductService {
-    ProductSearchResponseDto displayProducts(String query, List<Integer> category, int page, int perPage) throws Exception;
+    ProductSearchResponseDto displayProducts(String query, List<String> category, int page, int perPage) throws Exception;
     ProductDetailsResponseDto getProductDetails(Long id);
     ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto) throws Exception;
     void addCategory(AddCategoryRequestDto requestDto);

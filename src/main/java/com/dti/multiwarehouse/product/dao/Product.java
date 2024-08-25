@@ -36,11 +36,8 @@ public class Product {
     @Column(name = "sold", nullable = false)
     private int sold;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @CreationTimestamp
