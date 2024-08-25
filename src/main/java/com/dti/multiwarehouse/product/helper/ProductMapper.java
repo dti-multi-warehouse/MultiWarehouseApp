@@ -40,7 +40,7 @@ public class ProductMapper {
                 .name(product.getName())
                 .price(product.getPrice())
                 .stock(product.getStock())
-                .categoryId(product.getCategory().getName())
+                .categoryId(product.getCategoryId())
                 .build();
     }
 

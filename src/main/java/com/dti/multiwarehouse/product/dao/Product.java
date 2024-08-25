@@ -1,6 +1,5 @@
 package com.dti.multiwarehouse.product.dao;
 
-import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,7 +7,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashMap;
 
 @Getter
 @Setter

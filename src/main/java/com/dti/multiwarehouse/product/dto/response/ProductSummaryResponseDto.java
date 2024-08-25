@@ -16,5 +16,5 @@ public class ProductSummaryResponseDto {
     private String name;
     private BigDecimal price;
     private int stock;
-    private String categoryId;
+    private Long categoryId;
 }

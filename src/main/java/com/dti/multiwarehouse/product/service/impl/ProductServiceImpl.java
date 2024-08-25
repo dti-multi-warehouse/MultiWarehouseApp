@@ -2,10 +2,8 @@ package com.dti.multiwarehouse.product.service.impl;
 
 import com.dti.multiwarehouse.config.TypeSense;
 import com.dti.multiwarehouse.product.dao.Category;
-import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddCategoryRequestDto;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
-import com.dti.multiwarehouse.product.dto.request.ProductSummaryRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
@@ -17,14 +15,10 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -46,7 +40,7 @@ public class ProductServiceImpl implements ProductService {
                     .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
-                    .addFieldsItem(new Field().name("category").type(FieldTypes.STRING))
+                    .addFieldsItem(new Field().name("categoryId").type(FieldTypes.INT32))
                     .addFieldsItem(new Field().name("sold").type(FieldTypes.INT32))
                     .defaultSortingField("sold");
             CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
@@ -72,12 +66,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDetailsResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
+    public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
         var product = productRepository.save(ProductMapper.toEntity(requestDto));
 
         typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
 
-        return ProductMapper.toDetailsResponseDto(product);
+        return ProductMapper.toSummaryResponseDto(product);
     }
 
     @Override
