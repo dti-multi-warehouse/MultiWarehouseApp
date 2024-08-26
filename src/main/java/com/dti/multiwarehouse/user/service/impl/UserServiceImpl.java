@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.user.service.impl;
 
 import com.dti.multiwarehouse.exception.ResourceNotFoundException;
+import com.dti.multiwarehouse.user.dto.ClerkRegistrationRequest;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.repository.UserRepository;
 import com.dti.multiwarehouse.user.service.UserService;
@@ -29,7 +30,6 @@ public class UserServiceImpl implements UserService {
         user.setEmail(user.getEmail().toLowerCase());
 
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            // Log the raw password before encoding
             System.out.println("Raw password before encoding: " + user.getPassword());
 
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -43,5 +43,28 @@ public class UserServiceImpl implements UserService {
         }
 
         return userRepository.save(user);
+    }
+
+//    @Override
+//    public void registerClerk(ClerkRegistrationRequest request) {
+//        User user = new User();
+//        user.setEmail(request.getEmail());
+//        user.setUsername(request.getUsername());
+//
+//        userRepository.save(user);
+//    }
+
+    @Override
+    public void saveEmail(String email) {
+        Optional<User> existingUser = userRepository.findByEmail(email.toLowerCase());
+        if (existingUser.isPresent()) {
+            throw new ResourceNotFoundException("Email is already registered");
+        }
+
+        User user = new User();
+        user.setEmail(email.toLowerCase());
+        user.setVerified(true);
+        user.setRole("user");
+        userRepository.save(user);
     }
 }
