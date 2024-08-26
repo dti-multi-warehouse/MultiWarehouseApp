@@ -1,13 +1,12 @@
 package com.dti.multiwarehouse.product.service.impl;
 
+import com.dti.multiwarehouse.category.service.CategoryService;
 import com.dti.multiwarehouse.config.TypeSense;
-import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import com.dti.multiwarehouse.product.helper.ProductMapper;
-import com.dti.multiwarehouse.category.repository.CategoryRepository;
 import com.dti.multiwarehouse.product.repository.ProductRepository;
 import com.dti.multiwarehouse.product.service.ProductService;
 import jakarta.annotation.PostConstruct;
@@ -26,7 +25,8 @@ public class ProductServiceImpl implements ProductService {
     @Resource
     private final TypeSense typeSense;
     private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
+
+    private final CategoryService categoryService;
 
     @PostConstruct
     public void init() throws Exception {
@@ -70,15 +70,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
-        var category = getCategory(requestDto.getCategoryId());
+        var category = categoryService.getCategoryById(requestDto.getCategoryId());
         var product = productRepository.save(ProductMapper.toEntity(requestDto, category));
 
         typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
 
         return ProductMapper.toSummaryResponseDto(product);
-    }
-
-    private Category getCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId).orElseThrow(() -> new EntityNotFoundException("Category with id " + categoryId + " not found"));
     }
 }

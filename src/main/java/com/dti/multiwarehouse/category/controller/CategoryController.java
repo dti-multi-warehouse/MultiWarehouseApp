@@ -21,12 +21,6 @@ public class CategoryController {
         return Response.success("Categories successfully retrieved", res);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getCategoryById(@PathVariable Long id) {
-        var res = categoryService.getCategoryById(id);
-        return Response.success("Category successfully retrieved", res);
-    }
-
     @PostMapping
     public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto requestDto) {
         var res = categoryService.addCategory(requestDto);

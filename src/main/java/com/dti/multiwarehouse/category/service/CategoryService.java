@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.category.service;
 
+import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.category.dto.request.CategoryRequestDto;
 import com.dti.multiwarehouse.category.dto.response.CategoryResponseDto;
 
@@ -10,5 +11,5 @@ public interface CategoryService {
     List<CategoryResponseDto> getAllCategories();
     CategoryResponseDto updateCategory(Long id, CategoryRequestDto requestDto);
     void deleteCategory(Long id);
-    CategoryResponseDto getCategoryById(Long id);
+    Category getCategoryById(Long id);
 }

@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.category.service.impl;
 
+import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.category.dto.request.CategoryRequestDto;
 import com.dti.multiwarehouse.category.dto.response.CategoryResponseDto;
 import com.dti.multiwarehouse.category.helper.CategoryMapper;
@@ -48,8 +49,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryResponseDto getCategoryById(Long id) {
-        var category = categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Category with id " + id + " not found"));
-        return CategoryMapper.toResponseDto(category);
+    public Category getCategoryById(Long id) {
+        return categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Category with id " + id + " not found"));
     }
 }
