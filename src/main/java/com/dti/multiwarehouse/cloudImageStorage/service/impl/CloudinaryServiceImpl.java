@@ -1,7 +1,7 @@
-package com.dti.multiwarehouse.cloudinary.service.impl;
+package com.dti.multiwarehouse.cloudImageStorage.service.impl;
 
 import com.cloudinary.Cloudinary;
-import com.dti.multiwarehouse.cloudinary.service.CloudinaryService;
+import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
-public class CloudinaryServiceImpl implements CloudinaryService {
+public class CloudinaryServiceImpl implements CloudImageStorageService {
     @Resource
     private Cloudinary cloudinary;
     private final List<String> ALLOWED_FORMAT = List.of("jpg", "jpeg", "png");
