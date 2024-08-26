@@ -1,6 +1,5 @@
 package com.dti.multiwarehouse.product.controller;
 
-import com.dti.multiwarehouse.product.dto.request.AddCategoryRequestDto;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.response.Response;
@@ -16,12 +15,6 @@ import java.util.List;
 @RequestMapping("/api/v1/product")
 public class ProductController {
     private final ProductService productService;
-
-    @PostMapping("/category")
-    public ResponseEntity<?> createCategory(@Valid @RequestBody AddCategoryRequestDto requestDto) {
-        productService.addCategory(requestDto);
-        return Response.success("Category successfully created");
-    }
 
     @PostMapping
     public ResponseEntity<?> addProduct(@Valid @RequestBody AddProductRequestDto requestDto) throws Exception {

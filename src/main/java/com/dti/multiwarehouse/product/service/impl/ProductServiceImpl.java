@@ -1,14 +1,13 @@
 package com.dti.multiwarehouse.product.service.impl;
 
 import com.dti.multiwarehouse.config.TypeSense;
-import com.dti.multiwarehouse.product.dao.Category;
-import com.dti.multiwarehouse.product.dto.request.AddCategoryRequestDto;
+import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import com.dti.multiwarehouse.product.helper.ProductMapper;
-import com.dti.multiwarehouse.product.repository.CategoryRepository;
+import com.dti.multiwarehouse.category.repository.CategoryRepository;
 import com.dti.multiwarehouse.product.repository.ProductRepository;
 import com.dti.multiwarehouse.product.service.ProductService;
 import jakarta.annotation.PostConstruct;
@@ -77,13 +76,6 @@ public class ProductServiceImpl implements ProductService {
         typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
 
         return ProductMapper.toSummaryResponseDto(product);
-    }
-
-    @Override
-    public void addCategory(AddCategoryRequestDto requestDto) {
-        Category category = new Category();
-        category.setName(requestDto.getName());
-        categoryRepository.save(category);
     }
 
     private Category getCategory(Long categoryId) {

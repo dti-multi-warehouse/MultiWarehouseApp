@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.product.dao;
 
+import com.dti.multiwarehouse.category.dao.Category;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

@@ -1,4 +1,4 @@
-package com.dti.multiwarehouse.product.dto.request;
+package com.dti.multiwarehouse.category.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AddCategoryRequestDto {
+public class CategoryRequestDto {
     @NotBlank
     private String name;
 }

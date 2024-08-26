@@ -1,6 +1,6 @@
 package com.dti.multiwarehouse.product.helper;
 
-import com.dti.multiwarehouse.product.dao.Category;
+import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
