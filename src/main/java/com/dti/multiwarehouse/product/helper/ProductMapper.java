@@ -35,6 +35,7 @@ public class ProductMapper {
         document.put("stock", product.getStock());
         document.put("category", product.getCategory().getName());
         document.put("sold", product.getSold());
+        document.put("thumbnail", product.getImageUrls().stream().findFirst().orElse(null));
         return document;
     }
 

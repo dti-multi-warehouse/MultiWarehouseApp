@@ -22,7 +22,7 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto requestDto) {
+    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto requestDto) throws Exception {
         var res = categoryService.addCategory(requestDto);
         return Response.success("Category successfully created", res);
     }

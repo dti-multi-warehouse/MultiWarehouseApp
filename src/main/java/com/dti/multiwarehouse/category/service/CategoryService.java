@@ -7,7 +7,7 @@ import com.dti.multiwarehouse.category.dto.response.CategoryResponseDto;
 import java.util.List;
 
 public interface CategoryService {
-    CategoryResponseDto addCategory(CategoryRequestDto requestDto);
+    CategoryResponseDto addCategory(CategoryRequestDto requestDto) throws Exception;
     List<CategoryResponseDto> getAllCategories();
     CategoryResponseDto updateCategory(Long id, CategoryRequestDto requestDto);
     void deleteCategory(Long id);

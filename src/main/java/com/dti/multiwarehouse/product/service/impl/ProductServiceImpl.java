@@ -37,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     @PostConstruct
     public void init() throws Exception {
         try {
+//            typeSense.client().collections("products").delete();
             typeSense.client().collections("products").retrieve();
         } catch (Exception e) {
             CollectionSchema productCollectionSchema = new CollectionSchema();
@@ -47,6 +48,7 @@ public class ProductServiceImpl implements ProductService {
                     .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
                     .addFieldsItem(new Field().name("category").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("sold").type(FieldTypes.INT32))
+                    .addFieldsItem(new Field().name("thumbnail").type(FieldTypes.STRING))
                     .defaultSortingField("sold");
             CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
         }
@@ -57,10 +59,8 @@ public class ProductServiceImpl implements ProductService {
         var searchParameters = new SearchParameters()
                 .q(query)
                 .queryBy("name,description")
-//                .filterBy(category.isEmpty() ? "category:*" : "category:" + category)
                 .page(page)
                 .perPage(perPage);
-        System.out.println(category.isEmpty());
         if (!category.isEmpty()) {
             searchParameters.filterBy("category:" + category);
         }
@@ -71,7 +71,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
-        System.out.println(product.getImageUrls());
         return ProductMapper.toDetailsResponseDto(product);
     }
 
