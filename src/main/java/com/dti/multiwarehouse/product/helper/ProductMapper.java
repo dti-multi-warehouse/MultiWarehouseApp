@@ -9,9 +9,11 @@ import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import org.typesense.model.SearchResult;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 public class ProductMapper {
-    public static Product toEntity(AddProductRequestDto requestDto, Category category) {
+    public static Product toEntity(AddProductRequestDto requestDto, Category category, List<String> urls) {
         return Product
                 .builder()
                 .name(requestDto.getName())
@@ -20,6 +22,7 @@ public class ProductMapper {
                 .stock(requestDto.getStock())
                 .category(category)
                 .sold(0)
+                .imageUrls(new HashSet<>(urls))
                 .build();
     }
 

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,8 +18,11 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<?> addProduct(@Valid @RequestBody AddProductRequestDto requestDto) throws Exception {
-        var res = productService.addProduct(requestDto);
+    public ResponseEntity<?> addProduct(
+            @Valid @RequestPart AddProductRequestDto requestDto,
+            @RequestPart(required = true) List<MultipartFile> images
+            ) throws Exception {
+        var res = productService.addProduct(requestDto, images);
         return Response.success("Product successfully added", res);
     }
 

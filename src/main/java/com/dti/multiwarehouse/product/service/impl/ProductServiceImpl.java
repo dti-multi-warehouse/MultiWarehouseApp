@@ -1,7 +1,9 @@
 package com.dti.multiwarehouse.product.service.impl;
 
 import com.dti.multiwarehouse.category.service.CategoryService;
+import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import com.dti.multiwarehouse.config.TypeSense;
+import com.dti.multiwarehouse.exceptions.ApplicationException;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
@@ -14,9 +16,12 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -27,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     private final CategoryService categoryService;
+    private final CloudImageStorageService cloudImageStorageService;
 
     @PostConstruct
     public void init() throws Exception {
@@ -65,16 +71,41 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        System.out.println(product.getImageUrls());
         return ProductMapper.toDetailsResponseDto(product);
     }
 
     @Override
-    public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto) throws Exception {
+    public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto, List<MultipartFile> images) throws Exception {
         var category = categoryService.getCategoryById(requestDto.getCategoryId());
-        var product = productRepository.save(ProductMapper.toEntity(requestDto, category));
+        var imageUrls = uploadImages(images);
+        var product = productRepository.save(ProductMapper.toEntity(requestDto, category, imageUrls));
 
         typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
 
         return ProductMapper.toSummaryResponseDto(product);
+    }
+
+    private List<String> uploadImages(List<MultipartFile> images) throws IOException {
+        var imageUrls = new ArrayList<String>();
+
+        try {
+            for (var image : images) {
+                var url = cloudImageStorageService.uploadImage(image, "productImage");
+                if (url != null && !url.isEmpty()) {
+                    imageUrls.add(url);
+                } else {
+                    throw new IOException("Failed to upload image " + image.getOriginalFilename());
+                }
+            }
+        } catch (IOException e) {
+            for (var url : imageUrls) {
+                cloudImageStorageService.deleteImage(url);
+            }
+            throw new ApplicationException("Failed to upload image");
+        }
+
+        return imageUrls;
+
     }
 }

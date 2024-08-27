@@ -28,4 +28,10 @@ public class CloudinaryServiceImpl implements CloudImageStorageService {
         String publicId = (String) uploadedFile.get("public_id");
         return cloudinary.url().secure(true).generate(publicId);
     }
+
+    @Override
+    public void deleteImage(String imageName) throws IOException {
+        HashMap<Object, Object> options = new HashMap<>();
+        cloudinary.uploader().destroy(imageName, options);
+    }
 }
