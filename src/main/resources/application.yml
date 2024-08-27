@@ -8,7 +8,7 @@ spring:
 #    password: ${DB_PWD_DEV}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
   config:
     import: optional:file:.env[.properties]

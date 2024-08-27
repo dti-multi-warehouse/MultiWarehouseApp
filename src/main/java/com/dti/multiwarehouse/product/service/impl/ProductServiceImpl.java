@@ -4,7 +4,9 @@ import com.dti.multiwarehouse.category.service.CategoryService;
 import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import com.dti.multiwarehouse.config.TypeSense;
 import com.dti.multiwarehouse.exceptions.ApplicationException;
+import com.dti.multiwarehouse.helper.EntityUpdateUtil;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
+import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
@@ -23,6 +25,7 @@ import org.typesense.model.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -34,14 +37,16 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryService categoryService;
     private final CloudImageStorageService cloudImageStorageService;
 
+    String PRODUCT_KEY = "products";
+
     @PostConstruct
     public void init() throws Exception {
         try {
-//            typeSense.client().collections("products").delete();
-            typeSense.client().collections("products").retrieve();
+//            typeSense.client().collections(PRODUCT_KEY).delete();
+            typeSense.client().collections(PRODUCT_KEY).retrieve();
         } catch (Exception e) {
             CollectionSchema productCollectionSchema = new CollectionSchema();
-            productCollectionSchema.name("products")
+            productCollectionSchema.name(PRODUCT_KEY)
                     .addFieldsItem(new Field().name("id").type(FieldTypes.INT64))
                     .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
@@ -64,7 +69,7 @@ public class ProductServiceImpl implements ProductService {
         if (!category.isEmpty()) {
             searchParameters.filterBy("category:" + category);
         }
-        var searchResult = typeSense.client().collections("products").documents().search(searchParameters);
+        var searchResult = typeSense.client().collections(PRODUCT_KEY).documents().search(searchParameters);
         return ProductMapper.toSearchResponseDto(searchResult);
     }
 
@@ -80,9 +85,57 @@ public class ProductServiceImpl implements ProductService {
         var imageUrls = uploadImages(images);
         var product = productRepository.save(ProductMapper.toEntity(requestDto, category, imageUrls));
 
-        typeSense.client().collections("products").documents().create(ProductMapper.toDocument(product));
+        typeSense.client().collections(PRODUCT_KEY).documents().create(ProductMapper.toDocument(product));
 
         return ProductMapper.toSummaryResponseDto(product);
+    }
+
+    @Override
+    public ProductSummaryResponseDto updateProduct(Long id, UpdateProductRequestDto requestDto, List<MultipartFile> images) throws Exception {
+        var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        EntityUpdateUtil.updateEntityFromDto(product, requestDto);
+
+        if (requestDto.getCategoryId() != null) {
+            var category = categoryService.getCategoryById(requestDto.getCategoryId());
+            product.setCategory(category);
+        }
+
+        if (images != null) {
+            var imageUrls = uploadImages(images);
+            for (var imageUrl : imageUrls) {
+                product.addImageUrl(imageUrl);
+            }
+        }
+
+        if (requestDto.getDeletedImageUrls() != null) {
+            deleteImages(requestDto.getDeletedImageUrls());
+            for (var imageUrl : requestDto.getDeletedImageUrls()) {
+                product.removeImageUrl(imageUrl);
+            }
+        }
+
+        var p = productRepository.save(product);
+
+        try {
+            typeSense.client().collections(PRODUCT_KEY).documents(id.toString()).update(ProductMapper.toDocument(p));
+        } catch (Exception e) {
+            throw new ApplicationException(e.getMessage());
+        }
+
+        return ProductMapper.toSummaryResponseDto(p);
+    }
+
+    @Override
+    public void deleteProduct(Long id) {
+        try {
+            productRepository.deleteById(id);
+            typeSense.client().collections(PRODUCT_KEY)
+                    .documents(id.toString())
+                    .delete();
+        } catch (Exception e) {
+           throw new ApplicationException("Failed to delete product with id: " + id);
+        }
+
     }
 
     private List<String> uploadImages(List<MultipartFile> images) throws IOException {
@@ -105,6 +158,17 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return imageUrls;
+
+    }
+
+    private void deleteImages(Set<String> imageUrls) {
+        try {
+            for (var imageUrl : imageUrls) {
+                cloudImageStorageService.deleteImage(imageUrl);
+            }
+        } catch (IOException e) {
+            throw new ApplicationException("Failed to delete image: " + imageUrls);
+        }
 
     }
 }

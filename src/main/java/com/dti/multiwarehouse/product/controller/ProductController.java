@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.product.controller;
 
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
+import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.response.Response;
 import jakarta.validation.Valid;
@@ -40,5 +41,20 @@ public class ProductController {
     public ResponseEntity<?> getProductDetails(@PathVariable Long id) {
         var res = productService.getProductDetails(id);
         return Response.success("Product successfully retrieved", res);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id,
+                                           @RequestPart UpdateProductRequestDto requestDto,
+                                           @RequestPart(required = false) List<MultipartFile> images
+    ) throws Exception {
+        var res = productService.updateProduct(id, requestDto, images);
+        return Response.success("Product successfully updated", res);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return Response.success("Product successfully deleted", id);
     }
 }
