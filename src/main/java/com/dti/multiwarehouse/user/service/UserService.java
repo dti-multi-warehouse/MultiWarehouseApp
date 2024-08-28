@@ -11,4 +11,7 @@ public interface UserService {
 
 //    void registerClerk(ClerkRegistrationRequest request);
     void saveEmail(String email);
+    void resetPassword(String email, String newPassword);
+    String generateToken(User user);
+    boolean validateToken(String token, User user);
 }
