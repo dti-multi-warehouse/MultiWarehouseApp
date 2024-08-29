@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: MultiWarehouse
+  datasource:
+#    url: jdbc:postgresql://ep-lively-poetry-a1e8ru91.ap-southeast-1.aws.neon.tech/personal?user=personal_owner&password=rjL8C4SAbkuw&sslmode=require&prepareThreshold=0
+    url: jdbc:postgresql://${DB_URL}:${DB_PORT}/${DB_NAME}?prepareThreshold=0
+    username: ${DB_USERNAME_DEV}
+    password: ${DB_PWD_DEV}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  config:
+    import: optional:file:.env[.properties]
