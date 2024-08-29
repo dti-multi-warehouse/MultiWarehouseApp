@@ -24,6 +24,8 @@ public class User {
 
     private boolean isVerified;
 
+    private boolean isSocial;
+
     private String avatar;
 
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -31,4 +33,15 @@ public class User {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     private LocalDateTime deletedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

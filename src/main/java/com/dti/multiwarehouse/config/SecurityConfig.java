@@ -81,6 +81,9 @@ public class SecurityConfig {
                     auth.requestMatchers("/api/v1/login").permitAll();
                     auth.requestMatchers("/api/v1/register").permitAll();
                     auth.requestMatchers("/api/v1/register/confirm").permitAll();
+                    auth.requestMatchers("/api/v1/save-email").permitAll();
+                    auth.requestMatchers("/api/v1/reset-password/request").permitAll();
+                    auth.requestMatchers("/api/v1/reset-password/confirm").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

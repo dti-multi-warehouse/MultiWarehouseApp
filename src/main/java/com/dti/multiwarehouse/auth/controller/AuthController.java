@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.auth.controller;
 
+import com.dti.multiwarehouse.auth.dto.ClerkLoginRequest;
 import com.dti.multiwarehouse.auth.dto.LoginRequestDto;
 import com.dti.multiwarehouse.auth.dto.LoginResponseDto;
 import com.dti.multiwarehouse.auth.entity.UserAuth;
@@ -60,6 +61,16 @@ public class AuthController {
         logger.info("Login successful for user: {}", userLogin.getEmail());
         return ResponseEntity.status(HttpStatus.OK).headers(headers).body(resp);
     }
+
+//    @PostMapping("/loginclerk")
+//    public ResponseEntity<String> loginClerk(@RequestBody ClerkLoginRequest request) {
+//        boolean isAuthenticated = authService.authenticateClerk(request);
+//        if (isAuthenticated) {
+//            return ResponseEntity.ok("Clerk login successful");
+//        } else {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Clerk login failed");
+//        }
+//    }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {

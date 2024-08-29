@@ -1,9 +1,12 @@
 package com.dti.multiwarehouse.auth.service;
 
+import com.dti.multiwarehouse.auth.dto.ClerkLoginRequest;
 import com.dti.multiwarehouse.auth.dto.LoginResponseDto;
 import com.dti.multiwarehouse.auth.helper.Claims;
 import com.dti.multiwarehouse.auth.repository.AuthRedisRepository;
 import com.dti.multiwarehouse.exception.ResourceNotFoundException;
+import com.dti.multiwarehouse.user.entity.User;
+import com.dti.multiwarehouse.user.repository.UserRepository;
 import com.dti.multiwarehouse.user.service.UserService;
 import lombok.extern.java.Log;
 import org.slf4j.Logger;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.stream.Collectors;
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -24,11 +28,13 @@ public class AuthServiceImpl implements AuthService {
     private final JwtEncoder jwtEncoder;
     private final AuthRedisRepository authRedisRepository;
     private final UserService userService;
+    private final UserRepository userRepository;
 
-    public AuthServiceImpl(JwtEncoder jwtEncoder, AuthRedisRepository authRedisRepository, UserService userService) {
+    public AuthServiceImpl(JwtEncoder jwtEncoder, AuthRedisRepository authRedisRepository, UserService userService, UserRepository userRepository) {
         this.jwtEncoder = jwtEncoder;
         this.authRedisRepository = authRedisRepository;
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -89,5 +95,13 @@ public class AuthServiceImpl implements AuthService {
         } else {
             logger.warn("No JWT found for user {} during logout", email);
         }
+    }
+
+    public boolean authenticateClerk(ClerkLoginRequest request) {
+        Optional<User> user = userRepository.findByEmail(request.getEmail());
+        if (user != null) {
+            return true;
+        }
+        return false;
     }
 }

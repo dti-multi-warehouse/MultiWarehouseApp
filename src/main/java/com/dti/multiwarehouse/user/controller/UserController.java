@@ -2,9 +2,11 @@ package com.dti.multiwarehouse.user.controller;
 
 import com.dti.multiwarehouse.exception.ResourceNotFoundException;
 import com.dti.multiwarehouse.response.Response;
+import com.dti.multiwarehouse.user.dto.ClerkRegistrationRequest;
 import com.dti.multiwarehouse.user.dto.UserConfirmationRequest;
 import com.dti.multiwarehouse.user.dto.UserRegistrationRequest;
 import com.dti.multiwarehouse.user.entity.User;
+import com.dti.multiwarehouse.user.repository.UserRepository;
 import com.dti.multiwarehouse.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +32,7 @@ public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<Response> register(@RequestBody UserRegistrationRequest request) {
@@ -54,57 +58,63 @@ public class UserController {
         return ResponseEntity.ok(new Response(true, "Verification email sent"));
     }
 
+    @PostMapping("/save-email")
+    public ResponseEntity<String> saveUserEmail(@RequestBody UserRegistrationRequest request) {
+        String email = request.getEmail();
+
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+
+        try {
+            User user = new User();
+            System.out.println("Saving email: " + email);
+            userService.saveEmail(email);
+            return ResponseEntity.ok("Email saved successfully. Verification email sent.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save email");
+        }
+    }
+
     @PostMapping("/register/confirm")
     public ResponseEntity<Response> confirmRegistration(@RequestBody UserConfirmationRequest request) {
         String email = request.getEmail().toLowerCase();
-        System.out.println("Received confirmation request for email: " + email);
-        System.out.println("Received token: " + request.getToken());
 
         Optional<User> userOptional = userService.findByEmail(email);
         if (userOptional.isEmpty()) {
-            System.out.println("User not found for email: " + email);
             throw new ResourceNotFoundException("User not found");
         }
 
         User user = userOptional.get();
         if (user.isVerified()) {
-            System.out.println("User already verified: " + email);
             throw new ResourceNotFoundException("User already verified");
         }
 
-        boolean isTokenValid = validateVerificationToken(request.getToken(), user);
+        boolean isTokenValid = userService.validateToken(request.getToken(), user);
         if (!isTokenValid) {
-            String decodedToken = new String(Base64.getDecoder().decode(padBase64Token(request.getToken())));
-            String[] parts = decodedToken.split("\\|");
-            Instant expiryDate = Instant.parse(parts[2]);
-
-            if (Instant.now().isAfter(expiryDate)) {
-                System.out.println("Token Expired for email: " + email);
-                sendVerificationEmail(email);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
-            }
-
-            System.out.println("Invalid or expired token for email: " + email);
-            throw new ResourceNotFoundException("Invalid or expired token");
+            sendVerificationEmail(request.getEmail());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
         }
 
         user.setPassword(request.getPassword());
         user.setVerified(true);
+        user.setSocial(false);
         user.setRole("user");
         userService.save(user);
 
-        System.out.println("Registration successful for email: " + email);
         return ResponseEntity.ok(new Response(true, "Registration successful"));
     }
 
+
     private void sendVerificationEmail(String email) {
         User user = userService.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        String token = generateVerificationToken(user);
+        String token = userService.generateToken(user);
         String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
+
         String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + encodedToken;
 
-        System.out.println("Verification link: " + verificationLink);
+        System.out.println("verification link: "+verificationLink);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(email);
@@ -113,53 +123,67 @@ public class UserController {
         mailSender.send(mailMessage);
     }
 
-    public String generateVerificationToken(User user) {
-        String token = UUID.randomUUID().toString();
-        Instant expiryDate = Instant.now().plusSeconds(3600); // 1 hour
-        String combined = token + "|" + user.getEmail() + "|" + expiryDate.toString();
-        String encodedToken = Base64.getEncoder().encodeToString(combined.getBytes());
-        System.out.println("Generated token: " + encodedToken);
-        return encodedToken;
+    @PostMapping("/reset-password/request")
+    public ResponseEntity<Response> requestResetPassword(@RequestBody Map<String,String> request){
+        String email = request.get("email");
+
+        Optional<User> userOptional = userService.findByEmail(email);
+        if(userOptional.isEmpty()){
+            throw  new ResourceNotFoundException("User not found with this email address.");
+        }
+
+        User user = userOptional.get();
+
+        if (user.isSocial()) {
+            System.out.println("cannot reset password for social user");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new Response(false, "Cannot reset password for a social login account."));
+        }
+
+        String token = userService.generateToken(user);
+        sendResetPasswordEmail(email, token);
+
+        return ResponseEntity.ok(new Response(true, "Password reset email sent"));
     }
 
-    private String padBase64Token(String token) {
-        int paddingLength = 4 - (token.length() % 4);
-        if (paddingLength < 4) {
-            token += "=".repeat(paddingLength);
+    @PostMapping("/reset-password/confirm")
+    public ResponseEntity<Response> resetPassword(@RequestBody Map<String, String> request){
+        String email = request.get("email");
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+
+        Optional<User> userOptional = userService.findByEmail(email);
+        User user = userOptional.get();
+
+        boolean isValidToken = userService.validateToken(token, user);
+        if(!isValidToken){
+            sendResetPasswordEmail(email, token);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
         }
-        return token;
+
+        if (user.isSocial()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new Response(false, "Cannot reset password for a social login account."));
+        }
+
+        userService.resetPassword(email, newPassword);
+
+        return ResponseEntity.ok(new Response(true, "Password has been reset successfully"));
+
     }
 
-    public boolean validateVerificationToken(String token, User user) {
-        try {
-            System.out.println("Received token: " + token);
-            token = padBase64Token(token);
-            System.out.println("Padded token: " + token);
-            String decodedToken = new String(Base64.getDecoder().decode(token));
-            System.out.println("Decoded token: " + decodedToken);
-            String[] parts = decodedToken.split("\\|");
-            if (parts.length != 3) {
-                System.out.println("Token has an incorrect format. Parts: " + parts.length);
-                return false;
-            }
+    private void sendResetPasswordEmail(String email, String token){
+        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
-            String tokenEmail = parts[1];
-            Instant expiryDate = Instant.parse(parts[2]);
+        String resetLink = "http://localhost:3000/reset-password/confirmation?email="+encodedEmail+"&token="+encodedToken;
 
-            System.out.println("Token email: " + tokenEmail);
-            System.out.println("User email: " + user.getEmail());
-            System.out.println("Token expiry date: " + expiryDate);
-            System.out.println("Current UTC time: " + Instant.now());
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
 
-            boolean isValid = tokenEmail.equals(user.getEmail()) && Instant.now().isBefore(expiryDate);
-            System.out.println("Is token valid? " + isValid);
-            return isValid;
-        } catch (IllegalArgumentException e) {
-            System.out.println("Failed to decode the token: " + e.getMessage());
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        mailMessage.setTo(email);
+        mailMessage.setSubject("Password Reset Request");
+        mailMessage.setText("Click the link to reset your password: "+resetLink);
+        System.out.println("reset link"+resetLink);
+        mailSender.send(mailMessage);
     }
 }
