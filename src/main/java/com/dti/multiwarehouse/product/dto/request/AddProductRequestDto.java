@@ -26,10 +26,6 @@ public class AddProductRequestDto {
 
     @NotNull
     @Positive
-    private int stock;
-
-    @NotNull
-    @Positive
     private Long categoryId;
 
 }

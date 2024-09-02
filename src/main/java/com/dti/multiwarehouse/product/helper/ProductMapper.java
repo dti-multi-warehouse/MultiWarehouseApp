@@ -19,7 +19,7 @@ public class ProductMapper {
                 .name(requestDto.getName())
                 .description(requestDto.getDescription())
                 .price(requestDto.getPrice())
-                .stock(requestDto.getStock())
+                .stock(0)
                 .category(category)
                 .sold(0)
                 .imageUrls(new HashSet<>(urls))

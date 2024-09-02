@@ -20,10 +20,10 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<?> addProduct(
-            @Valid @RequestPart AddProductRequestDto requestDto,
+            @Valid @RequestPart AddProductRequestDto product,
             @RequestPart(required = true) List<MultipartFile> images
             ) throws Exception {
-        var res = productService.addProduct(requestDto, images);
+        var res = productService.addProduct(product, images);
         return Response.success("Product successfully added", res);
     }
 
