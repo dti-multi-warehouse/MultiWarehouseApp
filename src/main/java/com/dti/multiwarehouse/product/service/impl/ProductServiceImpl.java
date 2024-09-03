@@ -24,6 +24,7 @@ import org.typesense.model.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -100,17 +101,27 @@ public class ProductServiceImpl implements ProductService {
             product.setCategory(category);
         }
 
+        var currentImageUrls = new HashSet<>(product.getImageUrls());
+        Set<String> deletedImageUrls;
+
+        System.out.println(requestDto.getPrevImages());
+
+        if (requestDto.getPrevImages() != null) {
+            deletedImageUrls = new HashSet<>(currentImageUrls);
+            deletedImageUrls.removeAll(requestDto.getPrevImages());
+        } else {
+            deletedImageUrls = currentImageUrls;
+        }
+
+        deleteImages(deletedImageUrls);
+        for (var imageUrl : deletedImageUrls) {
+            product.removeImageUrl(imageUrl);
+        }
+
         if (images != null) {
             var imageUrls = uploadImages(images);
             for (var imageUrl : imageUrls) {
                 product.addImageUrl(imageUrl);
-            }
-        }
-
-        if (requestDto.getDeletedImageUrls() != null) {
-            deleteImages(requestDto.getDeletedImageUrls());
-            for (var imageUrl : requestDto.getDeletedImageUrls()) {
-                product.removeImageUrl(imageUrl);
             }
         }
 

@@ -25,6 +25,5 @@ public class UpdateProductRequestDto {
     @Positive
     private Long categoryId;
 
-    @NotEmpty
-    private Set<String> deletedImageUrls;
+    private Set<String> prevImages;
 }

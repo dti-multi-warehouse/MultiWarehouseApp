@@ -8,6 +8,7 @@ import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ProductService {
     ProductSearchResponseDto displayProducts(String query, List<String> category, int page, int perPage) throws Exception;

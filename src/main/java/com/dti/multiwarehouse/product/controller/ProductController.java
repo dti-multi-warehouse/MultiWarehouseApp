@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -45,10 +46,11 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
-                                           @RequestPart UpdateProductRequestDto requestDto,
+                                           @RequestPart UpdateProductRequestDto product,
+//                                           @RequestPart(required = false) Set<String> prevImages,
                                            @RequestPart(required = false) List<MultipartFile> images
     ) throws Exception {
-        var res = productService.updateProduct(id, requestDto, images);
+        var res = productService.updateProduct(id, product, images);
         return Response.success("Product successfully updated", res);
     }
 
