@@ -1,7 +1,6 @@
 package com.dti.multiwarehouse.user.service.impl;
 
-import com.dti.multiwarehouse.exception.ResourceNotFoundException;
-import com.dti.multiwarehouse.user.dto.ClerkRegistrationRequest;
+import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.repository.UserRepository;
 import com.dti.multiwarehouse.user.service.UserService;

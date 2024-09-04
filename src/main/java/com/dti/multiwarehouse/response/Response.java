@@ -27,6 +27,11 @@ public class Response<T> {
 
     }
 
+    public Response(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
+
     public static <T> ResponseEntity<Response<Object>> failed(String message) {
         return failed(HttpStatus.BAD_REQUEST.value(), message, null);
     }

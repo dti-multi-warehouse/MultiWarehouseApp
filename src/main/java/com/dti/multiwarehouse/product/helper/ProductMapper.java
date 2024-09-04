@@ -1,6 +1,6 @@
 package com.dti.multiwarehouse.product.helper;
 
-import com.dti.multiwarehouse.product.dao.Category;
+import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
@@ -9,17 +9,20 @@ import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import org.typesense.model.SearchResult;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 public class ProductMapper {
-    public static Product toEntity(AddProductRequestDto requestDto, Category category) {
+    public static Product toEntity(AddProductRequestDto requestDto, Category category, List<String> urls) {
         return Product
                 .builder()
                 .name(requestDto.getName())
                 .description(requestDto.getDescription())
                 .price(requestDto.getPrice())
-                .stock(requestDto.getStock())
+                .stock(0)
                 .category(category)
                 .sold(0)
+                .imageUrls(new HashSet<>(urls))
                 .build();
     }
 
@@ -32,6 +35,7 @@ public class ProductMapper {
         document.put("stock", product.getStock());
         document.put("category", product.getCategory().getName());
         document.put("sold", product.getSold());
+        document.put("thumbnail", product.getImageUrls().stream().findFirst().orElse(null));
         return document;
     }
 
@@ -53,6 +57,7 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .stock(product.getStock())
                 .category(product.getCategory().getName())
+                .imageUrls(product.getImageUrls())
                 .build();
     }
 

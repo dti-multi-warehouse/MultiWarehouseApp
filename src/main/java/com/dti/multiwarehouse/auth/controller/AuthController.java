@@ -81,6 +81,6 @@ public class AuthController {
         headers.add("Set-Cookie", "Sid=; Path=/; Max-Age=0; HttpOnly");
 
         logger.info("Logout successful");
-        return ResponseEntity.status(HttpStatus.OK).headers(headers).body(new Response(true, "Logout successfully"));
+        return ResponseEntity.status(HttpStatus.OK).headers(headers).body("Logout successfully");
     }
 }

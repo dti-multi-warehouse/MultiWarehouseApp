@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Getter
 @AllArgsConstructor
@@ -16,4 +17,5 @@ public class ProductDetailsResponseDto {
     private BigDecimal price;
     private int stock;
     private String category;
+    private Set<String> imageUrls;
 }

@@ -1,15 +1,17 @@
 package com.dti.multiwarehouse.product.controller;
 
-import com.dti.multiwarehouse.product.dto.request.AddCategoryRequestDto;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
+import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -17,15 +19,12 @@ import java.util.List;
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping("/category")
-    public ResponseEntity<?> createCategory(@Valid @RequestBody AddCategoryRequestDto requestDto) {
-        productService.addCategory(requestDto);
-        return Response.success("Category successfully created");
-    }
-
     @PostMapping
-    public ResponseEntity<?> addProduct(@Valid @RequestBody AddProductRequestDto requestDto) throws Exception {
-        var res = productService.addProduct(requestDto);
+    public ResponseEntity<?> addProduct(
+            @Valid @RequestPart AddProductRequestDto product,
+            @RequestPart(required = true) List<MultipartFile> images
+            ) throws Exception {
+        var res = productService.addProduct(product, images);
         return Response.success("Product successfully added", res);
     }
 
@@ -43,5 +42,21 @@ public class ProductController {
     public ResponseEntity<?> getProductDetails(@PathVariable Long id) {
         var res = productService.getProductDetails(id);
         return Response.success("Product successfully retrieved", res);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id,
+                                           @RequestPart UpdateProductRequestDto product,
+//                                           @RequestPart(required = false) Set<String> prevImages,
+                                           @RequestPart(required = false) List<MultipartFile> images
+    ) throws Exception {
+        var res = productService.updateProduct(id, product, images);
+        return Response.success("Product successfully updated", res);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return Response.success("Product successfully deleted", id);
     }
 }

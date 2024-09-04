@@ -1,8 +1,7 @@
 package com.dti.multiwarehouse.user.controller;
 
-import com.dti.multiwarehouse.exception.ResourceNotFoundException;
+import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.response.Response;
-import com.dti.multiwarehouse.user.dto.ClerkRegistrationRequest;
 import com.dti.multiwarehouse.user.dto.UserConfirmationRequest;
 import com.dti.multiwarehouse.user.dto.UserRegistrationRequest;
 import com.dti.multiwarehouse.user.entity.User;
@@ -18,11 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -35,7 +31,7 @@ public class UserController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<Response> register(@RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<?> register(@RequestBody UserRegistrationRequest request) {
         Optional<User> existingUser = userService.findByEmail(request.getEmail());
 
         if (existingUser.isPresent()) {
@@ -55,11 +51,11 @@ public class UserController {
 
         sendVerificationEmail(request.getEmail());
 
-        return ResponseEntity.ok(new Response(true, "Verification email sent"));
+        return Response.success("Verification email sent");
     }
 
     @PostMapping("/save-email")
-    public ResponseEntity<String> saveUserEmail(@RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<?> saveUserEmail(@RequestBody UserRegistrationRequest request) {
         String email = request.getEmail();
 
         if (email == null || email.isEmpty()) {
@@ -70,14 +66,14 @@ public class UserController {
             User user = new User();
             System.out.println("Saving email: " + email);
             userService.saveEmail(email);
-            return ResponseEntity.ok("Email saved successfully. Verification email sent.");
+            return Response.success("Email saved successfully. Verification email sent.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save email");
+            return Response.failed(HttpStatus.INTERNAL_SERVER_ERROR.value(),"Failed to save email");
         }
     }
 
     @PostMapping("/register/confirm")
-    public ResponseEntity<Response> confirmRegistration(@RequestBody UserConfirmationRequest request) {
+    public ResponseEntity<?> confirmRegistration(@RequestBody UserConfirmationRequest request) {
         String email = request.getEmail().toLowerCase();
 
         Optional<User> userOptional = userService.findByEmail(email);
@@ -93,7 +89,7 @@ public class UserController {
         boolean isTokenValid = userService.validateToken(request.getToken(), user);
         if (!isTokenValid) {
             sendVerificationEmail(request.getEmail());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
+            return Response.failed("Token expired. A new verification email has been sent.");
         }
 
         user.setPassword(request.getPassword());
@@ -102,7 +98,7 @@ public class UserController {
         user.setRole("user");
         userService.save(user);
 
-        return ResponseEntity.ok(new Response(true, "Registration successful"));
+        return Response.success("Registration successful");
     }
 
 
@@ -124,7 +120,7 @@ public class UserController {
     }
 
     @PostMapping("/reset-password/request")
-    public ResponseEntity<Response> requestResetPassword(@RequestBody Map<String,String> request){
+    public ResponseEntity<?> requestResetPassword(@RequestBody Map<String,String> request){
         String email = request.get("email");
 
         Optional<User> userOptional = userService.findByEmail(email);
@@ -136,18 +132,17 @@ public class UserController {
 
         if (user.isSocial()) {
             System.out.println("cannot reset password for social user");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new Response(false, "Cannot reset password for a social login account."));
+            return Response.failed(HttpStatus.FORBIDDEN.value(), "Cannot reset password for a social login account.");
         }
 
         String token = userService.generateToken(user);
         sendResetPasswordEmail(email, token);
 
-        return ResponseEntity.ok(new Response(true, "Password reset email sent"));
+        return Response.success("Password reset email sent");
     }
 
     @PostMapping("/reset-password/confirm")
-    public ResponseEntity<Response> resetPassword(@RequestBody Map<String, String> request){
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request){
         String email = request.get("email");
         String token = request.get("token");
         String newPassword = request.get("newPassword");
@@ -158,18 +153,16 @@ public class UserController {
         boolean isValidToken = userService.validateToken(token, user);
         if(!isValidToken){
             sendResetPasswordEmail(email, token);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
+            return Response.failed("Token expired. A new verification email has been sent");
         }
 
         if (user.isSocial()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new Response(false, "Cannot reset password for a social login account."));
+            return Response.failed(HttpStatus.FORBIDDEN.value(), "Cannot reset passwor for a social login account");
         }
 
         userService.resetPassword(email, newPassword);
 
-        return ResponseEntity.ok(new Response(true, "Password has been reset successfully"));
-
+        return Response.success("Password has been reset successfully");
     }
 
     private void sendResetPasswordEmail(String email, String token){
