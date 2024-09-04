@@ -26,6 +26,11 @@ public class GlobalExceptionHandler {
         return Response.failed(HttpStatus.BAD_REQUEST.value(), "Unable to process the request", ex.getMessage());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Response<String>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return Response.failed(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public final ResponseEntity<Response<String>> handleValidationExceptions(MethodArgumentNotValidException ex){
         String errorMessage = ex.getBindingResult().getAllErrors().stream()
