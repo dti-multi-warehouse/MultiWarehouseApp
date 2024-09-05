@@ -34,7 +34,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public GetCartResponseDto getCart(String sessionId) {
-        var cart = redisRepository.findById(sessionId).orElseThrow(() -> new EntityNotFoundException("Cart not found"));
+        var cart = redisRepository.findById(sessionId).orElseGet(() -> new Cart(sessionId, new HashMap<>(), 3000));
         var items = cart.getItems();
         var res = new GetCartResponseDto();
         items.forEach((k,v) -> {
