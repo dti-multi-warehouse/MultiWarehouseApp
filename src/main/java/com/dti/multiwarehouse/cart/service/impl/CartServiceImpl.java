@@ -6,6 +6,7 @@ import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.cart.dto.GetCartResponseDto;
 import com.dti.multiwarehouse.cart.repository.CartRedisRepository;
 import com.dti.multiwarehouse.cart.service.CartService;
+import com.dti.multiwarehouse.product.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,13 @@ import java.util.HashMap;
 @Service
 public class CartServiceImpl implements CartService {
     private final CartRedisRepository redisRepository;
+    private final ProductService productService;
 
     @Override
     public void addToCart(String sessionId, AddItemDto requestDto) {
+        if (!productService.isExist(requestDto.getProductId())) {
+            throw new EntityNotFoundException("Product with id " + requestDto.getProductId() + " not found");
+        }
         var cart = redisRepository.findById(sessionId)
                 .orElseGet(() -> new Cart(sessionId, new HashMap<>(), 3000));
         cart.addItem(requestDto.getProductId(), requestDto.getQuantity());

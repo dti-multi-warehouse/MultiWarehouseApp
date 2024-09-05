@@ -16,4 +16,5 @@ public interface ProductService {
     ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto, List<MultipartFile> images) throws Exception;
     ProductSummaryResponseDto updateProduct(Long id, UpdateProductRequestDto requestDto, List<MultipartFile> images) throws Exception;
     void deleteProduct(Long id);
+    boolean isExist(Long id);
 }
