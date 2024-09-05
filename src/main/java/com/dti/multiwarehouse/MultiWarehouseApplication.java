@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @EnableConfigurationProperties({CloudinaryConfigProperties.class, RsaKeyProperties.class})
 @SpringBootApplication
+@EnableCaching
 public class MultiWarehouseApplication {
 
     public static void main(String[] args) {

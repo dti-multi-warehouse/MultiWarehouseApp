@@ -182,4 +182,9 @@ public class ProductServiceImpl implements ProductService {
         }
 
     }
+
+    @Override
+    public boolean isExist(Long id) {
+        return productRepository.existsById(id);
+    }
 }
