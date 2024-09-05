@@ -4,6 +4,7 @@ import com.dti.multiwarehouse.cart.dao.Cart;
 import com.dti.multiwarehouse.cart.dto.AddItemDto;
 import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.cart.dto.GetCartResponseDto;
+import com.dti.multiwarehouse.cart.helper.CartMapper;
 import com.dti.multiwarehouse.cart.repository.CartRedisRepository;
 import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.product.service.ProductService;
@@ -11,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 
 @RequiredArgsConstructor
@@ -37,15 +39,21 @@ public class CartServiceImpl implements CartService {
         redisRepository.save(cart);
     }
 
-    @Override
     public GetCartResponseDto getCart(String sessionId) {
         var cart = redisRepository.findById(sessionId).orElseGet(() -> new Cart(sessionId, new HashMap<>(), 3000));
         var items = cart.getItems();
         var res = new GetCartResponseDto();
-        items.forEach((k,v) -> {
-            var cartItem = new CartItem(k, v);
-            res.addCartItem(cartItem);
-        });
+
+        BigDecimal totalPrice = items.entrySet().stream()
+                .map(entry -> {
+                    var productDetails = productService.getProductDetails(entry.getKey());
+                    var cartItem = CartMapper.toCartItem(productDetails, entry.getValue());
+                    res.addCartItem(cartItem);
+                    return cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        res.setTotalPrice(totalPrice);
         return res;
     }
 
