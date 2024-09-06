@@ -1,23 +1,29 @@
-package com.dti.multiwarehouse.warehouse.dao;
+package com.dti.multiwarehouse.stock.dao;
 
+import com.dti.multiwarehouse.product.dao.Product;
+import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
+import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
-public class Warehouse {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "warehouse_id_gen")
-    @SequenceGenerator(name = "warehouse_id_gen", sequenceName = "warehouse_id_seq", allocationSize = 1)
-    private Long id;
+public class Stock {
+
+    @EmbeddedId
+    private StockCompositeKey id;
+
+
+
+    private int stock;
 
     @CreationTimestamp
     @Column(name = "createdAt")

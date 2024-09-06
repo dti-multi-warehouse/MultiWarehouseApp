@@ -5,6 +5,7 @@ import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService
 import com.dti.multiwarehouse.config.TypeSense;
 import com.dti.multiwarehouse.exceptions.ApplicationException;
 import com.dti.multiwarehouse.helper.EntityUpdateUtil;
+import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
@@ -186,5 +187,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public boolean isExist(Long id) {
         return productRepository.existsById(id);
+    }
+
+    @Override
+    public Product findProductById(Long id) {
+        return productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
     }
 }
