@@ -54,44 +54,46 @@ public class StockServiceImpl implements StockService {
                 .status(StockMutStatus.AWAITING_CONFIRMATION)
                 .build();
         stockMutationRepository.save(stockMutation);
-        calculateStock(requestDto.getProductId(), requestDto.getWarehouseToId());
-        calculateStock(requestDto.getProductId(), requestDto.getWarehouseFromId());
+        calculateStock(requestDto.getProductId(), requestDto.getWarehouseToId(), requestDto.getWarehouseFromId());
     }
 
     @Override
     public void acceptStockMutation(Long stockMutationId) {
-        var stockMutation = stockMutationRepository
-                .findById(stockMutationId)
-                .orElseThrow(() -> new EntityNotFoundException("Stock mutation with id " + stockMutationId + " not found"));
-        stockMutation.setStatus(StockMutStatus.COMPLETED);
-        stockMutationRepository.save(stockMutation);
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId());
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseFrom().getId());
+        mutateStock(stockMutationId, StockMutStatus.COMPLETED);
     }
 
     @Override
     public void cancelStockMutation(Long stockMutationId) {
-        var stockMutation = stockMutationRepository
-                .findById(stockMutationId)
-                .orElseThrow(() -> new EntityNotFoundException("Stock mutation with id " + stockMutationId + " not found"));
-        stockMutation.setStatus(StockMutStatus.CANCELLED);
-        stockMutationRepository.save(stockMutation);
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId());
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseFrom().getId());
+        mutateStock(stockMutationId, StockMutStatus.CANCELLED);
     }
 
     @Override
     public void rejectStockMutation(Long stockMutationId) {
+        mutateStock(stockMutationId, StockMutStatus.REJECTED);
+    }
+
+    private void mutateStock(Long stockMutationId, StockMutStatus status) {
         var stockMutation = stockMutationRepository
                 .findById(stockMutationId)
                 .orElseThrow(() -> new EntityNotFoundException("Stock mutation with id " + stockMutationId + " not found"));
-        stockMutation.setStatus(StockMutStatus.REJECTED);
+        stockMutation.setStatus(status);
         stockMutationRepository.save(stockMutation);
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId());
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseFrom().getId());
+        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId(), stockMutation.getWarehouseFrom().getId());
     }
 
     private void calculateStock(Long productId, Long warehouseId) {
+        createStockIfNotExist(productId, warehouseId);
+        stockMutationRepository.calculateProductStock(productId);
+        stockMutationRepository.calculateWarehouseStock(productId, warehouseId);
+    }
+
+    private void calculateStock(Long productId, Long warehouseToId, Long warehouseFromId) {
+        createStockIfNotExist(productId, warehouseToId);
+        stockMutationRepository.calculateWarehouseStock(productId, warehouseToId);
+        stockMutationRepository.calculateWarehouseStock(productId, warehouseFromId);
+    }
+
+    private void createStockIfNotExist(Long productId, Long warehouseId) {
         var product = productService.findProductById(productId);
         var warehouse = warehouseService.findWarehouseById(warehouseId);
         var key = new StockCompositeKey();
@@ -102,7 +104,5 @@ public class StockServiceImpl implements StockService {
             var newStock = new Stock(key, 0);
             stockRepository.save(newStock);
         }
-        stockMutationRepository.calculateProductStock(productId);
-        stockMutationRepository.calculateWarehouseStock(productId, warehouseId);
     }
 }
