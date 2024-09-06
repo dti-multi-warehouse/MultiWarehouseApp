@@ -4,7 +4,6 @@ import com.dti.multiwarehouse.stock.dao.StockMutation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.query.Procedure;
 
 public interface StockMutationRepository extends JpaRepository<StockMutation, Long> {
     @Modifying
@@ -21,4 +20,20 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
                 """
     )
     void calculateProductStock(Long productId);
+
+    @Modifying
+    @Query(
+            value = """
+            UPDATE Stock s
+            SET s.stock = (
+                SELECT COALESCE(SUM(CASE WHEN m.warehouseTo.id = :warehouseToId THEN m.quantity ELSE 0 END), 0) -
+                       COALESCE(SUM(CASE WHEN m.warehouseFrom.id != :warehouseToId THEN m.quantity ELSE 0 END), 0)
+                FROM StockMutation m
+                WHERE m.product.id = :productId
+                AND (m.warehouseTo.id = :warehouseToId OR m.warehouseFrom.id != :warehouseToId)
+            )
+            WHERE s.id.warehouse.id = :warehouseToId
+            """
+    )
+    void calculateWarehouseStock(Long productId, Long warehouseToId);
 }

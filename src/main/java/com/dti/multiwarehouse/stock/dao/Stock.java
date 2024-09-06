@@ -21,8 +21,6 @@ public class Stock {
     @EmbeddedId
     private StockCompositeKey id;
 
-
-
     private int stock;
 
     @CreationTimestamp
@@ -35,4 +33,9 @@ public class Stock {
 
     @Column(name = "deletedAt")
     private Instant deletedAt;
+
+    public Stock(StockCompositeKey id, int stock) {
+        this.id = id;
+        this.stock = stock;
+    }
 }

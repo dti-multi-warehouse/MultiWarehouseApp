@@ -1,8 +1,10 @@
 package com.dti.multiwarehouse.stock.service.impl;
 
 import com.dti.multiwarehouse.product.service.ProductService;
+import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dao.StockMutation;
 import com.dti.multiwarehouse.stock.dao.enums.StockMutStatus;
+import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
@@ -34,7 +36,7 @@ public class StockServiceImpl implements StockService {
                 .status(StockMutStatus.COMPLETED)
                 .build();
         stockMutationRepository.save(stockMutation);
-        stockMutationRepository.calculateProductStock(requestDto.getProductId());
+        calculateStock(requestDto.getProductId(), requestDto.getWarehouseToId());
     }
 
     @Override
@@ -50,5 +52,20 @@ public class StockServiceImpl implements StockService {
     @Override
     public void rejectStockMutation() {
 
+    }
+
+    private void calculateStock(Long productId, Long warehouseId) {
+        var product = productService.findProductById(productId);
+        var warehouse = warehouseService.findWarehouseById(warehouseId);
+        var key = new StockCompositeKey();
+        key.setProduct(product);
+        key.setWarehouse(warehouse);
+        var stock = stockRepository.findById(key);
+        if (stock.isEmpty()) {
+            var newStock = new Stock(key, 0);
+            stockRepository.save(newStock);
+        }
+        stockMutationRepository.calculateProductStock(productId);
+        stockMutationRepository.calculateWarehouseStock(productId, warehouseId);
     }
 }
