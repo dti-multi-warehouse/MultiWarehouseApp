@@ -36,7 +36,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<?> displayProducts(
-            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "*") String query,
             @RequestParam(defaultValue = "") List<String> category,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int perPage) throws Exception {
