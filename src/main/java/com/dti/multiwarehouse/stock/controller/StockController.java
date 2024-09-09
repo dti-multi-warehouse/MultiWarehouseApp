@@ -3,6 +3,7 @@ package com.dti.multiwarehouse.stock.controller;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.service.StockService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +15,13 @@ public class StockController {
     private final StockService stockService;
 
     @PostMapping("/restock")
-    public ResponseEntity<?> restock(@RequestBody RestockRequestDto requestDto) {
+    public ResponseEntity<?> restock(@Valid @RequestBody RestockRequestDto requestDto) {
         stockService.restock(requestDto);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/mutation")
-    public ResponseEntity<?> requestMutation(@RequestBody RequestMutationRequestDto requestDto) {
+    public ResponseEntity<?> requestMutation(@Valid @RequestBody RequestMutationRequestDto requestDto) {
         stockService.requestStockMutation(requestDto);
         return ResponseEntity.ok().build();
     }
