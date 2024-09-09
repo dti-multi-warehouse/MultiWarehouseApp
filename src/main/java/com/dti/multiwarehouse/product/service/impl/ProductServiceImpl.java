@@ -9,6 +9,7 @@ import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
+import com.dti.multiwarehouse.product.dto.response.ProductGroupedSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import com.dti.multiwarehouse.product.helper.ProductMapper;
@@ -53,12 +54,24 @@ public class ProductServiceImpl implements ProductService {
                     .addFieldsItem(new Field().name("name").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("description").type(FieldTypes.STRING))
                     .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
-                    .addFieldsItem(new Field().name("category").type(FieldTypes.STRING))
+                    .addFieldsItem(new Field().name("category").type(FieldTypes.STRING).facet(true))
                     .addFieldsItem(new Field().name("sold").type(FieldTypes.INT32))
                     .addFieldsItem(new Field().name("thumbnail").type(FieldTypes.STRING))
                     .defaultSortingField("sold");
             CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
         }
+    }
+
+    @Override
+    public ProductGroupedSearchResponseDto displayFeaturedProducts() throws Exception {
+        var searchParameters = new SearchParameters()
+                .q("*")
+                .queryBy("name")
+                .groupBy("category")
+                .groupLimit(6);
+        var searchResult = typeSense.client().collections(PRODUCT_KEY).documents().search(searchParameters);
+        searchResult.getGroupedHits().forEach(System.out::println);
+        return new ProductGroupedSearchResponseDto(searchResult.getGroupedHits());
     }
 
     @Override

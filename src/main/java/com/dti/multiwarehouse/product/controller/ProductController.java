@@ -28,9 +28,15 @@ public class ProductController {
         return Response.success("Product successfully added", res);
     }
 
+    @GetMapping("/featured")
+    public ResponseEntity<?> getFeaturedProducts() throws Exception {
+        var res = productService.displayFeaturedProducts();
+        return Response.success("Products successfully retrieved", res);
+    }
+
     @GetMapping
     public ResponseEntity<?> displayProducts(
-            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "*") String query,
             @RequestParam(defaultValue = "") List<String> category,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int perPage) throws Exception {
