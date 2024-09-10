@@ -10,6 +10,7 @@ import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
+import com.dti.multiwarehouse.stock.service.StockService;
 import com.dti.multiwarehouse.user.service.UserService;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,6 +27,7 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
 
+    private final StockService stockService;
     private final CartService cartService;
     private final UserService userService;
     private final WarehouseService warehouseService;
@@ -59,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
                 .price(price)
                 .build();
         orderRepository.save(order);
+        stockService.processOrder(warehouse.getId(), cart.getCartItems());
         return null;
     }
 

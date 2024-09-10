@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.stock.service.impl;
 
+import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.exceptions.InsufficientStockException;
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
@@ -18,6 +19,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -76,37 +79,26 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public void processOrder(CreateOrderRequestDto createOrderRequestDto) {
-        var closestWarehouse = warehouseService.findWarehouseById(1L);
-        var items = createOrderRequestDto.getItems();
-        for (var item : items) {
-            checkStockAvailability(item.getProductId(), closestWarehouse, item.getQuantity());
-        }
-    }
-
-    private void checkStockAvailability(Long productId, Warehouse warehouse, int quantity) {
-        var product = productService.findProductById(productId);
-        if (product.getStock() < quantity) {
-            throw new InsufficientStockException("Insufficient stock for product: " + productId);
-        }
-        var stockOptional = stockRepository.findById(new StockCompositeKey(product, warehouse));
-        if (stockOptional.isEmpty()) {
-            autoMutateStock(productId, warehouse.getId(), quantity);
-        }
-        if (stockOptional.isPresent()) {
-            var stock = stockOptional.get();
-            if (stock.getStock() < quantity) {
-                autoMutateStock(productId, warehouse.getId(), quantity - stock.getStock());
+    public void processOrder(Long warehouseId, List<CartItem> cartItems) {
+        var closestWarehouse = warehouseService.findWarehouseById(warehouseId);
+        for (var item : cartItems) {
+            var product = productService.findProductById(item.getProductId());
+            var stockOptional = stockRepository.findById(new StockCompositeKey(product, closestWarehouse));
+            if (stockOptional.isEmpty()) {
+//                make an auto stock mutation
+                autoMutateStock(item.getProductId(), warehouseId, item.getQuantity());
+            } else {
+                var stock = stockOptional.get();
+                if (stock.getStock() < item.getQuantity()) {
+//                    make an auto stock mutation
+                    autoMutateStock(item.getProductId(), warehouseId, item.getQuantity() - stock.getStock());
+                }
             }
         }
     }
 
     private void autoMutateStock(Long productId, Long warehouseId, int quantity) {
-        int amount = 0;
-        int count = 0;
-        while (amount <= quantity) {
-            amount++;
-        }
+//        find the nearest warehouses from current warehouse
     }
 
     private void mutateStock(Long stockMutationId, StockMutStatus status) {
