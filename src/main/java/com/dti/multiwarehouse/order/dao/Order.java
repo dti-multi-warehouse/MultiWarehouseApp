@@ -21,6 +21,8 @@ import java.util.Set;
 @Table(name = "orders")
 public class Order {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_id_gen")
+    @SequenceGenerator(name = "order_id_gen", sequenceName = "order_id_seq")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

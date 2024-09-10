@@ -44,11 +44,15 @@ public class OrderServiceImpl implements OrderService {
             }
         });
 //        fetch user
+        var userOptional = userService.findByEmail("reiss@mail.com");
+        if (userOptional.isEmpty()) {
+            throw new ApplicationException("User not found");
+        }
 //        find and fetch warehouse
         var warehouse = warehouseService.findWarehouseById(1L);
         var price = cart.getTotalPrice(); // + shipping fees
         var order = Order.builder()
-                .user(null)
+                .user(userOptional.get())
                 .warehouse(warehouse)
                 .status(OrderStatus.AWAITING_PAYMENT)
                 .paymentProof(null)
@@ -75,7 +79,7 @@ public class OrderServiceImpl implements OrderService {
     public void cancelOrder(Long id) {
         updateOrderStatus(
                 id,
-                OrderStatus.COMPLETED,
+                OrderStatus.CANCELLED,
                 null,
                 List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED),
                 "Order can no longer be cancelled at this stage"
