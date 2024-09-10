@@ -1,13 +1,15 @@
 package com.dti.multiwarehouse.user.controller;
 
-import com.dti.multiwarehouse.exception.ResourceNotFoundException;
+import com.dti.multiwarehouse.exceptions.ApplicationException;
+import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.response.Response;
-import com.dti.multiwarehouse.user.dto.ClerkRegistrationRequest;
 import com.dti.multiwarehouse.user.dto.UserConfirmationRequest;
+import com.dti.multiwarehouse.user.dto.UserProfileDTO;
 import com.dti.multiwarehouse.user.dto.UserRegistrationRequest;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.repository.UserRepository;
 import com.dti.multiwarehouse.user.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +17,12 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -34,32 +34,60 @@ public class UserController {
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
 
-    @PostMapping("/register")
-    public ResponseEntity<Response> register(@RequestBody UserRegistrationRequest request) {
+    @PostMapping("/auth/register")
+    public ResponseEntity<?> register(@RequestBody UserRegistrationRequest request) {
         Optional<User> existingUser = userService.findByEmail(request.getEmail());
 
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             if (!user.isVerified()) {
                 sendVerificationEmail(request.getEmail());
-                return ResponseEntity.ok(new Response(true, "Email is already registered but not verified. Verification email resent."));
+                return Response.success("Email is already registered but not verified. Verification email resent.");
             } else {
-                throw new ResourceNotFoundException("Email is already in use and verified.");
+                throw new ApplicationException("Email is already in use and verified.");
             }
         }
 
         User user = new User();
         user.setEmail(request.getEmail());
         user.setVerified(false);
-        userService.save(user);
-
+        userService.saveUser(user);
         sendVerificationEmail(request.getEmail());
 
-        return ResponseEntity.ok(new Response(true, "Verification email sent"));
+        return Response.success("Verification email sent");
     }
 
-    @PostMapping("/save-email")
-    public ResponseEntity<String> saveUserEmail(@RequestBody UserRegistrationRequest request) {
+    @PostMapping("/auth/register/confirm")
+    public ResponseEntity<?> confirmRegistration(@RequestBody UserConfirmationRequest request) {
+        String email = request.getEmail().toLowerCase();
+
+        Optional<User> userOptional = userService.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new ApplicationException("User not found");
+        }
+
+        User user = userOptional.get();
+        if (user.isVerified()) {
+            throw new ApplicationException("User already verified");
+        }
+
+        boolean isTokenValid = userService.validateToken(request.getToken(), user);
+        if (!isTokenValid) {
+            sendVerificationEmail(request.getEmail());
+            return Response.failed("Token expired. A new verification email has been sent.");
+        }
+
+        user.setPassword(request.getPassword());
+        user.setVerified(true);
+        user.setSocial(false);
+        user.setRole("user");
+        userService.saveUser(user);
+
+        return Response.success("Registration successful");
+    }
+
+    @PostMapping("/auth/save-email")
+    public ResponseEntity<?> saveUserEmail(@RequestBody UserRegistrationRequest request) {
         String email = request.getEmail();
 
         if (email == null || email.isEmpty()) {
@@ -67,43 +95,74 @@ public class UserController {
         }
 
         try {
-            User user = new User();
             System.out.println("Saving email: " + email);
             userService.saveEmail(email);
             return ResponseEntity.ok("Email saved successfully. Verification email sent.");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already registered as a regular user.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save email");
         }
     }
 
-    @PostMapping("/register/confirm")
-    public ResponseEntity<Response> confirmRegistration(@RequestBody UserConfirmationRequest request) {
-        String email = request.getEmail().toLowerCase();
-
-        Optional<User> userOptional = userService.findByEmail(email);
-        if (userOptional.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+    @PostMapping("/auth/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestBody Map<String, String> request) {
+        String email = request.get("email").toLowerCase();
+        Optional<User> existingUser = userService.findByEmail(email);
+        if (existingUser.isPresent()) {
+            return ResponseEntity.ok(Map.of("exists", true));
         }
 
-        User user = userOptional.get();
-        if (user.isVerified()) {
-            throw new ResourceNotFoundException("User already verified");
-        }
-
-        boolean isTokenValid = userService.validateToken(request.getToken(), user);
-        if (!isTokenValid) {
-            sendVerificationEmail(request.getEmail());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
-        }
-
-        user.setPassword(request.getPassword());
-        user.setVerified(true);
-        user.setSocial(false);
-        user.setRole("user");
-        userService.save(user);
-
-        return ResponseEntity.ok(new Response(true, "Registration successful"));
+        return ResponseEntity.ok(Map.of("exists", false));
     }
+
+    @PutMapping("/updateProfile")
+    public ResponseEntity<?> updateUserProfile(
+            @RequestParam("userId") Long userId,
+            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar,
+            @RequestParam(value = "password", required = false) String password,
+            @RequestParam(value = "email", required = false) String email) {
+
+        try {
+            userService.updateUserProfile(userId, username, avatar, password, email);
+            return ResponseEntity.ok("Profile updated. Please verify your new email if it was changed.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to update profile: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(@RequestParam("userId") Long userId) {
+        try {
+            UserProfileDTO userProfile = userService.getProfile(userId);
+            return ResponseEntity.ok(userProfile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to retrieve profile: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/auth/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token, HttpSession session) {
+        try {
+            userService.verifyEmail(token);
+            String redirectUrl = session.getAttribute("user") != null ? "http://localhost:3000/my-profile" : "http://localhost:3000";
+            return ResponseEntity.ok().header("Location", redirectUrl).build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Verification failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/auth/resend-verification-email")
+    public ResponseEntity<?> resendVerificationEmail(@RequestParam("email") String email) {
+        try {
+            userService.resendVerificationEmail(email);
+            return ResponseEntity.ok("Verification email has been resent.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to resend verification email: " + e.getMessage());
+        }
+    }
+
 
 
     private void sendVerificationEmail(String email) {
@@ -113,7 +172,6 @@ public class UserController {
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
         String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + encodedToken;
-
         System.out.println("verification link: "+verificationLink);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -123,31 +181,27 @@ public class UserController {
         mailSender.send(mailMessage);
     }
 
-    @PostMapping("/reset-password/request")
-    public ResponseEntity<Response> requestResetPassword(@RequestBody Map<String,String> request){
+    @PostMapping("/auth/reset-password/request")
+    public ResponseEntity<?> requestResetPassword(@RequestBody Map<String,String> request){
         String email = request.get("email");
 
         Optional<User> userOptional = userService.findByEmail(email);
         if(userOptional.isEmpty()){
-            throw  new ResourceNotFoundException("User not found with this email address.");
+            throw new ApplicationException("User not found with this email address.");
         }
 
         User user = userOptional.get();
-
         if (user.isSocial()) {
-            System.out.println("cannot reset password for social user");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new Response(false, "Cannot reset password for a social login account."));
+            return Response.failed("Cannot reset password for a social login account.");
         }
 
         String token = userService.generateToken(user);
         sendResetPasswordEmail(email, token);
-
-        return ResponseEntity.ok(new Response(true, "Password reset email sent"));
+        return Response.success("Password reset email sent");
     }
 
-    @PostMapping("/reset-password/confirm")
-    public ResponseEntity<Response> resetPassword(@RequestBody Map<String, String> request){
+    @PostMapping("/auth/reset-password/confirm")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request){
         String email = request.get("email");
         String token = request.get("token");
         String newPassword = request.get("newPassword");
@@ -158,18 +212,15 @@ public class UserController {
         boolean isValidToken = userService.validateToken(token, user);
         if(!isValidToken){
             sendResetPasswordEmail(email, token);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false, "Token expired. A new verification email has been sent."));
+            return Response.failed("Token expired. A new verification email has been sent.");
         }
 
         if (user.isSocial()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new Response(false, "Cannot reset password for a social login account."));
+            return Response.failed("Cannot reset password for a social login account.");
         }
 
         userService.resetPassword(email, newPassword);
-
-        return ResponseEntity.ok(new Response(true, "Password has been reset successfully"));
-
+        return Response.success("Password has been reset successfully");
     }
 
     private void sendResetPasswordEmail(String email, String token){
@@ -177,7 +228,6 @@ public class UserController {
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
         String resetLink = "http://localhost:3000/reset-password/confirmation?email="+encodedEmail+"&token="+encodedToken;
-
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 
         mailMessage.setTo(email);
