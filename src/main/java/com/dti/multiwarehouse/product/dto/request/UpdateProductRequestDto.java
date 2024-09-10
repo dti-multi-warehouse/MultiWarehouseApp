@@ -20,7 +20,7 @@ public class UpdateProductRequestDto {
     private String description;
 
     @Positive
-    private BigDecimal price;
+    private int price;
 
     @Positive
     private Long categoryId;

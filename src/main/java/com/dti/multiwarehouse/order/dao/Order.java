@@ -18,6 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "orders")
 public class Order {
     @Id
     private Long id;
@@ -31,7 +32,7 @@ public class Order {
     private Warehouse warehouse;
 
     @Column(name = "price", nullable = false)
-    private BigDecimal price;
+    private int price;
 
     @Column(name = "payment_proof")
     private String paymentProof;

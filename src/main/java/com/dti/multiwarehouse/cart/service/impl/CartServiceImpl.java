@@ -44,14 +44,14 @@ public class CartServiceImpl implements CartService {
         var items = cart.getItems();
         var res = new GetCartResponseDto();
 
-        BigDecimal totalPrice = items.entrySet().stream()
-                .map(entry -> {
+        int totalPrice = items.entrySet().stream()
+                .mapToInt(entry -> {
                     var productDetails = productService.getProductDetails(entry.getKey());
                     var cartItem = CartMapper.toCartItem(productDetails, entry.getValue());
                     res.addCartItem(cartItem);
-                    return cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    return cartItem.getPrice() * cartItem.getQuantity();
                 })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .sum();
 
         res.setTotalPrice(totalPrice);
         return res;
