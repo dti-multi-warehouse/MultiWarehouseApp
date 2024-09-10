@@ -32,7 +32,7 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
                 FROM StockMutation m
                 WHERE m.product.id = :productId
             )
-            WHERE s.id.warehouse.id = :warehouseId
+            WHERE s.id.warehouse.id = :warehouseId and s.id.product.id = :productId
             """
     )
     void calculateWarehouseStock(@Param("productId") Long productId,@Param("warehouseId") Long warehouseId);
