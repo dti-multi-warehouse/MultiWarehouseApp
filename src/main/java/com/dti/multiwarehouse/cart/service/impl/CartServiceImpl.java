@@ -39,6 +39,7 @@ public class CartServiceImpl implements CartService {
         redisRepository.save(cart);
     }
 
+    @Override
     public GetCartResponseDto getCart(String sessionId) {
         var cart = redisRepository.findById(sessionId).orElseGet(() -> new Cart(sessionId, new HashMap<>(), 3000));
         var items = cart.getItems();
