@@ -10,30 +10,47 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
     @Modifying
     @Query(
             value = """
-                UPDATE Product p
-                SET p.stock = (
-                    SELECT COALESCE(SUM(m.quantity), 0)
-                    FROM StockMutation m
-                    WHERE m.product.id = p.id
-                    AND m.warehouseFrom IS NULL
+                update product
+                set stock = (
+                SELECT
+                    (
+                        SELECT
+                            COALESCE(SUM(m.quantity), 0)
+                        FROM stock_mutation AS m
+                        WHERE m.product_id = :productId
+                    ) - (
+                        SELECT sum(case when o.status != 'CANCELLED' then i.quantity else 0 end)
+                        FROM order_item AS i
+                        JOIN orders AS o ON i.order_id = o.id
+                        WHERE i.product_id = :productId
+                    )
                 )
-                WHERE p.id = :productId
-                """
+                where product.id = :productId
+                """, nativeQuery = true
     )
-    void calculateProductStock(Long productId);
+    void calculateProductStock(@Param("productId") Long productId);
 
     @Modifying
     @Query(
             value = """
-            UPDATE Stock s
-            SET s.stock = (
-                SELECT COALESCE(SUM(CASE WHEN m.warehouseTo.id = :warehouseId AND m.status = 'COMPLETED' THEN m.quantity ELSE 0 END), 0) -
-                       COALESCE(SUM(CASE WHEN m.warehouseFrom.id = :warehouseId AND (m.status = 'AWAITING_CONFIRMATION' OR m.status = 'COMPLETED') THEN m.quantity ELSE 0 END), 0)
-                FROM StockMutation m
-                WHERE m.product.id = :productId
-            )
-            WHERE s.id.warehouse.id = :warehouseId and s.id.product.id = :productId
-            """
+                update stock
+                set stock = (
+                SELECT
+                    (
+                        SELECT
+                            SUM(CASE WHEN m.warehouse_to_id = 1 AND m.status = 'COMPLETED' THEN m.quantity ELSE 0 END) -
+                            SUM(CASE WHEN m.warehouse_from_id = 1 AND (m.status = 'AWAITING_CONFIRMATION' OR m.status = 'COMPLETED') THEN m.quantity ELSE 0 END)
+                        FROM stock_mutation AS m
+                        WHERE m.product_id = :productId
+                    ) - (
+                        SELECT sum(case when o.status != 'CANCELLED' then i.quantity else 0 end)
+                        FROM order_item AS i
+                        JOIN orders AS o ON i.order_id = o.id
+                        WHERE i.product_id = :productId AND o.warehouse_id = :warehouseId
+                    )
+                )
+                where stock.warehouse_id = :warehouseId AND stock.product_id = :productId;
+            """, nativeQuery = true
     )
     void calculateWarehouseStock(@Param("productId") Long productId,@Param("warehouseId") Long warehouseId);
 }
