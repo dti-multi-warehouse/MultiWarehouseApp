@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface OrderService {
-    CreateOrderResponseDto createOrder(String sessionId, CreateOrderRequestDto requestDto) throws MidtransError;
+    CreateOrderResponseDto createOrder(String sessionId, String email, CreateOrderRequestDto requestDto) throws MidtransError;
     void uploadPaymentProof(Long id, MultipartFile image);
     void cancelOrder(Long id);
     void confirmPayment(Long id);

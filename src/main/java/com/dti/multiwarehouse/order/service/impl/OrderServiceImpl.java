@@ -46,13 +46,13 @@ public class OrderServiceImpl implements OrderService {
     private final MidtransCoreApi midtransCoreApi;
 
     @Override
-    public CreateOrderResponseDto createOrder(String sessionId, CreateOrderRequestDto requestDto) throws MidtransError {
+    public CreateOrderResponseDto createOrder(String sessionId, String email, CreateOrderRequestDto requestDto) throws MidtransError {
         var cart = cartService.getCart(sessionId);
         if (cart.getCartItems().isEmpty()) {
             throw new EntityNotFoundException("Cart is empty");
         }
 //        fetch user
-        var userOptional = userService.findByEmail("reiss@mail.com");
+        var userOptional = userService.findByEmail(email);
 
         if (userOptional.isEmpty()) {
             throw new ApplicationException("User not found");

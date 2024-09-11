@@ -6,6 +6,8 @@ import com.dti.multiwarehouse.response.Response;
 import com.midtrans.httpclient.error.MidtransError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,8 +18,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequestDto requestDto) throws MidtransError {
-        var res = orderService.createOrder("ehehehe", requestDto);
+    public ResponseEntity<?> createOrder(@AuthenticationPrincipal Jwt jwt, @RequestBody CreateOrderRequestDto requestDto) throws MidtransError {
+        var res = orderService.createOrder(jwt.getTokenValue(), jwt.getSubject(), requestDto);
         return Response.success("Successfully placed order", res);
     }
 

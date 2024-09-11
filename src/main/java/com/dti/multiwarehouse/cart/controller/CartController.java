@@ -5,6 +5,10 @@ import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.response.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -14,32 +18,32 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
-    public ResponseEntity<?> getCartItems() {
-        var res = cartService.getCart("ehehehe");
+    public ResponseEntity<?> getCartItems(@AuthenticationPrincipal Jwt jwt) {
+        var res = cartService.getCart(jwt.getTokenValue());
         return Response.success("Cart retrieved successfully", res);
     }
 
     @PostMapping
-    public ResponseEntity<?> addItemToCart(@RequestBody AddItemDto addItemDto) {
-        cartService.addToCart("ehehehe", addItemDto);
+    public ResponseEntity<?> addItemToCart(@AuthenticationPrincipal Jwt jwt, @RequestBody AddItemDto addItemDto) {
+        cartService.addToCart(jwt.getTokenValue(), addItemDto);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/increment/{id}")
-    public ResponseEntity<?> incrementItem(@PathVariable Long id) {
-        cartService.incrementQuantity("ehehehe", id);
+    public ResponseEntity<?> incrementItem(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        cartService.incrementQuantity(jwt.getTokenValue(), id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/decrement/{id}")
-    public ResponseEntity<?> decrementItem(@PathVariable Long id) {
-        cartService.decrementQuantity("ehehehe", id);
+    public ResponseEntity<?> decrementItem(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        cartService.decrementQuantity(jwt.getTokenValue(), id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> removeItemFromCart(@PathVariable Long id) {
-        cartService.removeFromCart("ehehehe", id);
+    public ResponseEntity<?> removeItemFromCart(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        cartService.removeFromCart(jwt.getTokenValue(), id);
         return ResponseEntity.ok().build();
     }
 }
