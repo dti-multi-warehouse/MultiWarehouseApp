@@ -1,7 +1,6 @@
-package com.dti.multiwarehouse.product.dao;
+package com.dti.multiwarehouse.warehouse.dao;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,16 +12,12 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "category")
-public class Category {
+public class Warehouse {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_id_gen")
-    @SequenceGenerator(name = "category_id_gen", sequenceName = "category_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "warehouse_id_gen")
+    @SequenceGenerator(name = "warehouse_id_gen", sequenceName = "warehouse_id_seq", allocationSize = 1)
     private Long id;
-
-    private String name;
 
     @CreationTimestamp
     @Column(name = "createdAt")
