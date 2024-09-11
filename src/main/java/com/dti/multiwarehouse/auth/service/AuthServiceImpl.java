@@ -1,6 +1,6 @@
 package com.dti.multiwarehouse.auth.service;
 
-import com.dti.multiwarehouse.auth.dto.ClerkLoginRequest;
+import com.dti.multiwarehouse.auth.dto.SocialLoginRequest;
 import com.dti.multiwarehouse.auth.dto.LoginResponseDto;
 import com.dti.multiwarehouse.auth.helper.Claims;
 import com.dti.multiwarehouse.auth.repository.AuthRedisRepository;
@@ -39,7 +39,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponseDto generateToken(Authentication authentication) {
         logger.debug("Generating token for user: {}", authentication.getName());
-        long userId = userService.findByEmail(authentication.getName()).get().getId();
+        Optional<User> userOptional = userService.findByEmail(authentication.getName());
+
+        // Check if the user exists
+        if (userOptional.isEmpty()) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
+        User user = userOptional.get();
+
+        // Generate token only if the user is social or non-social based on the logic
+        long userId = user.getId();
         Instant now = Instant.now();
         String scope = authentication.getAuthorities()
                 .stream()
@@ -65,6 +75,8 @@ public class AuthServiceImpl implements AuthService {
                 .subject(authentication.getName())
                 .claim("scope", scope)
                 .claim("id", userId)
+                .claim("role", user.getRole())
+                .claim("is_social", user.isSocial())
                 .build();
 
         var jwt = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
@@ -78,6 +90,23 @@ public class AuthServiceImpl implements AuthService {
         logger.info("JWT Token generated and saved for user: {}", authentication.getName());
         response.setAccessToken(jwt);
         return response;
+    }
+    @Override
+    public String generateTokenForUser(User user) {
+        Instant now = Instant.now();
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plus(10, ChronoUnit.HOURS))
+                .subject(user.getEmail())
+                .claim("userId", user.getId())
+                .claim("email", user.getEmail())
+                .claim("role", user.getRole())
+                .claim("is_social", user.isSocial())
+                .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
     @Override
@@ -96,7 +125,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    public boolean authenticateClerk(ClerkLoginRequest request) {
+    public boolean authenticateClerk(SocialLoginRequest request) {
         Optional<User> user = userRepository.findByEmail(request.getEmail());
         if (user != null) {
             return true;
