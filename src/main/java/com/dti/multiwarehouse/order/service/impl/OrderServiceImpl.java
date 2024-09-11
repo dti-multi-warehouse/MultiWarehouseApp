@@ -7,20 +7,25 @@ import com.dti.multiwarehouse.exceptions.InsufficientStockException;
 import com.dti.multiwarehouse.order.dao.Order;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
+import com.dti.multiwarehouse.order.dto.request.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
+import com.dti.multiwarehouse.order.helper.OrderMapper;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
 import com.dti.multiwarehouse.stock.service.StockService;
 import com.dti.multiwarehouse.user.service.UserService;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
+import com.midtrans.httpclient.error.MidtransError;
+import com.midtrans.service.MidtransCoreApi;
+import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -33,8 +38,11 @@ public class OrderServiceImpl implements OrderService {
     private final WarehouseService warehouseService;
     private final CloudImageStorageService cloudImageStorageService;
 
+    @Resource
+    private final MidtransCoreApi midtransCoreApi;
+
     @Override
-    public CreateOrderResponseDto createOrder(String sessionId) {
+    public CreateOrderResponseDto createOrder(String sessionId, CreateOrderRequestDto requestDto) throws MidtransError {
         var cart = cartService.getCart(sessionId);
         if (cart.getCartItems().isEmpty()) {
             throw new EntityNotFoundException("Cart is empty");
@@ -60,8 +68,29 @@ public class OrderServiceImpl implements OrderService {
                 .paymentProof(null)
                 .price(price)
                 .build();
-        orderRepository.save(order);
+        var savedOrder = orderRepository.save(order);
         stockService.processOrder(warehouse.getId(), cart.getCartItems());
+        cartService.deleteCart(sessionId);
+        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
+            UUID idRand = UUID.randomUUID();
+
+            Map<String, Object> params = new HashMap<>();
+            Map<String, String> transactionDetails = new HashMap<>();
+            transactionDetails.put("order_id", String.valueOf(idRand));
+            transactionDetails.put("gross_amount", String.valueOf(price));
+
+            Map<String, String> bankTransfer = new HashMap<>();
+            if (requestDto.getBankTransfer() == null) {
+                bankTransfer.put("bank", "bca");
+            } else {
+                bankTransfer.put("bank", requestDto.getBankTransfer().name().toLowerCase());
+            }
+            params.put("payment_type", "bank_transfer");
+            params.put("transaction_details", transactionDetails);
+            params.put("bank_transfer", bankTransfer);
+            var res = midtransCoreApi.chargeTransaction(params);
+            return OrderMapper.toCreateOrderResponseDto(res);
+        }
         return null;
     }
 

@@ -1,6 +1,9 @@
 package com.dti.multiwarehouse.order.controller;
 
+import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.service.OrderService;
+import com.dti.multiwarehouse.response.Response;
+import com.midtrans.httpclient.error.MidtransError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +16,9 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<?> createOrder() {
-        var res = orderService.createOrder("ehehehe");
-        return ResponseEntity.ok(res);
+    public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequestDto requestDto) throws MidtransError {
+        var res = orderService.createOrder("ehehehe", requestDto);
+        return Response.success("Successfully placed order", res);
     }
 
     @PostMapping("/payment/{id}")
@@ -47,4 +50,5 @@ public class OrderController {
         orderService.finalizeOrder(id);
         return ResponseEntity.ok().build();
     }
+
 }

@@ -1,5 +1,7 @@
 package com.dti.multiwarehouse.order.dto.request;
 
+import com.dti.multiwarehouse.order.dto.request.enums.BankTransfer;
+import com.dti.multiwarehouse.order.dto.request.enums.PaymentMethod;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,7 +14,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateOrderRequestDto {
-    @NotNull
-    @Valid
-    private Set<CreateOrderItemRequestDto> items;
+    private PaymentMethod paymentMethod;
+    private BankTransfer bankTransfer;
 }

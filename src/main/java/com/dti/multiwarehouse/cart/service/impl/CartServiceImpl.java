@@ -73,4 +73,8 @@ public class CartServiceImpl implements CartService {
         redisRepository.save(cart);
     }
 
+    @Override
+    public void deleteCart(String sessionId) {
+        redisRepository.deleteById(sessionId);
+    }
 }
