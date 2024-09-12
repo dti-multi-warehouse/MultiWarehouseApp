@@ -1,8 +1,6 @@
 package com.dti.multiwarehouse.stock.service.impl;
 
 import com.dti.multiwarehouse.cart.dto.CartItem;
-import com.dti.multiwarehouse.exceptions.InsufficientStockException;
-import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dao.StockMutation;
@@ -13,14 +11,15 @@ import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
 import com.dti.multiwarehouse.stock.service.StockService;
-import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -78,27 +77,41 @@ public class StockServiceImpl implements StockService {
         mutateStock(stockMutationId, StockMutStatus.REJECTED);
     }
 
-    @Override
     public void processOrder(Long warehouseId, List<CartItem> cartItems) {
         var closestWarehouse = warehouseService.findWarehouseById(warehouseId);
+        Map<Long, Integer> productQuantities = new HashMap<>();
+
         for (var item : cartItems) {
-            var product = productService.findProductById(item.getProductId());
+            productQuantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+        }
+
+        for (Map.Entry<Long, Integer> entry : productQuantities.entrySet()) {
+            var productId = entry.getKey();
+            var requiredQuantity = entry.getValue();
+
+            var product = productService.findProductById(productId);
             var stockOptional = stockRepository.findById(new StockCompositeKey(product, closestWarehouse));
-            if (stockOptional.isEmpty()) {
-//                make an auto stock mutation
-                autoMutateStock(item.getProductId(), warehouseId, item.getQuantity());
-            } else {
-                var stock = stockOptional.get();
-                if (stock.getStock() < item.getQuantity()) {
-//                    make an auto stock mutation
-                    autoMutateStock(item.getProductId(), warehouseId, item.getQuantity() - stock.getStock());
+
+            int quantityToMutate = stockOptional
+                    .map(stock -> Math.max(0, requiredQuantity - stock.getStock()))
+                    .orElse(requiredQuantity);
+
+            if (quantityToMutate > 0) {
+                var isFulfilled = autoMutateStock(productId, warehouseId, quantityToMutate);
+                if (!isFulfilled) {
+                    greedyAutoMutateStock(productId, warehouseId, quantityToMutate);
                 }
             }
         }
     }
 
-    private void autoMutateStock(Long productId, Long warehouseId, int quantity) {
+    private boolean autoMutateStock(Long productId, Long warehouseId, int quantity) {
 //        find the nearest warehouses from current warehouse
+        return false;
+    }
+
+    private void greedyAutoMutateStock(Long productId, Long warehouseId, int quantity) {
+
     }
 
     private void mutateStock(Long stockMutationId, StockMutStatus status) {
