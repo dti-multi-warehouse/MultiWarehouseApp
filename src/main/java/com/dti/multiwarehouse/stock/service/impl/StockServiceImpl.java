@@ -106,12 +106,18 @@ public class StockServiceImpl implements StockService {
     }
 
     private boolean autoMutateStock(Long productId, Long warehouseId, int quantity) {
-//        find the nearest warehouses from current warehouse
+//        find the nearest warehouses from current warehouse -> List of warehouses?
+//        check their stock
+//        if they have enough, make the mutation
         return false;
     }
 
     private void greedyAutoMutateStock(Long productId, Long warehouseId, int quantity) {
-
+//        find the nearest warehouses from current warehouse -> List of warehouses?
+//        Create an accumulator for the quantities
+//        check their stock
+//        if they have any, make the mutation
+//        continue until accumulator == quantity
     }
 
     private void mutateStock(Long stockMutationId, StockMutStatus status) {
