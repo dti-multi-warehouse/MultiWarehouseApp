@@ -63,9 +63,9 @@ public class OrderServiceImpl implements OrderService {
         stockService.processOrder(warehouse.getId(), cart.getCartItems());
         cartService.deleteCart(sessionId);
 
-        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
-            return processMidtransPayment(price, requestDto.getBankTransfer());
-        }
+//        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
+//            return processMidtransPayment(price, requestDto.getBankTransfer());
+//        }
         return null;
     }
 
