@@ -22,7 +22,7 @@ public class AddProductRequestDto {
 
     @NotNull
     @Positive
-    private BigDecimal price;
+    private int price;
 
     @NotNull
     @Positive

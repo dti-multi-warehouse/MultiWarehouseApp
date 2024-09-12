@@ -15,7 +15,7 @@ import java.util.Set;
 public class CartItem {
     private Long productId;
     private String name;
-    private BigDecimal price;
+    private int price;
     private int stock;
     private String category;
     private String imageUrl;
