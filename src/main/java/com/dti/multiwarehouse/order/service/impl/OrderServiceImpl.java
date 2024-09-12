@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.order.service.impl;
 
+import com.dti.multiwarehouse.cart.dto.GetCartResponseDto;
 import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import com.dti.multiwarehouse.exceptions.ApplicationException;
@@ -9,13 +10,16 @@ import com.dti.multiwarehouse.order.dao.OrderItem;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
+import com.dti.multiwarehouse.order.dto.request.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
 import com.dti.multiwarehouse.order.helper.OrderMapper;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.stock.service.StockService;
+import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.service.UserService;
+import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import com.midtrans.httpclient.error.MidtransError;
 import com.midtrans.service.MidtransCoreApi;
@@ -49,63 +53,19 @@ public class OrderServiceImpl implements OrderService {
         if (cart.getCartItems().isEmpty()) {
             throw new EntityNotFoundException("Cart is empty");
         }
-//        fetch user
-        var userOptional = userService.findByEmail(email);
-
-        if (userOptional.isEmpty()) {
-            throw new ApplicationException("User not found");
-        }
-
-//        find and fetch warehouse
+        var user = userService.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var warehouse = warehouseService.findWarehouseById(1L);
-
         var price = cart.getTotalPrice(); // + shipping fees
-        var order = Order.builder()
-                .user(userOptional.get())
-                .warehouse(warehouse)
-                .status(OrderStatus.AWAITING_PAYMENT)
-                .paymentProof(null)
-                .price(price)
-                .paymentMethod(requestDto.getPaymentMethod())
-                .orderItems(new HashSet<>())
-                .build();
-
-//        check whether the stock is sufficient or not
-        cart.getCartItems().forEach(item -> {
-            if (item.getStock() < item.getQuantity()) {
-                throw new InsufficientStockException("Insufficient stock for: " + item.getName());
-            }
-            var product = productService.findProductById(item.getProductId());
-            var orderItem = new OrderItem(product, item.getQuantity());
-            order.addOrderItem(orderItem);
-        });
-
-
-
+        var order = createNewOrder(user, warehouse, price, requestDto.getPaymentMethod(), cart);
 
         orderRepository.save(order);
         stockService.processOrder(warehouse.getId(), cart.getCartItems());
         cartService.deleteCart(sessionId);
-        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
-            UUID idRand = UUID.randomUUID();
 
-            Map<String, Object> params = new HashMap<>();
-            Map<String, String> transactionDetails = new HashMap<>();
-            transactionDetails.put("order_id", String.valueOf(idRand));
-            transactionDetails.put("gross_amount", String.valueOf(price));
-
-            Map<String, String> bankTransfer = new HashMap<>();
-            if (requestDto.getBankTransfer() == null) {
-                bankTransfer.put("bank", "bca");
-            } else {
-                bankTransfer.put("bank", requestDto.getBankTransfer().name().toLowerCase());
-            }
-            params.put("payment_type", "bank_transfer");
-            params.put("transaction_details", transactionDetails);
-            params.put("bank_transfer", bankTransfer);
-            var res = midtransCoreApi.chargeTransaction(params);
-            return OrderMapper.toCreateOrderResponseDto(res);
-        }
+//        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
+//            return processMidtransPayment(price, requestDto.getBankTransfer());
+//        }
         return null;
     }
 
@@ -166,15 +126,51 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart) {
+        var order = Order.builder()
+                .user(user)
+                .warehouse(warehouse)
+                .status(OrderStatus.AWAITING_CONFIRMATION)
+                .paymentMethod(paymentMethod)
+                .price(price)
+                .orderItems(new HashSet<>())
+                .build();
+
+        for (var item : cart.getCartItems()) {
+            if (item.getStock() < item.getQuantity()) {
+                throw new InsufficientStockException("Insufficient stock for: " + item.getName());
+            }
+            var product = productService.findProductById(item.getProductId());
+            var orderItem = new OrderItem(product, item.getQuantity());
+            order.addOrderItem(orderItem);
+        }
+        return order;
+    }
+
+    private CreateOrderResponseDto processMidtransPayment(int price, BankTransfer bankTransfer) throws MidtransError {
+        var idRand = UUID.randomUUID();
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("payment_type", "bank_transfer");
+        params.put("transaction_details", Map.of(
+                "order_id", idRand.toString(),
+                "gross_amount", price
+        ));
+        params.put("bank_transfer", Map.of(
+                "bank", Optional.ofNullable(bankTransfer)
+                        .map(bt -> bt.name().toLowerCase())
+                        .orElse("bca")
+        ));
+        return OrderMapper.toCreateOrderResponseDto(midtransCoreApi.chargeTransaction(params));
+    }
+
     private void updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
         if (invalidStatuses != null && invalidStatuses.contains(order.getStatus())) {
-            System.out.println(order.getStatus());
             throw new ApplicationException(errorMessage);
         }
 
         if (expectedStatus != null && order.getStatus() != expectedStatus) {
-            System.out.println(order.getStatus());
             throw new ApplicationException(errorMessage);
         }
         order.setStatus(status);

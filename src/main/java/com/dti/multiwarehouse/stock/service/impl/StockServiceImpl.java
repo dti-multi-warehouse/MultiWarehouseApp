@@ -1,8 +1,6 @@
 package com.dti.multiwarehouse.stock.service.impl;
 
 import com.dti.multiwarehouse.cart.dto.CartItem;
-import com.dti.multiwarehouse.exceptions.InsufficientStockException;
-import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dao.StockMutation;
@@ -20,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -44,7 +44,8 @@ public class StockServiceImpl implements StockService {
                 .status(StockMutStatus.COMPLETED)
                 .build();
         stockMutationRepository.save(stockMutation);
-        calculateStock(requestDto.getProductId(), requestDto.getWarehouseToId());
+        stockMutationRepository.calculateProductStock(requestDto.getProductId());
+        calculateWarehouseStock(requestDto.getProductId(), requestDto.getWarehouseToId());
     }
 
     @Override
@@ -60,7 +61,8 @@ public class StockServiceImpl implements StockService {
                 .status(StockMutStatus.AWAITING_CONFIRMATION)
                 .build();
         stockMutationRepository.save(stockMutation);
-        calculateStock(requestDto.getProductId(), requestDto.getWarehouseToId(), requestDto.getWarehouseFromId());
+       calculateWarehouseStock(requestDto.getProductId(), requestDto.getWarehouseToId());
+       calculateWarehouseStock(requestDto.getProductId(), requestDto.getWarehouseFromId());
     }
 
     @Override
@@ -78,27 +80,86 @@ public class StockServiceImpl implements StockService {
         mutateStock(stockMutationId, StockMutStatus.REJECTED);
     }
 
-    @Override
     public void processOrder(Long warehouseId, List<CartItem> cartItems) {
         var closestWarehouse = warehouseService.findWarehouseById(warehouseId);
+        Map<Long, Integer> productQuantities = new HashMap<>();
+
+//        other warehouses, assume that they are sorted by closest distance
+        var warehouses = warehouseService.getAllWarehouses();
+        warehouses.removeFirst();
+
         for (var item : cartItems) {
-            var product = productService.findProductById(item.getProductId());
+            productQuantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+        }
+
+        for (Map.Entry<Long, Integer> entry : productQuantities.entrySet()) {
+            var productId = entry.getKey();
+            var requiredQuantity = entry.getValue();
+
+            var product = productService.findProductById(productId);
             var stockOptional = stockRepository.findById(new StockCompositeKey(product, closestWarehouse));
-            if (stockOptional.isEmpty()) {
-//                make an auto stock mutation
-                autoMutateStock(item.getProductId(), warehouseId, item.getQuantity());
-            } else {
-                var stock = stockOptional.get();
-                if (stock.getStock() < item.getQuantity()) {
-//                    make an auto stock mutation
-                    autoMutateStock(item.getProductId(), warehouseId, item.getQuantity() - stock.getStock());
+
+            int quantityToMutate = stockOptional
+                    .map(stock -> Math.max(0, requiredQuantity - stock.getStock()))
+                    .orElse(requiredQuantity);
+
+            if (quantityToMutate > 0) {
+                var isFulfilled = autoMutateStock(productId, closestWarehouse, warehouses, quantityToMutate);
+                if (!isFulfilled) {
+                    greedyAutoMutateStock(productId, closestWarehouse, warehouses, quantityToMutate);
                 }
+            } else {
+                calculateWarehouseStock(productId, closestWarehouse.getId());
             }
+            System.out.println("HEREE");
+            stockMutationRepository.calculateProductStock(productId);
         }
     }
 
-    private void autoMutateStock(Long productId, Long warehouseId, int quantity) {
-//        find the nearest warehouses from current warehouse
+    private boolean autoMutateStock(Long productId, Warehouse closestWarehouse, List<Warehouse> warehouses, int quantity) {
+        for (var warehouse : warehouses) {
+            var product = productService.findProductById(productId);
+            var stock = stockRepository.findById(new StockCompositeKey(product, warehouse)).orElse(new Stock());
+            if (stock.getStock() >= quantity) {
+                var stockMutation = StockMutation.builder()
+                        .product(product)
+                        .warehouseFrom(warehouse)
+                        .warehouseTo(closestWarehouse)
+                        .quantity(quantity)
+                        .status(StockMutStatus.COMPLETED)
+                        .build();
+                stockMutationRepository.save(stockMutation);
+                calculateWarehouseStock(productId, closestWarehouse.getId());
+                calculateWarehouseStock(productId, warehouse.getId());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void greedyAutoMutateStock(Long productId, Warehouse closestWarehouse, List<Warehouse> warehouses, int quantity) {
+        int accumulator = 0;
+        int i = 0;
+        var product = productService.findProductById(productId);
+        while (accumulator <= quantity) {
+            var warehouse = warehouses.get(i);
+            var stock = stockRepository.findById(new StockCompositeKey(product, warehouse)).orElse(new Stock());
+            if (stock.getStock() > 0) {
+                var quantityToMutate = Math.max(stock.getStock(), quantity);
+                var stockMutation = StockMutation.builder()
+                        .product(product)
+                        .warehouseFrom(warehouse)
+                        .warehouseTo(closestWarehouse)
+                        .quantity(quantityToMutate)
+                        .status(StockMutStatus.COMPLETED)
+                        .build();
+                stockMutationRepository.save(stockMutation);
+                calculateWarehouseStock(productId, closestWarehouse.getId());
+                calculateWarehouseStock(productId, warehouse.getId());
+                accumulator += quantityToMutate;
+            }
+            i++;
+        }
     }
 
     private void mutateStock(Long stockMutationId, StockMutStatus status) {
@@ -107,19 +168,13 @@ public class StockServiceImpl implements StockService {
                 .orElseThrow(() -> new EntityNotFoundException("Stock mutation with id " + stockMutationId + " not found"));
         stockMutation.setStatus(status);
         stockMutationRepository.save(stockMutation);
-        calculateStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId(), stockMutation.getWarehouseFrom().getId());
+        calculateWarehouseStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId());
+        calculateWarehouseStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseFrom().getId());
     }
 
-    private void calculateStock(Long productId, Long warehouseId) {
+    private void calculateWarehouseStock(Long productId, Long warehouseId) {
         createStockIfNotExist(productId, warehouseId);
-        stockMutationRepository.calculateProductStock(productId);
         stockMutationRepository.calculateWarehouseStock(productId, warehouseId);
-    }
-
-    private void calculateStock(Long productId, Long warehouseToId, Long warehouseFromId) {
-        createStockIfNotExist(productId, warehouseToId);
-        stockMutationRepository.calculateWarehouseStock(productId, warehouseToId);
-        stockMutationRepository.calculateWarehouseStock(productId, warehouseFromId);
     }
 
     private void createStockIfNotExist(Long productId, Long warehouseId) {
