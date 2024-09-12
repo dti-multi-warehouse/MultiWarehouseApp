@@ -167,12 +167,10 @@ public class OrderServiceImpl implements OrderService {
     private void updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
         if (invalidStatuses != null && invalidStatuses.contains(order.getStatus())) {
-            System.out.println(order.getStatus());
             throw new ApplicationException(errorMessage);
         }
 
         if (expectedStatus != null && order.getStatus() != expectedStatus) {
-            System.out.println(order.getStatus());
             throw new ApplicationException(errorMessage);
         }
         order.setStatus(status);
