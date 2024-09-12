@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.order.dao;
 
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
+import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import jakarta.persistence.*;
@@ -42,6 +43,9 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<OrderItem> orderItems;

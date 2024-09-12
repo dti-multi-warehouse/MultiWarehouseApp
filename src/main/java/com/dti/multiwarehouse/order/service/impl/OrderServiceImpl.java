@@ -1,6 +1,5 @@
 package com.dti.multiwarehouse.order.service.impl;
 
-import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import com.dti.multiwarehouse.exceptions.ApplicationException;
@@ -9,7 +8,7 @@ import com.dti.multiwarehouse.order.dao.Order;
 import com.dti.multiwarehouse.order.dao.OrderItem;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
-import com.dti.multiwarehouse.order.dto.request.enums.PaymentMethod;
+import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
 import com.dti.multiwarehouse.order.helper.OrderMapper;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
@@ -23,7 +22,6 @@ import com.midtrans.service.MidtransCoreApi;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,6 +66,7 @@ public class OrderServiceImpl implements OrderService {
                 .status(OrderStatus.AWAITING_PAYMENT)
                 .paymentProof(null)
                 .price(price)
+                .paymentMethod(requestDto.getPaymentMethod())
                 .orderItems(new HashSet<>())
                 .build();
 
@@ -170,10 +169,12 @@ public class OrderServiceImpl implements OrderService {
     private void updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
         if (invalidStatuses != null && invalidStatuses.contains(order.getStatus())) {
+            System.out.println(order.getStatus());
             throw new ApplicationException(errorMessage);
         }
 
         if (expectedStatus != null && order.getStatus() != expectedStatus) {
+            System.out.println(order.getStatus());
             throw new ApplicationException(errorMessage);
         }
         order.setStatus(status);
