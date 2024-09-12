@@ -41,14 +41,12 @@ public class AuthServiceImpl implements AuthService {
         logger.debug("Generating token for user: {}", authentication.getName());
         Optional<User> userOptional = userService.findByEmail(authentication.getName());
 
-        // Check if the user exists
         if (userOptional.isEmpty()) {
             throw new ResourceNotFoundException("User not found");
         }
 
         User user = userOptional.get();
 
-        // Generate token only if the user is social or non-social based on the logic
         long userId = user.getId();
         Instant now = Instant.now();
         String scope = authentication.getAuthorities()
@@ -82,12 +80,10 @@ public class AuthServiceImpl implements AuthService {
         var jwt = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
 
         if (authRedisRepository.isKeyBlacklisted(jwt)) {
-            logger.error("JWT Token is blacklisted for user: {}", authentication.getName());
             throw new ResourceNotFoundException("JWT Token has already been blacklisted");
         }
 
         authRedisRepository.saveJwtKey(authentication.getName(), jwt);
-        logger.info("JWT Token generated and saved for user: {}", authentication.getName());
         response.setAccessToken(jwt);
         return response;
     }
@@ -119,9 +115,6 @@ public class AuthServiceImpl implements AuthService {
         if (jwt != null) {
             authRedisRepository.blackListJwt(email, jwt);
             authRedisRepository.deleteJwtKey(email);
-            logger.info("User {} logged out and JWT blacklisted", email);
-        } else {
-            logger.warn("No JWT found for user {} during logout", email);
         }
     }
 

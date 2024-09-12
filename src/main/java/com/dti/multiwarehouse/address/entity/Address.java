@@ -1,26 +1,27 @@
-package com.dti.multiwarehouse.user.entity;
+package com.dti.multiwarehouse.address.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "warehouse_admin")
-public class WarehouseAdmin {
+@Table(name = "address")
+public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String street;
 
-    @ManyToOne
-    @JoinColumn(name = "warehouse_id", nullable = false)
-    private Warehouse warehouse;
+    private String city;
+
+    private String province;
+
+    private Double latitude;
+
+    private Double longitude;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

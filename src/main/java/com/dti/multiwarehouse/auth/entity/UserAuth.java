@@ -15,7 +15,7 @@ public class UserAuth implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         ArrayList<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(() -> user.getRole().toString());
+        authorities.add(() -> user.getRole().toUpperCase().replace(" ", "_"));
         return authorities;
     }
 

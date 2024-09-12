@@ -1,26 +1,37 @@
-package com.dti.multiwarehouse.user.entity;
+package com.dti.multiwarehouse.address.entity;
 
+import com.dti.multiwarehouse.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
-import com.dti.multiwarehouse.warehouse.dao.Warehouse;
+import com.dti.multiwarehouse.address.entity.Address;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "warehouse_admin")
-public class WarehouseAdmin {
+@Table(name = "user_address")
+public class UserAddress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String name;
+
+    private String phoneNumber;
+
+    private String label;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "warehouse_id", nullable = false)
-    private Warehouse warehouse;
+    @JoinColumn(name = "address_id", nullable = false)
+    private Address address;
+
+    private boolean isPrimary;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

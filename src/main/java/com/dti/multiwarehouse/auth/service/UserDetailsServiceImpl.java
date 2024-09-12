@@ -22,7 +22,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Log the retrieved encoded password
         System.out.println("Retrieved encoded password from DB: " + user.getPassword());
 
         return new UserAuth(user);

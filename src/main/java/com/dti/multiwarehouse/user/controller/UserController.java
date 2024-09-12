@@ -77,13 +77,30 @@ public class UserController {
             return Response.failed("Token expired. A new verification email has been sent.");
         }
 
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setVerified(true);
         user.setSocial(false);
         user.setRole("user");
         userService.saveUser(user);
 
         return Response.success("Registration successful");
+    }
+
+    private void sendVerificationEmail(String email) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        String token = userService.generateToken(user);
+        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8); // Encode the email
+
+        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + token; // Create link with encoded values
+        System.out.println("verification link: " + verificationLink);
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject("Complete Your Registration");
+        mailMessage.setText("Click the link to complete your registration: " + verificationLink);
+        mailSender.send(mailMessage);
     }
 
     @PostMapping("/auth/save-email")
@@ -161,24 +178,6 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to resend verification email: " + e.getMessage());
         }
-    }
-
-
-
-    private void sendVerificationEmail(String email) {
-        User user = userService.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        String token = userService.generateToken(user);
-        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
-        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
-
-        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + encodedToken;
-        System.out.println("verification link: "+verificationLink);
-
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(email);
-        mailMessage.setSubject("Complete Your Registration");
-        mailMessage.setText("Click the link to complete your registration: " + verificationLink);
-        mailSender.send(mailMessage);
     }
 
     @PostMapping("/auth/reset-password/request")

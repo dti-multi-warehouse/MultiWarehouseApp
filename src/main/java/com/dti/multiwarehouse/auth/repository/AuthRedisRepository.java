@@ -21,49 +21,25 @@ public class AuthRedisRepository {
     }
 
     public void saveJwtKey(String email, String jwtKey) {
-        try {
-            valueOps.set(STRING_KEY_PREFIX + email, jwtKey, 1, TimeUnit.HOURS);
-            logger.debug("Saved JWT key for email: {} with key: {}", email, jwtKey);
-        } catch (RedisConnectionFailureException ex) {
-            logger.error("Failed to save JWT key in Redis for email: {}. Connection failed.", email, ex);
-        } catch (DataAccessException ex) {
-            logger.error("Failed to save JWT key in Redis for email: {}. Data access exception.", email, ex);
-        }
+        valueOps.set(STRING_KEY_PREFIX + email, jwtKey, 1, TimeUnit.HOURS);
     }
 
     public String getJwtKey(String email) {
         try {
             String jwtKey = valueOps.get(STRING_KEY_PREFIX + email);
-            logger.debug("Retrieved JWT key for email: {} with key: {}", email, jwtKey);
             return jwtKey;
         } catch (RedisConnectionFailureException ex) {
             logger.error("Failed to retrieve JWT key from Redis for email: {}. Connection failed.", email, ex);
-        } catch (DataAccessException ex) {
-            logger.error("Failed to retrieve JWT key from Redis for email: {}. Data access exception.", email, ex);
         }
         return null;
     }
 
     public void deleteJwtKey(String email) {
-        try {
-            valueOps.getOperations().delete(STRING_KEY_PREFIX + email);
-            logger.debug("Deleted JWT key for email: {}", email);
-        } catch (RedisConnectionFailureException ex) {
-            logger.error("Failed to delete JWT key in Redis for email: {}. Connection failed.", email, ex);
-        } catch (DataAccessException ex) {
-            logger.error("Failed to delete JWT key in Redis for email: {}. Data access exception.", email, ex);
-        }
+        valueOps.getOperations().delete(STRING_KEY_PREFIX + email);
     }
 
     public void blackListJwt(String email, String jwt) {
-        try {
-            valueOps.set(STRING_BLACKLIST_KEY_PREFIX + jwt, email, 1, TimeUnit.HOURS);
-            logger.debug("Blacklisted JWT for email: {} with token: {}", email, jwt);
-        } catch (RedisConnectionFailureException ex) {
-            logger.error("Failed to blacklist JWT in Redis for email: {}. Connection failed.", email, ex);
-        } catch (DataAccessException ex) {
-            logger.error("Failed to blacklist JWT in Redis for email: {}. Data access exception.", email, ex);
-        }
+        valueOps.set(STRING_BLACKLIST_KEY_PREFIX + jwt, email, 1, TimeUnit.HOURS);
     }
 
     public Boolean isKeyBlacklisted(String jwt) {
@@ -73,8 +49,6 @@ public class AuthRedisRepository {
             return isBlacklisted;
         } catch (RedisConnectionFailureException ex) {
             logger.error("Failed to check blacklist status for JWT: {}. Connection failed.", jwt, ex);
-        } catch (DataAccessException ex) {
-            logger.error("Failed to check blacklist status for JWT: {}. Data access exception.", jwt, ex);
         }
         return false;
     }
