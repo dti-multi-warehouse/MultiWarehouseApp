@@ -50,6 +50,12 @@ public class ProductController {
         return Response.success("Product successfully retrieved", res);
     }
 
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getProductDashboard() {
+        var res = productService.getAllProducts();
+        return Response.success("Products successfully retrieved", res);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
                                            @RequestPart UpdateProductRequestDto product,

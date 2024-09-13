@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.product.dao;
 
 import com.dti.multiwarehouse.category.dao.Category;
+import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -68,5 +69,16 @@ public class Product {
 
     public void removeImageUrl(String imageUrl) {
         imageUrls.remove(imageUrl);
+    }
+
+    public ProductSummaryResponseDto toProductSummaryResponseDto() {
+        return ProductSummaryResponseDto.builder()
+                .id(id)
+                .name(name)
+                .price(price)
+                .stock(stock)
+                .category(category.getName())
+                .thumbnail(imageUrls.stream().findFirst().orElse(null))
+                .build();
     }
 }
