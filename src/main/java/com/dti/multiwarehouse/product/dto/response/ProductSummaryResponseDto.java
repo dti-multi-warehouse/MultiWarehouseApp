@@ -18,4 +18,5 @@ public class ProductSummaryResponseDto {
     private int price;
     private int stock;
     private String category;
+    private String thumbnail;
 }

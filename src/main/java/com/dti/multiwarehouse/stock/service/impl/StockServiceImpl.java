@@ -8,6 +8,7 @@ import com.dti.multiwarehouse.stock.dao.enums.StockMutStatus;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
+import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -18,9 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -111,9 +111,15 @@ public class StockServiceImpl implements StockService {
             } else {
                 calculateWarehouseStock(productId, closestWarehouse.getId());
             }
-            System.out.println("HEREE");
             stockMutationRepository.calculateProductStock(productId);
         }
+    }
+
+    @Override
+    public List<GetStockResponseDto> getAllStock() {
+        return stockRepository.findAll().stream()
+                .map(Stock::toGetStockResponseDto)
+                .collect(Collectors.toList());
     }
 
     private boolean autoMutateStock(Long productId, Warehouse closestWarehouse, List<Warehouse> warehouses, int quantity) {
@@ -141,11 +147,11 @@ public class StockServiceImpl implements StockService {
         int accumulator = 0;
         int i = 0;
         var product = productService.findProductById(productId);
-        while (accumulator <= quantity) {
+        while (accumulator < quantity) {
             var warehouse = warehouses.get(i);
             var stock = stockRepository.findById(new StockCompositeKey(product, warehouse)).orElse(new Stock());
             if (stock.getStock() > 0) {
-                var quantityToMutate = Math.max(stock.getStock(), quantity);
+                var quantityToMutate = Math.min(quantity - accumulator, stock.getStock());
                 var stockMutation = StockMutation.builder()
                         .product(product)
                         .warehouseFrom(warehouse)

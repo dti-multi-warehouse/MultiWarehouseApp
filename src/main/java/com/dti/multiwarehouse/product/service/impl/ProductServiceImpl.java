@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -161,6 +162,13 @@ public class ProductServiceImpl implements ProductService {
            throw new ApplicationException("Failed to delete product with id: " + id);
         }
 
+    }
+
+    @Override
+    public List<ProductSummaryResponseDto> getAllProducts() {
+        return productRepository.findAll().stream()
+                .map(Product::toProductSummaryResponseDto)
+                .collect(Collectors.toList());
     }
 
     private List<String> uploadImages(List<MultipartFile> images) throws IOException {

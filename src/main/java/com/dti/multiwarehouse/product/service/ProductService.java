@@ -21,4 +21,5 @@ public interface ProductService {
     void deleteProduct(Long id);
     boolean isExist(Long id);
     Product findProductById(Long id);
+    List<ProductSummaryResponseDto> getAllProducts();
 }
