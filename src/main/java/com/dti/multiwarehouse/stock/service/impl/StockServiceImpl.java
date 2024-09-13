@@ -88,9 +88,6 @@ public class StockServiceImpl implements StockService {
         var warehouses = warehouseService.getAllWarehouses();
         warehouses.removeFirst();
 
-        warehouses.forEach(warehouse -> {
-            System.out.println(warehouse.getId());
-        });
         for (var item : cartItems) {
             productQuantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
         }
@@ -154,7 +151,6 @@ public class StockServiceImpl implements StockService {
             var warehouse = warehouses.get(i);
             var stock = stockRepository.findById(new StockCompositeKey(product, warehouse)).orElse(new Stock());
             if (stock.getStock() > 0) {
-//                var quantityToMutate = quantity - stock.getStock() - accumulator;
                 var quantityToMutate = Math.min(quantity - accumulator, stock.getStock());
                 var stockMutation = StockMutation.builder()
                         .product(product)
