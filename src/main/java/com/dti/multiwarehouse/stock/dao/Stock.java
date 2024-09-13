@@ -60,6 +60,7 @@ public class Stock {
     public GetStockResponseDto toGetStockResponseDto() {
         return GetStockResponseDto.builder()
                 .id(id.getProduct().getId())
+                .warehouseId(id.getWarehouse().getId())
                 .thumbnail(id.getProduct().getImageUrls().stream().findFirst().orElse(null))
                 .name(id.getProduct().getName())
                 .stock(stock)

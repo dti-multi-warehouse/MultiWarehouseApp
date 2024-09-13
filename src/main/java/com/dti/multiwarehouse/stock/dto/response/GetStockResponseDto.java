@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class GetStockResponseDto {
     private Long id;
+    private Long warehouseId;
     private String thumbnail;
     private String name;
     private int stock;
