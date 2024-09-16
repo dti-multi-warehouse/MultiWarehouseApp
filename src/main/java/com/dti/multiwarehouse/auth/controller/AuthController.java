@@ -71,7 +71,7 @@ public class AuthController {
         boolean isVerified = clerkService.verifyToken(request.getToken());
 
         if (!isVerified) {
-            return ResponseEntity.status(401).body(null); // Unauthorized
+            return ResponseEntity.status(401).body(null);
         }
 
         Optional<User> userOptional = userService.findByEmail(request.getEmail());

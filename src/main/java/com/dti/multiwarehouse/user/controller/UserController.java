@@ -77,7 +77,7 @@ public class UserController {
             return Response.failed("Token expired. A new verification email has been sent.");
         }
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(request.getPassword());
         user.setVerified(true);
         user.setSocial(false);
         user.setRole("user");
@@ -91,9 +91,9 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String token = userService.generateToken(user);
-        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8); // Encode the email
+        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
-        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + token; // Create link with encoded values
+        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + token;
         System.out.println("verification link: " + verificationLink);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -223,10 +223,10 @@ public class UserController {
     }
 
     private void sendResetPasswordEmail(String email, String token){
-        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+//        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
-        String resetLink = "http://localhost:3000/reset-password/confirmation?email="+encodedEmail+"&token="+encodedToken;
+        String resetLink = "http://localhost:3000/reset-password/confirmation?email="+encodedEmail+"&token="+token;
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 
         mailMessage.setTo(email);
