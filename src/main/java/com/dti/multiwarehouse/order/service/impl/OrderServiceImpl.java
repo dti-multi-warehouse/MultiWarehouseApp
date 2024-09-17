@@ -89,13 +89,16 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancelOrder(Long id) {
-        updateOrderStatus(
+        var res = updateOrderStatus(
                 id,
                 OrderStatus.CANCELLED,
                 null,
                 List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED),
                 "Order can no longer be cancelled at this stage"
         );
+        res.getOrderItems().forEach(orderItem -> {
+            productService.updateSold(orderItem.getProduct().getId());
+        });
     }
 
     @Override
@@ -169,7 +172,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderMapper.toCreateOrderResponseDto(midtransCoreApi.chargeTransaction(params));
     }
 
-    private void updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
+    private Order updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
         if (invalidStatuses != null && invalidStatuses.contains(order.getStatus())) {
             throw new ApplicationException(errorMessage);
@@ -179,6 +182,6 @@ public class OrderServiceImpl implements OrderService {
             throw new ApplicationException(errorMessage);
         }
         order.setStatus(status);
-        orderRepository.save(order);
+        return orderRepository.save(order);
     }
 }
