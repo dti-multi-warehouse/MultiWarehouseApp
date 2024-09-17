@@ -44,7 +44,7 @@ public class StockServiceImpl implements StockService {
                 .status(StockMutStatus.COMPLETED)
                 .build();
         stockMutationRepository.save(stockMutation);
-        stockMutationRepository.calculateProductStock(requestDto.getProductId());
+        productService.updateSoldAndStock(requestDto.getProductId());
         calculateWarehouseStock(requestDto.getProductId(), requestDto.getWarehouseToId());
     }
 
@@ -111,7 +111,7 @@ public class StockServiceImpl implements StockService {
             } else {
                 calculateWarehouseStock(productId, closestWarehouse.getId());
             }
-            stockMutationRepository.calculateProductStock(productId);
+            productService.updateSoldAndStock(productId);
         }
     }
 

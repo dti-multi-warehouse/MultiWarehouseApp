@@ -10,7 +10,6 @@ import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Set;
 
 public interface ProductService {
     ProductGroupedSearchResponseDto displayFeaturedProducts() throws Exception;
@@ -22,4 +21,5 @@ public interface ProductService {
     boolean isExist(Long id);
     Product findProductById(Long id);
     List<ProductSummaryResponseDto> getAllProducts();
+    void updateSoldAndStock(Long id);
 }

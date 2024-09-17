@@ -36,7 +36,11 @@ public class CartServiceImpl implements CartService {
     public void removeFromCart(String sessionId, Long productId) {
         var cart = redisRepository.findById(sessionId).orElseThrow(() -> new EntityNotFoundException("Cart not found"));
         cart.removeItem(productId);
-        redisRepository.save(cart);
+        if (cart.getItems().isEmpty()) {
+            deleteCart(sessionId);
+        } else {
+            redisRepository.save(cart);
+        }
     }
 
     @Override
@@ -70,7 +74,11 @@ public class CartServiceImpl implements CartService {
     public void decrementQuantity(String sessionId, Long productId) {
         var cart = redisRepository.findById(sessionId).orElseThrow(() -> new EntityNotFoundException("Cart not found"));
         cart.decrementQuantity(productId);
-        redisRepository.save(cart);
+        if (cart.getItems().isEmpty()) {
+            deleteCart(sessionId);
+        } else {
+            redisRepository.save(cart);
+        }
     }
 
     @Override
