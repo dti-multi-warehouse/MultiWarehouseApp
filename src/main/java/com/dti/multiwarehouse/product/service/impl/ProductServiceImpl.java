@@ -8,10 +8,7 @@ import com.dti.multiwarehouse.helper.EntityUpdateUtil;
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
-import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductGroupedSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
+import com.dti.multiwarehouse.product.dto.response.*;
 import com.dti.multiwarehouse.product.helper.ProductMapper;
 import com.dti.multiwarehouse.product.repository.ProductRepository;
 import com.dti.multiwarehouse.product.service.ProductService;
@@ -20,6 +17,7 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
@@ -213,5 +211,20 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product findProductById(Long id) {
         return productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+    }
+
+    @Transactional
+    @Override
+    public void updateSold(Long productId) {
+        productRepository.recalculateSold(productId);
+        var res = productRepository.getSoldAndStock(productId);
+        var product = productRepository.findById(productId).orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+        product.setSold(res.getSold());
+        product.setStock(res.getStock());
+        try {
+            typeSense.client().collections(PRODUCT_KEY).documents(productId.toString()).update(ProductMapper.toDocument(product));
+        } catch (Exception e) {
+            throw new ApplicationException(e.getMessage());
+        }
     }
 }

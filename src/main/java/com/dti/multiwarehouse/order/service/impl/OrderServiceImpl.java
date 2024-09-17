@@ -27,6 +27,7 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class OrderServiceImpl implements OrderService {
     @Resource
     private final MidtransCoreApi midtransCoreApi;
 
+    @Transactional
     @Override
     public CreateOrderResponseDto createOrder(String sessionId, String email, CreateOrderRequestDto requestDto) throws MidtransError {
         var cart = cartService.getCart(sessionId);
@@ -66,6 +68,9 @@ public class OrderServiceImpl implements OrderService {
 //        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
 //            return processMidtransPayment(price, requestDto.getBankTransfer());
 //        }
+        order.getOrderItems().forEach(orderItem -> {
+            productService.updateSold(orderItem.getProduct().getId());
+        });
         return null;
     }
 
