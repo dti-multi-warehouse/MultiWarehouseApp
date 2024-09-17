@@ -68,9 +68,6 @@ public class OrderServiceImpl implements OrderService {
 //        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
 //            return processMidtransPayment(price, requestDto.getBankTransfer());
 //        }
-        order.getOrderItems().forEach(orderItem -> {
-            productService.updateSold(orderItem.getProduct().getId());
-        });
         return null;
     }
 
@@ -97,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
                 "Order can no longer be cancelled at this stage"
         );
         res.getOrderItems().forEach(orderItem -> {
-            productService.updateSold(orderItem.getProduct().getId());
+            productService.updateSoldAndStock(orderItem.getProduct().getId());
         });
     }
 

@@ -215,8 +215,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     @Override
-    public void updateSold(Long productId) {
+    public void updateSoldAndStock(Long productId) {
         productRepository.recalculateSold(productId);
+        productRepository.recalculateStock(productId);
         var res = productRepository.getSoldAndStock(productId);
         var product = productRepository.findById(productId).orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
         product.setSold(res.getSold());

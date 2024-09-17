@@ -10,28 +10,6 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
     @Modifying
     @Query(
             value = """
-            UPDATE product
-            SET stock = COALESCE((
-                SELECT
-                    COALESCE((
-                        SELECT COALESCE(SUM(m.quantity), 0)
-                        FROM stock_mutation AS m
-                        WHERE m.product_id = :productId and m.warehouse_from_id is null
-                    ), 0) - COALESCE((
-                        SELECT COALESCE(SUM(CASE WHEN o.status != 'CANCELLED' THEN i.quantity ELSE 0 END), 0)
-                        FROM order_item AS i
-                        JOIN orders AS o ON i.order_id = o.id
-                        WHERE i.product_id = :productId
-                    ), 0)
-            ), 0)
-            WHERE product.id = :productId
-            """, nativeQuery = true
-    )
-    void calculateProductStock(@Param("productId") Long productId);
-
-    @Modifying
-    @Query(
-            value = """
             UPDATE stock
             SET stock = COALESCE((
                 SELECT
