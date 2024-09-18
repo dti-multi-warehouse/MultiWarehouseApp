@@ -25,7 +25,7 @@ public class Category {
     @Column(name= "name", nullable = false)
     private String name;
 
-    @Column(name = "logoUrl")
+    @Column(name = "logoUrl", nullable = false)
     private String logoUrl;
 
     @CreationTimestamp

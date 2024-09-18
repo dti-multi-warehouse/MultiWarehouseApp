@@ -52,7 +52,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private BankTransfer bank;
 
-    @Column(name = "accountNumber")
+    @Column(name = "accountNumber", nullable = false)
     private String accountNumber;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -66,7 +66,7 @@ public class Order {
     @Column(name = "updatedAt")
     private Instant updatedAt;
 
-    @Column(name = "paymentExpiredAt")
+    @Column(name = "paymentExpiredAt", nullable = false)
     private Instant paymentExpiredAt;
 
     public void addOrderItem(OrderItem orderItem) {
