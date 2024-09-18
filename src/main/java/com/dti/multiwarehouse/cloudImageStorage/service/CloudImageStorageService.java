@@ -6,5 +6,6 @@ import java.io.IOException;
 
 public interface CloudImageStorageService {
     String uploadImage(MultipartFile file, String folderName) throws IOException;
+    String uploadSvgImage(MultipartFile file, String folderName) throws IOException;
     void deleteImage(String imageName) throws IOException;
 }
