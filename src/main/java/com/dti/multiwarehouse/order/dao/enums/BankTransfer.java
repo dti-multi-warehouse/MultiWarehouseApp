@@ -1,4 +1,4 @@
-package com.dti.multiwarehouse.order.dto.request.enums;
+package com.dti.multiwarehouse.order.dao.enums;
 
 public enum BankTransfer {
     BCA,

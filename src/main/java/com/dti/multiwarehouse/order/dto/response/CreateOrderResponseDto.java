@@ -1,22 +1,22 @@
 package com.dti.multiwarehouse.order.dto.response;
 
+import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
+import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class CreateOrderResponseDto {
-    private String transactionId;
-    private String currency;
-    private String price;
-    private String transactionTime;
-    private String transactionStatus;
-    private String paymentType;
-    private String bank;
-    private String vaNumber;
-    private String message;
+    private int price;
+    private String accountNumber;
+    private BankTransfer bankTransfer;
+    private PaymentMethod paymentMethod;
+    private Instant paymentExpiredAt;
 }
