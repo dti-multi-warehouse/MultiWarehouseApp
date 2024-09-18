@@ -1,6 +1,6 @@
 package com.dti.multiwarehouse.order.dto.request;
 
-import com.dti.multiwarehouse.order.dto.request.enums.BankTransfer;
+import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Data;

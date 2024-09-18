@@ -10,9 +10,9 @@ import com.dti.multiwarehouse.order.dao.OrderItem;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
-import com.dti.multiwarehouse.order.dto.request.enums.BankTransfer;
+import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
-import com.dti.multiwarehouse.order.helper.OrderMapper;
+import com.dti.multiwarehouse.order.dto.response.MindtransChargeDto;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
 import com.dti.multiwarehouse.product.service.ProductService;
@@ -31,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -61,14 +63,20 @@ public class OrderServiceImpl implements OrderService {
         var price = cart.getTotalPrice(); // + shipping fees
         var order = createNewOrder(user, warehouse, price, requestDto.getPaymentMethod(), cart);
 
+        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
+            var res = processMidtransPayment(price, requestDto.getBankTransfer());
+            order.setBank(BankTransfer.valueOf(res.getBank().toUpperCase()));
+            order.setAccountNumber(res.getVaNumber());
+        } else {
+            order.setBank(BankTransfer.BCA);
+            order.setAccountNumber(UUID.randomUUID().toString());
+        }
+
         orderRepository.save(order);
         stockService.processOrder(warehouse.getId(), cart.getCartItems());
         cartService.deleteCart(sessionId);
 
-//        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
-//            return processMidtransPayment(price, requestDto.getBankTransfer());
-//        }
-        return null;
+        return order.toCreateOrderResponseDto();
     }
 
     @Override
@@ -93,9 +101,7 @@ public class OrderServiceImpl implements OrderService {
                 List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED),
                 "Order can no longer be cancelled at this stage"
         );
-        res.getOrderItems().forEach(orderItem -> {
-            productService.updateSoldAndStock(orderItem.getProduct().getId());
-        });
+        res.getOrderItems().forEach(orderItem -> productService.updateSoldAndStock(orderItem.getProduct().getId()));
     }
 
     @Override
@@ -135,10 +141,11 @@ public class OrderServiceImpl implements OrderService {
         var order = Order.builder()
                 .user(user)
                 .warehouse(warehouse)
+                .price(price)
                 .status(OrderStatus.AWAITING_CONFIRMATION)
                 .paymentMethod(paymentMethod)
-                .price(price)
                 .orderItems(new HashSet<>())
+                .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.DAYS))
                 .build();
 
         for (var item : cart.getCartItems()) {
@@ -152,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-    private CreateOrderResponseDto processMidtransPayment(int price, BankTransfer bankTransfer) throws MidtransError {
+    private MindtransChargeDto processMidtransPayment(int price, BankTransfer bankTransfer) throws MidtransError {
         var idRand = UUID.randomUUID();
 
         Map<String, Object> params = new HashMap<>();
@@ -166,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
                         .map(bt -> bt.name().toLowerCase())
                         .orElse("bca")
         ));
-        return OrderMapper.toCreateOrderResponseDto(midtransCoreApi.chargeTransaction(params));
+        return new MindtransChargeDto(midtransCoreApi.chargeTransaction(params));
     }
 
     private Order updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {

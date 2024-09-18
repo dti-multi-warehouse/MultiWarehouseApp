@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.product.dao;
 
 import com.dti.multiwarehouse.category.dao.Category;
+import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -79,6 +81,31 @@ public class Product {
                 .stock(stock)
                 .category(category.getName())
                 .thumbnail(imageUrls.stream().findFirst().orElse(null))
+                .build();
+    }
+
+    public HashMap<String, Object> toDocument() {
+        HashMap<String, Object> document = new HashMap<>();
+        document.put("id", id.toString());
+        document.put("name", name);
+        document.put("description", description);
+        document.put("price", price);
+        document.put("stock", stock);
+        document.put("category", category.getName());
+        document.put("sold", sold);
+        document.put("thumbnail", imageUrls.stream().findFirst().orElse(null));
+        return document;
+    }
+
+    public ProductDetailsResponseDto toProductDetailsResponseDto() {
+        return ProductDetailsResponseDto.builder()
+                .id(id)
+                .name(name)
+                .description(description)
+                .price(price)
+                .stock(stock)
+                .category(category.getName())
+                .imageUrls(imageUrls)
                 .build();
     }
 }

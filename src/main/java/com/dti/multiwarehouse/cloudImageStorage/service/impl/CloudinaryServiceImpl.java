@@ -30,6 +30,16 @@ public class CloudinaryServiceImpl implements CloudImageStorageService {
     }
 
     @Override
+    public String uploadSvgImage(MultipartFile file, String folderName) throws IOException {
+        HashMap<Object, Object> options = new HashMap<>();
+        options.put("folder", folderName);
+        options.put("allowed_format", "svg");
+        Map uploadedFile = cloudinary.uploader().upload(file.getBytes(), options);
+        String publicId = (String) uploadedFile.get("public_id");
+        return cloudinary.url().secure(true).generate(publicId);
+    }
+
+    @Override
     public void deleteImage(String imageName) throws IOException {
         HashMap<Object, Object> options = new HashMap<>();
         cloudinary.uploader().destroy(imageName, options);
