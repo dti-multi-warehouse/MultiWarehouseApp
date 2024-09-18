@@ -90,18 +90,18 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
-        return ProductMapper.toDetailsResponseDto(product);
+        return product.toProductDetailsResponseDto();
     }
 
     @Override
     public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto, List<MultipartFile> images) throws Exception {
         var category = categoryService.getCategoryById(requestDto.getCategoryId());
         var imageUrls = uploadImages(images);
-        var product = productRepository.save(ProductMapper.toEntity(requestDto, category, imageUrls));
+        var product = productRepository.save(requestDto.toProduct(category, imageUrls));
 
-        typeSense.client().collections(PRODUCT_KEY).documents().create(ProductMapper.toDocument(product));
+        typeSense.client().collections(PRODUCT_KEY).documents().upsert(product.toDocument());
 
-        return ProductMapper.toSummaryResponseDto(product);
+        return product.toProductSummaryResponseDto();
     }
 
     @Override
@@ -116,8 +116,6 @@ public class ProductServiceImpl implements ProductService {
 
         var currentImageUrls = new HashSet<>(product.getImageUrls());
         Set<String> deletedImageUrls;
-
-        System.out.println(requestDto.getPrevImages());
 
         if (requestDto.getPrevImages() != null) {
             deletedImageUrls = new HashSet<>(currentImageUrls);
@@ -141,12 +139,12 @@ public class ProductServiceImpl implements ProductService {
         var p = productRepository.save(product);
 
         try {
-            typeSense.client().collections(PRODUCT_KEY).documents(id.toString()).update(ProductMapper.toDocument(p));
+            typeSense.client().collections(PRODUCT_KEY).documents().upsert(p.toDocument());
         } catch (Exception e) {
             throw new ApplicationException(e.getMessage());
         }
 
-        return ProductMapper.toSummaryResponseDto(p);
+        return p.toProductSummaryResponseDto();
     }
 
     @Override
@@ -223,7 +221,7 @@ public class ProductServiceImpl implements ProductService {
         product.setSold(res.getSold());
         product.setStock(res.getStock());
         try {
-            typeSense.client().collections(PRODUCT_KEY).documents(productId.toString()).update(ProductMapper.toDocument(product));
+            typeSense.client().collections(PRODUCT_KEY).documents().upsert(product.toDocument());
         } catch (Exception e) {
             throw new ApplicationException(e.getMessage());
         }
