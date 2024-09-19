@@ -9,8 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -41,7 +40,7 @@ public class AddProductRequestDto {
                 .stock(0)
                 .category(category)
                 .sold(0)
-                .imageUrls(new HashSet<>(imageUrls))
+                .imageUrls(new ArrayList<>(imageUrls))
                 .build();
     }
 
