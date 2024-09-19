@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.stock.controller;
 
+import com.dti.multiwarehouse.response.Response;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -13,6 +14,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/stock")
 public class StockController {
     private final StockService stockService;
+
+    @GetMapping
+    public ResponseEntity<?> getAllStocks() {
+        var res = stockService.getAllStock();
+        return Response.success("Successfully retrieved stocks", res);
+    }
 
     @PostMapping("/restock")
     public ResponseEntity<?> restock(@Valid @RequestBody RestockRequestDto requestDto) {

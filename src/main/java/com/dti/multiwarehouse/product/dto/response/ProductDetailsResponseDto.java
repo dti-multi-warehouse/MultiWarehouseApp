@@ -14,7 +14,7 @@ public class ProductDetailsResponseDto {
     private Long id;
     private String name;
     private String description;
-    private BigDecimal price;
+    private int price;
     private int stock;
     private String category;
     private Set<String> imageUrls;

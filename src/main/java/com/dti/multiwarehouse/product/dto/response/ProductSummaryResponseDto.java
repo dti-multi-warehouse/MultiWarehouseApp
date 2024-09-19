@@ -15,7 +15,8 @@ import java.util.Set;
 public class ProductSummaryResponseDto {
     private Long id;
     private String name;
-    private BigDecimal price;
+    private int price;
     private int stock;
     private String category;
+    private String thumbnail;
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 public class GetCartResponseDto {
     private List<CartItem> cartItems =  new ArrayList<>();
-    private BigDecimal totalPrice;
+    private int totalPrice;
 
     public void addCartItem(CartItem cartItem) {
         cartItems.add(cartItem);

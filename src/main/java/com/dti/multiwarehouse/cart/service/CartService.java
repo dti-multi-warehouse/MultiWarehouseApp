@@ -9,4 +9,5 @@ public interface CartService {
     GetCartResponseDto getCart(String sessionId);
     void incrementQuantity(String sessionId, Long productId);
     void decrementQuantity(String sessionId, Long productId);
+    void deleteCart(String sessionId);
 }

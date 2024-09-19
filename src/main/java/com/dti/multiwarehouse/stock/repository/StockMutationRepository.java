@@ -10,30 +10,24 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
     @Modifying
     @Query(
             value = """
-                UPDATE Product p
-                SET p.stock = (
-                    SELECT COALESCE(SUM(m.quantity), 0)
-                    FROM StockMutation m
-                    WHERE m.product.id = p.id
-                    AND m.warehouseFrom IS NULL
-                )
-                WHERE p.id = :productId
-                """
+            UPDATE stock
+            SET stock = COALESCE((
+                SELECT
+                    COALESCE((
+                        SELECT
+                            COALESCE(SUM(CASE WHEN m.warehouse_to_id = :warehouseId AND m.status = 'COMPLETED' THEN m.quantity ELSE 0 END), 0) -
+                            COALESCE(SUM(CASE WHEN m.warehouse_from_id = :warehouseId AND (m.status = 'AWAITING_CONFIRMATION' OR m.status = 'COMPLETED') THEN m.quantity ELSE 0 END), 0)
+                        FROM stock_mutation AS m
+                        WHERE m.product_id = :productId
+                    ), 0) - COALESCE((
+                        SELECT COALESCE(SUM(CASE WHEN o.status != 'CANCELLED' THEN i.quantity ELSE 0 END), 0)
+                        FROM order_item AS i
+                        JOIN orders AS o ON i.order_id = o.id
+                        WHERE i.product_id = :productId AND o.warehouse_id = :warehouseId
+                    ), 0)
+            ), 0)
+            WHERE stock.warehouse_id = :warehouseId AND stock.product_id = :productId
+        """, nativeQuery = true
     )
-    void calculateProductStock(Long productId);
-
-    @Modifying
-    @Query(
-            value = """
-            UPDATE Stock s
-            SET s.stock = (
-                SELECT COALESCE(SUM(CASE WHEN m.warehouseTo.id = :warehouseId AND m.status = 'COMPLETED' THEN m.quantity ELSE 0 END), 0) -
-                       COALESCE(SUM(CASE WHEN m.warehouseFrom.id = :warehouseId AND (m.status = 'AWAITING_CONFIRMATION' OR m.status = 'COMPLETED') THEN m.quantity ELSE 0 END), 0)
-                FROM StockMutation m
-                WHERE m.product.id = :productId
-            )
-            WHERE s.id.warehouse.id = :warehouseId
-            """
-    )
-    void calculateWarehouseStock(@Param("productId") Long productId,@Param("warehouseId") Long warehouseId);
+    void calculateWarehouseStock(@Param("productId") Long productId, @Param("warehouseId") Long warehouseId);
 }

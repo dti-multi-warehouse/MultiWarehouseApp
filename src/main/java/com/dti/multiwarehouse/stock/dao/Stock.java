@@ -1,8 +1,9 @@
 package com.dti.multiwarehouse.stock.dao;
 
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
-import com.dti.multiwarehouse.warehouse.dao.Warehouse;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -22,11 +23,6 @@ public class Stock {
     private StockCompositeKey id;
 
     private int stock;
-
-    @MapsId("warehouse")
-    @ManyToOne
-    @JoinColumn(name = "warehouse_id")
-    private Warehouse warehouse;
 
     @CreationTimestamp
     @Column(name = "createdAt")

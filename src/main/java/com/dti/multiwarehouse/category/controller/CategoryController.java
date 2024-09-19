@@ -7,6 +7,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RequiredArgsConstructor
 @RestController
@@ -22,14 +25,21 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto requestDto) throws Exception {
-        var res = categoryService.addCategory(requestDto);
+    public ResponseEntity<?> createCategory(
+            @Valid @RequestPart CategoryRequestDto requestDto,
+            @RequestPart MultipartFile logo
+    ) throws Exception, IOException {
+        var res = categoryService.addCategory(requestDto, logo);
         return Response.success("Category successfully created", res);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCategory(@PathVariable Long id,@Valid @RequestBody CategoryRequestDto requestDto) {
-        var res = categoryService.updateCategory(id, requestDto);
+    public ResponseEntity<?> updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestPart CategoryRequestDto requestDto,
+            @RequestPart MultipartFile logo
+    ) throws Exception {
+        var res = categoryService.updateCategory(id, requestDto, logo);
         return Response.success("Category successfully updated", res);
     }
 

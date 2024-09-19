@@ -1,11 +1,13 @@
 package com.dti.multiwarehouse.category.dao;
 
+import com.dti.multiwarehouse.category.dto.response.CategoryResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.HashMap;
 
 @Getter
 @Setter
@@ -20,7 +22,11 @@ public class Category {
     @SequenceGenerator(name = "category_id_gen", sequenceName = "category_id_seq", allocationSize = 1)
     private Long id;
 
+    @Column(name= "name", nullable = false)
     private String name;
+
+    @Column(name = "logoUrl", nullable = false)
+    private String logoUrl;
 
     @CreationTimestamp
     @Column(name = "createdAt")
@@ -32,4 +38,20 @@ public class Category {
 
     @Column(name = "deletedAt")
     private Instant deletedAt;
+
+    public HashMap<String, Object> toDocument() {
+        HashMap<String, Object> document = new HashMap<>();
+        document.put("id", id.toString());
+        document.put("name",name);
+        document.put("logoUrl",logoUrl);
+        return document;
+    }
+
+    public CategoryResponseDto toResponseDto() {
+        return CategoryResponseDto.builder()
+                .id(id)
+                .name(name)
+                .logoUrl(logoUrl)
+                .build();
+    }
 }

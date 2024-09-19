@@ -8,10 +8,7 @@ import com.dti.multiwarehouse.helper.EntityUpdateUtil;
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
-import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductGroupedSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
+import com.dti.multiwarehouse.product.dto.response.*;
 import com.dti.multiwarehouse.product.helper.ProductMapper;
 import com.dti.multiwarehouse.product.repository.ProductRepository;
 import com.dti.multiwarehouse.product.service.ProductService;
@@ -20,6 +17,7 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
@@ -29,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -91,18 +90,18 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
-        return ProductMapper.toDetailsResponseDto(product);
+        return product.toProductDetailsResponseDto();
     }
 
     @Override
     public ProductSummaryResponseDto addProduct(AddProductRequestDto requestDto, List<MultipartFile> images) throws Exception {
         var category = categoryService.getCategoryById(requestDto.getCategoryId());
         var imageUrls = uploadImages(images);
-        var product = productRepository.save(ProductMapper.toEntity(requestDto, category, imageUrls));
+        var product = productRepository.save(requestDto.toProduct(category, imageUrls));
 
-        typeSense.client().collections(PRODUCT_KEY).documents().create(ProductMapper.toDocument(product));
+        typeSense.client().collections(PRODUCT_KEY).documents().upsert(product.toDocument());
 
-        return ProductMapper.toSummaryResponseDto(product);
+        return product.toProductSummaryResponseDto();
     }
 
     @Override
@@ -117,8 +116,6 @@ public class ProductServiceImpl implements ProductService {
 
         var currentImageUrls = new HashSet<>(product.getImageUrls());
         Set<String> deletedImageUrls;
-
-        System.out.println(requestDto.getPrevImages());
 
         if (requestDto.getPrevImages() != null) {
             deletedImageUrls = new HashSet<>(currentImageUrls);
@@ -142,12 +139,12 @@ public class ProductServiceImpl implements ProductService {
         var p = productRepository.save(product);
 
         try {
-            typeSense.client().collections(PRODUCT_KEY).documents(id.toString()).update(ProductMapper.toDocument(p));
+            typeSense.client().collections(PRODUCT_KEY).documents().upsert(p.toDocument());
         } catch (Exception e) {
             throw new ApplicationException(e.getMessage());
         }
 
-        return ProductMapper.toSummaryResponseDto(p);
+        return p.toProductSummaryResponseDto();
     }
 
     @Override
@@ -161,6 +158,13 @@ public class ProductServiceImpl implements ProductService {
            throw new ApplicationException("Failed to delete product with id: " + id);
         }
 
+    }
+
+    @Override
+    public List<ProductSummaryResponseDto> getAllProducts() {
+        return productRepository.findAll().stream()
+                .map(Product::toProductSummaryResponseDto)
+                .collect(Collectors.toList());
     }
 
     private List<String> uploadImages(List<MultipartFile> images) throws IOException {
@@ -205,5 +209,21 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product findProductById(Long id) {
         return productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+    }
+
+    @Transactional
+    @Override
+    public void updateSoldAndStock(Long productId) {
+        productRepository.recalculateSold(productId);
+        productRepository.recalculateStock(productId);
+        var res = productRepository.getSoldAndStock(productId);
+        var product = productRepository.findById(productId).orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+        product.setSold(res.getSold());
+        product.setStock(res.getStock());
+        try {
+            typeSense.client().collections(PRODUCT_KEY).documents().upsert(product.toDocument());
+        } catch (Exception e) {
+            throw new ApplicationException(e.getMessage());
+        }
     }
 }

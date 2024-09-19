@@ -36,22 +36,27 @@ public class CartServiceImpl implements CartService {
     public void removeFromCart(String sessionId, Long productId) {
         var cart = redisRepository.findById(sessionId).orElseThrow(() -> new EntityNotFoundException("Cart not found"));
         cart.removeItem(productId);
-        redisRepository.save(cart);
+        if (cart.getItems().isEmpty()) {
+            deleteCart(sessionId);
+        } else {
+            redisRepository.save(cart);
+        }
     }
 
+    @Override
     public GetCartResponseDto getCart(String sessionId) {
         var cart = redisRepository.findById(sessionId).orElseGet(() -> new Cart(sessionId, new HashMap<>(), 3000));
         var items = cart.getItems();
         var res = new GetCartResponseDto();
 
-        BigDecimal totalPrice = items.entrySet().stream()
-                .map(entry -> {
+        int totalPrice = items.entrySet().stream()
+                .mapToInt(entry -> {
                     var productDetails = productService.getProductDetails(entry.getKey());
                     var cartItem = CartMapper.toCartItem(productDetails, entry.getValue());
                     res.addCartItem(cartItem);
-                    return cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    return cartItem.getPrice() * cartItem.getQuantity();
                 })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .sum();
 
         res.setTotalPrice(totalPrice);
         return res;
@@ -69,7 +74,15 @@ public class CartServiceImpl implements CartService {
     public void decrementQuantity(String sessionId, Long productId) {
         var cart = redisRepository.findById(sessionId).orElseThrow(() -> new EntityNotFoundException("Cart not found"));
         cart.decrementQuantity(productId);
-        redisRepository.save(cart);
+        if (cart.getItems().isEmpty()) {
+            deleteCart(sessionId);
+        } else {
+            redisRepository.save(cart);
+        }
     }
 
+    @Override
+    public void deleteCart(String sessionId) {
+        redisRepository.deleteById(sessionId);
+    }
 }
