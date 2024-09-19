@@ -86,6 +86,23 @@ public class UserController {
         return Response.success("Registration successful");
     }
 
+    private void sendVerificationEmail(String email) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        String token = userService.generateToken(user);
+        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
+
+        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + token;
+        System.out.println("verification link: " + verificationLink);
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject("Complete Your Registration");
+        mailMessage.setText("Click the link to complete your registration: " + verificationLink);
+        mailSender.send(mailMessage);
+    }
+
     @PostMapping("/auth/save-email")
     public ResponseEntity<?> saveUserEmail(@RequestBody UserRegistrationRequest request) {
         String email = request.getEmail();
@@ -163,24 +180,6 @@ public class UserController {
         }
     }
 
-
-
-    private void sendVerificationEmail(String email) {
-        User user = userService.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        String token = userService.generateToken(user);
-        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
-        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
-
-        String verificationLink = "http://localhost:3000/email-verification?email=" + encodedEmail + "&token=" + encodedToken;
-        System.out.println("verification link: "+verificationLink);
-
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(email);
-        mailMessage.setSubject("Complete Your Registration");
-        mailMessage.setText("Click the link to complete your registration: " + verificationLink);
-        mailSender.send(mailMessage);
-    }
-
     @PostMapping("/auth/reset-password/request")
     public ResponseEntity<?> requestResetPassword(@RequestBody Map<String,String> request){
         String email = request.get("email");
@@ -224,10 +223,10 @@ public class UserController {
     }
 
     private void sendResetPasswordEmail(String email, String token){
-        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+//        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
-        String resetLink = "http://localhost:3000/reset-password/confirmation?email="+encodedEmail+"&token="+encodedToken;
+        String resetLink = "http://localhost:3000/reset-password/confirmation?email="+encodedEmail+"&token="+token;
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 
         mailMessage.setTo(email);

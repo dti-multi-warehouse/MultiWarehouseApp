@@ -1,5 +1,9 @@
 package com.dti.multiwarehouse.warehouse.dao;
 
+import com.dti.multiwarehouse.address.entity.WarehouseAddress;
+import com.dti.multiwarehouse.stock.dao.Stock;
+import com.dti.multiwarehouse.user.entity.WarehouseAdmin;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,11 +12,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
+@Table(name = "warehouse")
 public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "warehouse_id_gen")
@@ -29,4 +35,14 @@ public class Warehouse {
 
     @Column(name = "deletedAt")
     private Instant deletedAt;
+
+    @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private WarehouseAddress warehouseAddress;
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WarehouseAdmin> warehouseAdmins;
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Stock> stocks;
 }
