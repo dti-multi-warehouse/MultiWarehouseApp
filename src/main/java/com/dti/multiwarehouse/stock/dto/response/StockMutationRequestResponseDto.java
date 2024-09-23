@@ -16,7 +16,6 @@ public class StockMutationRequestResponseDto {
     Long warehouseFromId;
     Long warehouseToId;
     int quantity;
-    String productName;
-    String thumbnail;
+    String name;
     Instant createdAt;
 }

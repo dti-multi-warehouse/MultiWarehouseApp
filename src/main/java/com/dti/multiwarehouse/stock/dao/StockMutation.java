@@ -80,8 +80,7 @@ public class StockMutation {
                 .warehouseFromId(warehouseFrom.getId())
                 .warehouseToId(warehouseTo.getId())
                 .quantity(quantity)
-                .productName(product.getName())
-                .thumbnail(product.getImageUrls().getFirst())
+                .name(product.getName())
                 .createdAt(createdAt)
                 .build();
     }
