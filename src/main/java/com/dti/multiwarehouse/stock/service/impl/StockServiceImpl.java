@@ -9,6 +9,7 @@ import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
+import com.dti.multiwarehouse.stock.dto.response.StockMutationRequestResponseDto;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -119,6 +120,18 @@ public class StockServiceImpl implements StockService {
     public List<GetStockResponseDto> getAllStock() {
         return stockRepository.findAll().stream()
                 .map(Stock::toGetStockResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StockMutationRequestResponseDto> getStockMutationRequest() {
+//        determine the warehouse that they are responsible for
+//        var warehouseId = ???
+//        var activeRequests = stockMutationRepository.findAllActiveRequestByWarehouseId(warehouseId)
+//        if they are a superadmin, fetch all
+        var activeRequests = stockMutationRepository.findAllActiveRequest();
+        return activeRequests.stream()
+                .map(StockMutation::toStockMutationRequestResponseDto)
                 .collect(Collectors.toList());
     }
 

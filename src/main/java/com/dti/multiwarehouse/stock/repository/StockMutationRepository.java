@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface StockMutationRepository extends JpaRepository<StockMutation, Long> {
     @Modifying
     @Query(
@@ -30,4 +32,22 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
         """, nativeQuery = true
     )
     void calculateWarehouseStock(@Param("productId") Long productId, @Param("warehouseId") Long warehouseId);
+
+    @Query(
+            value = """
+            SELECT *
+            FROM stock_mutation
+            WHERE warehouse_from_id = :warehouseId and status = 'AWAITING_CONFIRMATION'
+        """, nativeQuery = true
+    )
+    List<StockMutation> findAllActiveRequestByWarehouseId(@Param("warehouseId") Long warehouseId);
+
+    @Query(
+            value = """
+            SELECT *
+            FROM stock_mutation
+            WHERE status = 'AWAITING_CONFIRMATION'
+        """, nativeQuery = true
+    )
+    List<StockMutation> findAllActiveRequest();
 }

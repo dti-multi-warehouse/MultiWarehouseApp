@@ -33,6 +33,12 @@ public class StockController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/mutation")
+    public ResponseEntity<?> getActiveMutationRequests() {
+        var res = stockService.getStockMutationRequest();
+        return Response.success("Successfully retrieved stock mutation requests", res);
+    }
+
     @PutMapping("/mutation/accept/{id}")
     public ResponseEntity<?> acceptMutation(@PathVariable Long id) {
         stockService.acceptStockMutation(id);
