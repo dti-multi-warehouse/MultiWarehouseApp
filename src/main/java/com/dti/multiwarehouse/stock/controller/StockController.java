@@ -39,19 +39,19 @@ public class StockController {
         return Response.success("Successfully retrieved stock mutation requests", res);
     }
 
-    @PutMapping("/mutation/accept/{id}")
+    @PutMapping("/mutation/{id}/accept")
     public ResponseEntity<?> acceptMutation(@PathVariable Long id) {
         stockService.acceptStockMutation(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/reject/{id}")
+    @PutMapping("/mutation/{id}/reject")
     public ResponseEntity<?> rejectMutation(@PathVariable Long id) {
         stockService.rejectStockMutation(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/cancel/{id}")
+    @PutMapping("/mutation/{id}/cancel")
     public ResponseEntity<?> cancelMutation(@PathVariable Long id) {
         stockService.cancelStockMutation(id);
         return ResponseEntity.ok().build();
