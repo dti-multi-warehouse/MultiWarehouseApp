@@ -76,6 +76,7 @@ public class StockMutation {
 
     public StockMutationRequestResponseDto toStockMutationRequestResponseDto() {
         return StockMutationRequestResponseDto.builder()
+                .id(id)
                 .warehouseFromId(warehouseFrom.getId())
                 .warehouseToId(warehouseTo.getId())
                 .quantity(quantity)

@@ -12,6 +12,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 public class StockMutationRequestResponseDto {
+    Long id;
     Long warehouseFromId;
     Long warehouseToId;
     int quantity;
