@@ -21,6 +21,12 @@ public class StockController {
         return Response.success("Successfully retrieved stocks", res);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProductAndStockAvailability(@PathVariable("id") Long id) {
+        var res = stockService.getProductAndStockAvailability(id);
+        return Response.success("Successfully retrieved stock", res);
+    }
+
     @PostMapping("/restock")
     public ResponseEntity<?> restock(@Valid @RequestBody RestockRequestDto requestDto) {
         stockService.restock(requestDto);

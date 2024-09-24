@@ -29,7 +29,7 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
                     ), 0)
             ), 0)
             WHERE stock.warehouse_id = :warehouseId AND stock.product_id = :productId
-        """, nativeQuery = true
+            """, nativeQuery = true
     )
     void calculateWarehouseStock(@Param("productId") Long productId, @Param("warehouseId") Long warehouseId);
 
@@ -38,7 +38,7 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
             SELECT *
             FROM stock_mutation
             WHERE warehouse_from_id = :warehouseId and status = 'AWAITING_CONFIRMATION'
-        """, nativeQuery = true
+            """, nativeQuery = true
     )
     List<StockMutation> findAllActiveRequestByWarehouseId(@Param("warehouseId") Long warehouseId);
 
@@ -47,7 +47,7 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
             SELECT *
             FROM stock_mutation
             WHERE status = 'AWAITING_CONFIRMATION'
-        """, nativeQuery = true
+            """, nativeQuery = true
     )
     List<StockMutation> findAllActiveRequest();
 }
