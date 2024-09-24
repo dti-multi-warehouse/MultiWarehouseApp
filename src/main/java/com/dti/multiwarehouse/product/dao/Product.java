@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -49,7 +50,7 @@ public class Product {
     private Category category;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    private Set<String> imageUrls;
+    private List<String> imageUrls;
 
     @CreationTimestamp
     @Column(name = "createdAt")

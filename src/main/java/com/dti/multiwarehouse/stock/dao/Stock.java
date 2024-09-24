@@ -3,6 +3,10 @@ package com.dti.multiwarehouse.stock.dao;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import jakarta.persistence.*;
+import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -58,5 +62,15 @@ public class Stock {
     @Override
     public final int hashCode() {
         return Objects.hash(id);
+    }
+
+    public GetStockResponseDto toGetStockResponseDto() {
+        return GetStockResponseDto.builder()
+                .id(id.getProduct().getId())
+                .warehouseId(id.getWarehouse().getId())
+                .thumbnail(id.getProduct().getImageUrls().stream().findFirst().orElse(null))
+                .name(id.getProduct().getName())
+                .stock(stock)
+                .build();
     }
 }

@@ -114,11 +114,11 @@ public class ProductServiceImpl implements ProductService {
             product.setCategory(category);
         }
 
-        var currentImageUrls = new HashSet<>(product.getImageUrls());
-        Set<String> deletedImageUrls;
+        var currentImageUrls = new ArrayList<>(product.getImageUrls());
+        List<String> deletedImageUrls;
 
         if (requestDto.getPrevImages() != null) {
-            deletedImageUrls = new HashSet<>(currentImageUrls);
+            deletedImageUrls = new ArrayList<>(currentImageUrls);
             deletedImageUrls.removeAll(requestDto.getPrevImages());
         } else {
             deletedImageUrls = currentImageUrls;
@@ -198,7 +198,7 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-    private void deleteImages(Set<String> imageUrls) {
+    private void deleteImages(List<String> imageUrls) {
         try {
             for (var imageUrl : imageUrls) {
                 cloudImageStorageService.deleteImage(imageUrl);
