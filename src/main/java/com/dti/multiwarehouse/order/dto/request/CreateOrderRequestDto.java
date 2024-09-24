@@ -6,10 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateOrderRequestDto {
     private PaymentMethod paymentMethod;
     private BankTransfer bankTransfer;
+    private Long shippingAddressId;
+    private Long warehouseId;
+    private List<Long> productIds;
+    private String shippingMethod;
 }

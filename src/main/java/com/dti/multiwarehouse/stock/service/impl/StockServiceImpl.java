@@ -13,9 +13,11 @@ import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
 import com.dti.multiwarehouse.stock.service.StockService;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
+import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class StockServiceImpl implements StockService {
 
     private final WarehouseService warehouseService;
     private final ProductService productService;
+    private final WarehouseRepository warehouseRepository;
 
     @Override
     public void restock(RestockRequestDto requestDto) {
@@ -194,5 +197,34 @@ public class StockServiceImpl implements StockService {
             var newStock = new Stock(key, 0);
             stockRepository.save(newStock);
         }
+    }
+
+    public int getStockForProductInWarehouse(Long productId, Long warehouseId) {
+        var product = productService.findProductById(productId);
+        var warehouse = warehouseService.findWarehouseById(warehouseId);
+        var stockOptional = stockRepository.findById(new StockCompositeKey(product, warehouse));
+
+        return stockOptional.map(Stock::getStock).orElse(0);
+    }
+
+    public Warehouse findWarehouseForOrder(List<CartItem> cartItems) {
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+
+        for (Warehouse warehouse : warehouses) {
+            boolean allItemsAvailable = true;
+
+            for (CartItem item : cartItems) {
+                int availableStock = getStockForProductInWarehouse(item.getProductId(), warehouse.getId());
+                if (availableStock < item.getQuantity()) {
+                    allItemsAvailable = false;
+                    break;
+                }
+            }
+
+            if (allItemsAvailable) {
+                return warehouse;
+            }
+        }
+        return null;
     }
 }

@@ -26,7 +26,7 @@ import java.util.Set;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_id_gen")
-    @SequenceGenerator(name = "order_id_gen", sequenceName = "order_id_seq")
+    @SequenceGenerator(name = "order_id_gen", sequenceName = "order_id_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,6 +48,9 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+
+    @Column(name = "shipping_cost", nullable = false)
+    private int shippingCost;
 
     @Enumerated(EnumType.STRING)
     private BankTransfer bank;
