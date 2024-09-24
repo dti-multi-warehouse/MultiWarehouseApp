@@ -3,6 +3,8 @@ package com.dti.multiwarehouse.warehouse.service.impl;
 import com.dti.multiwarehouse.address.entity.Address;
 import com.dti.multiwarehouse.address.entity.WarehouseAddress;
 import com.dti.multiwarehouse.address.repository.AddressRepository;
+import com.dti.multiwarehouse.cart.dto.CartItem;
+import com.dti.multiwarehouse.stock.service.StockService;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.entity.WarehouseAdmin;
 import com.dti.multiwarehouse.user.repository.UserRepository;
@@ -14,6 +16,7 @@ import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

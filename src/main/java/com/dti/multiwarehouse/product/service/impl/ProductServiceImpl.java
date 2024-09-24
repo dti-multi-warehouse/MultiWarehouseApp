@@ -167,6 +167,14 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public int getProductPrice(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+
+        return product.getPrice();
+    }
+
     private List<String> uploadImages(List<MultipartFile> images) throws IOException {
         var imageUrls = new ArrayList<String>();
 

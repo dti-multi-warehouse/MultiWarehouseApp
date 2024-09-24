@@ -1,31 +1,41 @@
 package com.dti.multiwarehouse.order.service.impl;
 
+import com.dti.multiwarehouse.address.entity.UserAddress;
+import com.dti.multiwarehouse.address.repository.UserAddressRepository;
 import com.dti.multiwarehouse.cart.dto.GetCartResponseDto;
 import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import com.dti.multiwarehouse.exceptions.ApplicationException;
 import com.dti.multiwarehouse.exceptions.InsufficientStockException;
+import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.order.dao.Order;
 import com.dti.multiwarehouse.order.dao.OrderItem;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
+import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
 import com.dti.multiwarehouse.order.dto.response.MindtransChargeDto;
+import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
+import com.dti.multiwarehouse.order.service.ShippingService;
+import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.stock.service.StockService;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.service.UserService;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
+import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import com.midtrans.httpclient.error.MidtransError;
 import com.midtrans.service.MidtransCoreApi;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,13 +49,14 @@ import java.util.*;
 @Service
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-
+    @Lazy
     private final StockService stockService;
     private final CartService cartService;
     private final UserService userService;
-    private final WarehouseService warehouseService;
     private final CloudImageStorageService cloudImageStorageService;
     private final ProductService productService;
+    private final ShippingService shippingService;
+    private final UserAddressRepository userAddressRepository;
 
     @Resource
     private final MidtransCoreApi midtransCoreApi;
@@ -57,28 +68,78 @@ public class OrderServiceImpl implements OrderService {
         if (cart.getCartItems().isEmpty()) {
             throw new EntityNotFoundException("Cart is empty");
         }
+
         var user = userService.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        var warehouse = warehouseService.findWarehouseById(1L);
-        var price = cart.getTotalPrice(); // + shipping fees
-        var order = createNewOrder(user, warehouse, price, requestDto.getPaymentMethod(), cart);
 
-        if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
-            var res = processMidtransPayment(price, requestDto.getBankTransfer());
-            order.setBank(BankTransfer.valueOf(res.getBank().toUpperCase()));
-            order.setAccountNumber(res.getVaNumber());
-        } else {
-            order.setBank(BankTransfer.BCA);
-            order.setAccountNumber(UUID.randomUUID().toString());
+        UserAddress userAddress = userAddressRepository.findById(requestDto.getShippingAddressId())
+                .orElseThrow(() -> new EntityNotFoundException("Shipping address not found"));
+
+        Warehouse nearestWarehouse = shippingService.findNearestWarehouse(userAddress.getAddress().getId());
+        if (nearestWarehouse == null) {
+            throw new EntityNotFoundException("No suitable warehouse found for the shipping address");
         }
 
-        orderRepository.save(order);
-        stockService.processOrder(warehouse.getId(), cart.getCartItems());
-        cartService.deleteCart(sessionId);
+        checkStockAvailability(requestDto.getProductIds(), nearestWarehouse);
+        int totalWeight = calculateTotalWeight(requestDto.getProductIds());
 
-        return order.toCreateOrderResponseDto();
+        ShippingCostRequestDto shippingRequest = new ShippingCostRequestDto();
+        shippingRequest.setOriginCityId(nearestWarehouse.getId());
+        shippingRequest.setDestinationCityId(userAddress.getAddress().getId());
+        shippingRequest.setWeight(totalWeight);
+        shippingRequest.setCourier(requestDto.getShippingMethod());
+
+        ShippingCostResponseDto shippingResponse = shippingService.calculateShippingCost(shippingRequest);
+        if (shippingResponse.getRajaOngkir() != null && !shippingResponse.getRajaOngkir().getResults().isEmpty()) {
+            var result = shippingResponse.getRajaOngkir().getResults().get(0);
+            List<ShippingCostResponseDto.RajaOngkir.Result.Cost> costs = result.getCosts();
+            if (costs.isEmpty() || costs.get(0).getCost().isEmpty()) {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "No shipping cost available for the selected method.");
+            }
+
+            int shippingCost = costs.get(0).getCost().get(0).getValue();
+            var totalPrice = cart.getTotalPrice() + shippingCost;
+
+            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart);
+            order.setShippingCost(shippingCost);
+
+            if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
+                var res = processMidtransPayment(totalPrice, requestDto.getBankTransfer());
+                order.setBank(BankTransfer.valueOf(res.getBank().toUpperCase()));
+                order.setAccountNumber(res.getVaNumber());
+            } else {
+                order.setBank(BankTransfer.BCA);
+                order.setAccountNumber(UUID.randomUUID().toString());
+            }
+
+            orderRepository.save(order);
+            stockService.processOrder(nearestWarehouse.getId(), cart.getCartItems());
+            cartService.deleteCart(sessionId);
+
+            return order.toCreateOrderResponseDto();
+        } else {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "No shipping options available.");
+        }
     }
 
+    private int calculateTotalWeight(List<Long> productIds) {
+        int totalWeight = 0;
+        int defaultWeightPerProduct = 300;
+        for (Long productId : productIds) {
+            totalWeight += defaultWeightPerProduct;
+        }
+
+        return totalWeight;
+    }
+
+    private void checkStockAvailability(List<Long> productIds, Warehouse nearestWarehouse) {
+        for (Long productId : productIds) {
+            Product product = productService.findProductById(productId);
+            if (product.getStock() <= 0) {
+                throw new InsufficientStockException("Insufficient stock for product: " + product.getName());
+            }
+        }
+    }
     @Override
     public void uploadPaymentProof(Long id, MultipartFile image) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));

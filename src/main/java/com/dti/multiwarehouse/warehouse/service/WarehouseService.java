@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.warehouse.service;
 
+import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.dto.AssignWarehouseAdminDTO;
 import com.dti.multiwarehouse.warehouse.dto.WarehouseDTO;
