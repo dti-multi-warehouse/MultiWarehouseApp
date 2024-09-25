@@ -1,15 +1,13 @@
-package com.dti.multiwarehouse.stock.dto.response;
+package com.dti.multiwarehouse.stock.dto.request;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GetStockAvailabilityResponseDto {
+public class GetWarehouseAndStockAvailabililtyRequestDto {
     private Long warehouseId;
-    private int stock;
+    private Long productId;
 }

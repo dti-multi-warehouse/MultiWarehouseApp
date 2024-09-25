@@ -8,10 +8,7 @@ import com.dti.multiwarehouse.stock.dao.enums.StockMutStatus;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
-import com.dti.multiwarehouse.stock.dto.response.GetProductAndStockAvailabilityDto;
-import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
-import com.dti.multiwarehouse.stock.dto.response.RetrieveProductAndStockAvailabilityDto;
-import com.dti.multiwarehouse.stock.dto.response.StockMutationRequestResponseDto;
+import com.dti.multiwarehouse.stock.dto.response.*;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -140,8 +137,17 @@ public class StockServiceImpl implements StockService {
     @Override
     public List<GetProductAndStockAvailabilityDto> getProductAndStockAvailability(Long warehouseId) {
         var res = stockRepository.retrieveProductAndStockAvailability(warehouseId);
-//        res.forEach(r -> System.out.println(r.getName()));
-        return res.stream().map(GetProductAndStockAvailabilityDto::fromDto).collect(Collectors.toList());
+        return res.stream()
+                .map(GetProductAndStockAvailabilityDto::fromDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GetWarehouseAndStockAvailabilityResponseDto> getWarehouseAndStockAvailability(Long warehouseId, Long productId) {
+        var res = stockRepository.retrieveWarehouseAndStockAvailability(warehouseId, productId);
+        return res.stream()
+                .map(GetWarehouseAndStockAvailabilityResponseDto::fromDto)
+                .collect(Collectors.toList());
     }
 
     private boolean autoMutateStock(Long productId, Warehouse closestWarehouse, List<Warehouse> warehouses, int quantity) {

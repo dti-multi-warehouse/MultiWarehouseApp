@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.stock.controller;
 
 import com.dti.multiwarehouse.response.Response;
+import com.dti.multiwarehouse.stock.dto.request.GetWarehouseAndStockAvailabililtyRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -24,6 +25,12 @@ public class StockController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductAndStockAvailability(@PathVariable("id") Long id) {
         var res = stockService.getProductAndStockAvailability(id);
+        return Response.success("Successfully retrieved stock", res);
+    }
+
+    @GetMapping("/warehouse")
+    public ResponseEntity<?> getWarehouseAndStockAvailability(@RequestBody GetWarehouseAndStockAvailabililtyRequestDto requestDto) {
+        var res = stockService.getWarehouseAndStockAvailability(requestDto.getWarehouseId(), requestDto.getProductId());
         return Response.success("Successfully retrieved stock", res);
     }
 

@@ -3,6 +3,7 @@ package com.dti.multiwarehouse.stock.repository;
 import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.response.RetrieveProductAndStockAvailabilityDto;
+import com.dti.multiwarehouse.stock.dto.response.RetrieveWarehouseAndStockAvailabilityDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,4 +27,13 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     )
     List<RetrieveProductAndStockAvailabilityDto> retrieveProductAndStockAvailability(@Param("warehouseId") Long warehouseId);
 
+    @Query(
+            value = """
+            SELECT s.stock, w.id AS warehouseId
+            FROM stock AS s
+            JOIN warehouse AS w ON s.warehouse_id = w.id
+            WHERE w.id != :warehouseId AND s.product_id = :productId
+            """, nativeQuery = true
+    )
+    List<RetrieveWarehouseAndStockAvailabilityDto> retrieveWarehouseAndStockAvailability(@Param("warehouseId") Long warehouseId, @Param("productId") Long productId);
 }
