@@ -29,8 +29,8 @@ public class StockController {
     }
 
     @GetMapping("/warehouse")
-    public ResponseEntity<?> getWarehouseAndStockAvailability(@RequestBody GetWarehouseAndStockAvailabililtyRequestDto requestDto) {
-        var res = stockService.getWarehouseAndStockAvailability(requestDto.getWarehouseId(), requestDto.getProductId());
+    public ResponseEntity<?> getWarehouseAndStockAvailability(@RequestParam Long warehouseId, @RequestParam Long productId) {
+        var res = stockService.getWarehouseAndStockAvailability(warehouseId, productId);
         return Response.success("Successfully retrieved stock", res);
     }
 
