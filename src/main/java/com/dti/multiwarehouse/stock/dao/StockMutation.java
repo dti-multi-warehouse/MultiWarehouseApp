@@ -2,6 +2,7 @@ package com.dti.multiwarehouse.stock.dao;
 
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.stock.dao.enums.StockMutStatus;
+import com.dti.multiwarehouse.stock.dto.response.StockMutationRequestResponseDto;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import jakarta.persistence.*;
 import lombok.*;
@@ -71,5 +72,16 @@ public class StockMutation {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    public StockMutationRequestResponseDto toStockMutationRequestResponseDto() {
+        return StockMutationRequestResponseDto.builder()
+                .id(id)
+                .warehouseFromId(warehouseFrom.getId())
+                .warehouseToId(warehouseTo.getId())
+                .quantity(quantity)
+                .name(product.getName())
+                .createdAt(createdAt)
+                .build();
     }
 }

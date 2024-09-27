@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.stock.controller;
 
 import com.dti.multiwarehouse.response.Response;
+import com.dti.multiwarehouse.stock.dto.request.GetWarehouseAndStockAvailabililtyRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -21,6 +22,18 @@ public class StockController {
         return Response.success("Successfully retrieved stocks", res);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProductAndStockAvailability(@PathVariable("id") Long id) {
+        var res = stockService.getProductAndStockAvailability(id);
+        return Response.success("Successfully retrieved stock", res);
+    }
+
+    @GetMapping("/warehouse")
+    public ResponseEntity<?> getWarehouseAndStockAvailability(@RequestParam Long warehouseId, @RequestParam Long productId) {
+        var res = stockService.getWarehouseAndStockAvailability(warehouseId, productId);
+        return Response.success("Successfully retrieved stock", res);
+    }
+
     @PostMapping("/restock")
     public ResponseEntity<?> restock(@Valid @RequestBody RestockRequestDto requestDto) {
         stockService.restock(requestDto);
@@ -33,19 +46,25 @@ public class StockController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/accept/{id}")
+    @GetMapping("/mutation")
+    public ResponseEntity<?> getActiveMutationRequests() {
+        var res = stockService.getStockMutationRequest();
+        return Response.success("Successfully retrieved stock mutation requests", res);
+    }
+
+    @PutMapping("/mutation/{id}/accept")
     public ResponseEntity<?> acceptMutation(@PathVariable Long id) {
         stockService.acceptStockMutation(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/reject/{id}")
+    @PutMapping("/mutation/{id}/reject")
     public ResponseEntity<?> rejectMutation(@PathVariable Long id) {
         stockService.rejectStockMutation(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/cancel/{id}")
+    @PutMapping("/mutation/{id}/cancel")
     public ResponseEntity<?> cancelMutation(@PathVariable Long id) {
         stockService.cancelStockMutation(id);
         return ResponseEntity.ok().build();
