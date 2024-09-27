@@ -1,6 +1,5 @@
 package com.dti.multiwarehouse.dashboard.dto.response;
 
-import com.dti.multiwarehouse.dashboard.dto.request.RetrieveMonthlySalesReport;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,13 +9,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GetMonthlySalesReport {
+public class GetMonthlySalesReportResponseDto {
     Long id;
     String name;
     int revenue;
 
-    public static GetMonthlySalesReport fromDto(RetrieveMonthlySalesReport dto) {
-        return GetMonthlySalesReport.builder()
+    public static GetMonthlySalesReportResponseDto fromDto(RetrieveMonthlySalesReport dto) {
+        return GetMonthlySalesReportResponseDto.builder()
                 .id(dto.getId())
                 .name(dto.getName())
                 .revenue(dto.getRevenue())

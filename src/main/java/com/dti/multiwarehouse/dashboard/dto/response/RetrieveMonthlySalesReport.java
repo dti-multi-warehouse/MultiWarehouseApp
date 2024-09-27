@@ -1,4 +1,4 @@
-package com.dti.multiwarehouse.dashboard.dto.request;
+package com.dti.multiwarehouse.dashboard.dto.response;
 
 public interface RetrieveMonthlySalesReport {
     Long getId();
