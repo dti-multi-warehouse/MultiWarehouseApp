@@ -7,6 +7,7 @@ import com.dti.multiwarehouse.warehouse.dto.WarehouseDTO;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,18 @@ import java.util.List;
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchWarehouses(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String province,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<WarehouseDTO> warehouses = warehouseService.searchWarehouses(name, city, province, page, size);
+        return Response.success("Warehouses retrieved successfully", warehouses);
+    }
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('admin')")
@@ -50,8 +63,14 @@ public class WarehouseController {
     @PostMapping("/assign-admin")
     @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> assignWarehouseAdmin(@RequestBody AssignWarehouseAdminDTO dto) {
-        warehouseService.assignWarehouseAdmin(dto);
-        return ResponseEntity.ok("Warehouse admin assigned successfully");
+        try {
+            warehouseService.assignWarehouseAdmin(dto);
+            return ResponseEntity.ok("Warehouse admin assigned successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred while assigning the warehouse admin");
+        }
     }
 
     @GetMapping("/{id}")

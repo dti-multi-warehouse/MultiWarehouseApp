@@ -75,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
         UserAddress userAddress = userAddressRepository.findById(requestDto.getShippingAddressId())
                 .orElseThrow(() -> new EntityNotFoundException("Shipping address not found"));
 
-        Warehouse nearestWarehouse = shippingService.findNearestWarehouse(userAddress.getAddress().getId());
+        Warehouse nearestWarehouse = shippingService.findNearestWarehouse(userAddress.getId());
         if (nearestWarehouse == null) {
             throw new EntityNotFoundException("No suitable warehouse found for the shipping address");
         }
@@ -85,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
 
         ShippingCostRequestDto shippingRequest = new ShippingCostRequestDto();
         shippingRequest.setOriginCityId(nearestWarehouse.getId());
-        shippingRequest.setDestinationCityId(userAddress.getAddress().getId());
+        shippingRequest.setDestinationCityId(userAddress.getId());
         shippingRequest.setWeight(totalWeight);
         shippingRequest.setCourier(requestDto.getShippingMethod());
 

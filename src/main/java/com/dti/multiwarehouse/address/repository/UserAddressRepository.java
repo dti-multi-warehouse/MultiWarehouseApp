@@ -7,9 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserAddressRepository extends JpaRepository<UserAddress, Long> {
     List<UserAddress> findByUserId(Long userId);
+    Optional<UserAddress> findById(Long userAddressId);
     @Modifying
     @Transactional
     @Query("UPDATE UserAddress ua SET ua.isPrimary = false WHERE ua.user.id = :userId AND ua.isPrimary = true")
