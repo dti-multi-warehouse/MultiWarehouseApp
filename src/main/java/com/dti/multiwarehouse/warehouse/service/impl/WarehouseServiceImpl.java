@@ -12,11 +12,14 @@ import com.dti.multiwarehouse.user.repository.WarehouseAdminRepository;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.dto.AssignWarehouseAdminDTO;
 import com.dti.multiwarehouse.warehouse.dto.WarehouseDTO;
+import com.dti.multiwarehouse.warehouse.mapper.WarehouseMapper;
 import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,34 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Override
     @Transactional
+    public Page<WarehouseDTO> searchWarehouses(String name, String city, String province, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<Warehouse> warehouses = warehouseRepository.searchWarehouses(name, city, province, pageRequest);
+
+        return warehouses.map(this::mapToWarehouseDTO);
+    }
+
+    private WarehouseDTO mapToWarehouseDTO(Warehouse warehouse) {
+        WarehouseDTO dto = new WarehouseDTO();
+        dto.setId(warehouse.getId());
+        dto.setName(warehouse.getName());
+        dto.setStreet(warehouse.getWarehouseAddress().getAddress().getStreet());
+        dto.setCity(warehouse.getWarehouseAddress().getAddress().getCity());
+        dto.setProvince(warehouse.getWarehouseAddress().getAddress().getProvince());
+        dto.setLatitude(warehouse.getWarehouseAddress().getAddress().getLatitude());
+        dto.setLongitude(warehouse.getWarehouseAddress().getAddress().getLongitude());
+
+        Optional<WarehouseAdmin> warehouseAdmin = warehouseAdminRepository.findByWarehouse(warehouse);
+        if (warehouseAdmin.isPresent()) {
+            dto.setAdminUsername(warehouseAdmin.get().getUser().getUsername());
+        } else {
+            dto.setAdminUsername("Unassigned");
+        }
+        return dto;
+    }
+
+    @Override
+    @Transactional
     public Warehouse createWarehouse(WarehouseDTO dto) {
         Address address = new Address();
         address.setStreet(dto.getStreet());
@@ -44,6 +75,7 @@ public class WarehouseServiceImpl implements WarehouseService {
         Address savedAddress = addressRepository.save(address);
 
         Warehouse warehouse = new Warehouse();
+        warehouse.setName(dto.getName());
 
         WarehouseAddress warehouseAddress = new WarehouseAddress();
         warehouseAddress.setAddress(savedAddress);
@@ -64,6 +96,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         Warehouse warehouse = warehouseOpt.get();
         Address address = warehouse.getWarehouseAddress().getAddress();
+        warehouse.setName(dto.getName());
         address.setStreet(dto.getStreet());
         address.setCity(dto.getCity());
         address.setProvince(dto.getProvince());
@@ -119,7 +152,10 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         Warehouse warehouse = warehouseOpt.get();
         User user = userOpt.get();
-
+        if (!user.getRole().equalsIgnoreCase("warehouse_admin")) {
+            throw new IllegalArgumentException("Only users with 'warehouse_admin' role can be assigned to a warehouse.");
+        }
+        
         WarehouseAdmin warehouseAdmin = new WarehouseAdmin();
         warehouseAdmin.setUser(user);
         warehouseAdmin.setWarehouse(warehouse);

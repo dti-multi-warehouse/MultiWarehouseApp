@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
@@ -16,10 +17,12 @@ public class WarehouseAdmin {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "warehouse_id", nullable = false)
+    @JsonBackReference
     private Warehouse warehouse;
 
     private LocalDateTime createdAt = LocalDateTime.now();
