@@ -14,10 +14,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             value = """
             SELECT COALESCE(SUM(o.price), 0) AS revenue
             FROM orders as o
-            WHERE o.warehouse_id = ? AND date_trunc('month', o.created_at) = date_trunc('month', ?::timestamp)
+            WHERE o.warehouse_id = :warehouseId
+            AND date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp))
+            AND o.status != 'CANCELLED'
             """, nativeQuery = true
     )
-    int getMonthlyTotalSalesReport(@Param("warehouseId") Long warehouseId, @Param("currentDate") Date currentDate);
+    int getMonthlyTotalSalesReport(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
 
     @Query(
             value = """
@@ -25,11 +28,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
              FROM orders AS o
              JOIN order_item AS i ON o.id = i.order_id
              JOIN product AS p ON i.product_id = p.id
-             WHERE o.warehouse_id = ? AND date_trunc('month', o.created_at) = date_trunc('month', ?::timestamp)
+             WHERE o.warehouse_id = :warehouseId
+             AND date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
+             AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp))
+             AND o.status != 'CANCELLED'
              GROUP BY p.id
             """, nativeQuery = true
     )
-    List<RetrieveMonthlySalesReport> getMonthlyProductSalesReport(@Param("warehouseId") Long warehouseId, @Param("currentDate") Date currentDate);
+    List<RetrieveMonthlySalesReport> getMonthlyProductSalesReport(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
 
     @Query(
             value = """
@@ -38,9 +44,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             JOIN order_item AS i ON o.id = i.order_id
             JOIN product AS p ON i.product_id = p.id
             JOIN category AS c ON p.category_id = c.id
-            WHERE o.warehouse_id = ? AND date_trunc('month', o.created_at) = date_trunc('month', ?::timestamp)
+            WHERE o.warehouse_id = :warehouseId
+            AND date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp))
+            AND o.status != 'CANCELLED'
             GROUP BY c.id
             """, nativeQuery = true
     )
-    List<RetrieveMonthlySalesReport> getMonthlyCategorySalesReport(@Param("warehouseId") Long warehouseId, @Param("currentDate") Date currentDate);
+    List<RetrieveMonthlySalesReport> getMonthlyCategorySalesReport(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
 }
