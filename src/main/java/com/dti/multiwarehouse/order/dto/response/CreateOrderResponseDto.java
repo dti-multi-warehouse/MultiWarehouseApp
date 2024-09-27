@@ -19,4 +19,5 @@ public class CreateOrderResponseDto {
     private BankTransfer bankTransfer;
     private PaymentMethod paymentMethod;
     private Instant paymentExpiredAt;
+    private int shippingCost;
 }

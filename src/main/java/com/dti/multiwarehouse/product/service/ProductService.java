@@ -21,5 +21,6 @@ public interface ProductService {
     boolean isExist(Long id);
     Product findProductById(Long id);
     List<ProductSummaryResponseDto> getAllProducts();
+    int getProductPrice(Long productId);
     void updateSoldAndStock(Long id);
 }

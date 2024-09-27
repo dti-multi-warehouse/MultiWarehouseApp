@@ -5,6 +5,8 @@ import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.dto.response.*;
+import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
+import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -26,4 +28,6 @@ public interface StockService {
     List<StockMutationRequestResponseDto> getStockMutationRequest();
     List<GetProductAndStockAvailabilityDto> getProductAndStockAvailability(Long warehouseId);
     List<GetWarehouseAndStockAvailabilityResponseDto> getWarehouseAndStockAvailability(Long warehouseId, Long productId);
+    int getStockForProductInWarehouse(Long productId, Long warehouseId);
+    Warehouse findWarehouseForOrder(List<CartItem> cartItems);
 }

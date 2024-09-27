@@ -49,6 +49,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
+    @Column(name = "shipping_cost", nullable = false)
+    private int shippingCost;
+
     @Enumerated(EnumType.STRING)
     private BankTransfer bank;
 
