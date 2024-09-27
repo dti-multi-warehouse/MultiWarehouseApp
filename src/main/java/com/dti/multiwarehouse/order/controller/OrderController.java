@@ -41,7 +41,7 @@ public class OrderController {
 
     @PostMapping("/payment/{id}")
     public ResponseEntity<?> createPayment(@PathVariable("id") Long id, MultipartFile paymentProof) {
-        orderService.uploadPaymentProof(id,paymentProof);
+        orderService.uploadPaymentProof(id, paymentProof);
         return ResponseEntity.ok().build();
     }
 

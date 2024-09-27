@@ -25,6 +25,9 @@ public class Warehouse {
     @SequenceGenerator(name = "warehouse_id_gen", sequenceName = "warehouse_id_seq", allocationSize = 1)
     private Long id;
 
+    @Column(name = "name")
+    private String name;
+
     @CreationTimestamp
     @Column(name = "createdAt")
     private Instant createdAt;
@@ -36,13 +39,13 @@ public class Warehouse {
     @Column(name = "deletedAt")
     private Instant deletedAt;
 
-    @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL)
     @JsonManagedReference
     private WarehouseAddress warehouseAddress;
 
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
     private List<WarehouseAdmin> warehouseAdmins;
 
-//    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<Stock> stocks;
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    private List<Stock> stocks;
 }

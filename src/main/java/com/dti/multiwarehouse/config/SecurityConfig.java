@@ -86,6 +86,8 @@ public class SecurityConfig {
                     auth.requestMatchers("/api/v1/auth/**").permitAll();
                     auth.requestMatchers("/api/v1/product").permitAll();
                     auth.requestMatchers("/api/v1/product/**").permitAll();
+                    auth.requestMatchers("/api/v1/admin/warehouse-admins/**").hasRole("admin");
+                    auth.requestMatchers("/api/v1/admin/users/**").authenticated();
                     auth.anyRequest().permitAll();
                 })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -47,7 +47,7 @@ public class ShippingServiceImpl implements ShippingService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "No suitable warehouse found for the shipping address");
         }
 
-        String payload = createPayload(nearestWarehouse.getWarehouseAddress().getAddress().getId(), userAddress.getAddress().getId(), request);
+        String payload = createPayload(nearestWarehouse.getWarehouseAddress().getAddress().getId(), userAddress.getId(), request);
         HttpEntity<String> entity = createHttpEntity(payload);
 
         try {
@@ -98,16 +98,15 @@ public class ShippingServiceImpl implements ShippingService {
     @Override
     public Warehouse findNearestWarehouse(Long userAddressId) {
         List<Warehouse> warehouses = warehouseRepository.findAll();
-        UserAddress userAddress = userAddressRepository.findById(userAddressId)
-                .orElseThrow(() -> new ResourceNotFoundException("User address not found with ID: " + userAddressId));
+        Optional<UserAddress> userAddress = userAddressRepository.findById(userAddressId);
 
         Warehouse nearestWarehouse = null;
         double shortestDistance = Double.MAX_VALUE;
 
         for (Warehouse warehouse : warehouses) {
             double distance = haversineDistance(
-                    userAddress.getAddress().getLatitude(),
-                    userAddress.getAddress().getLongitude(),
+                    userAddress.get().getAddress().getLatitude(),
+                    userAddress.get().getAddress().getLongitude(),
                     warehouse.getWarehouseAddress().getAddress().getLatitude(),
                     warehouse.getWarehouseAddress().getAddress().getLongitude()
             );
