@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -117,9 +118,10 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<GetStockResponseDto> getAllStock() {
-        return stockRepository.findAll().stream()
-                .map(Stock::toGetStockResponseDto)
+    public List<GetStockResponseDto> getAllStock(Long warehouseId, LocalDate date) {
+        return stockRepository.retrieveStock(warehouseId, date)
+                .stream()
+                .map(GetStockResponseDto::fromDto)
                 .collect(Collectors.toList());
     }
 

@@ -1,14 +1,16 @@
 package com.dti.multiwarehouse.stock.controller;
 
 import com.dti.multiwarehouse.response.Response;
-import com.dti.multiwarehouse.stock.dto.request.GetWarehouseAndStockAvailabililtyRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.service.StockService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RequiredArgsConstructor
 @RestController
@@ -17,8 +19,14 @@ public class StockController {
     private final StockService stockService;
 
     @GetMapping
-    public ResponseEntity<?> getAllStocks() {
-        var res = stockService.getAllStock();
+    public ResponseEntity<?> getAllStocks(
+            @RequestParam Long warehouseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        var res = stockService.getAllStock(warehouseId, date);
         return Response.success("Successfully retrieved stocks", res);
     }
 
