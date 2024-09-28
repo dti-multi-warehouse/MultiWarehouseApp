@@ -126,6 +126,14 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
+    public List<GetStockDetailsResponseDto> getStockDetails(Long warehouseId, Long productId) {
+        return stockRepository.retrieveStockDetails(warehouseId, productId)
+                .stream()
+                .map(GetStockDetailsResponseDto::fromDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<StockMutationRequestResponseDto> getStockMutationRequest() {
 //        determine the warehouse that they are responsible for
 //        var warehouseId = ???

@@ -25,6 +25,7 @@ public interface StockService {
     @Transactional
     void processOrder(Long warehouseId, List<CartItem> cartItems);
     List<GetStockResponseDto> getAllStock(Long warehouseId, LocalDate date);
+    List<GetStockDetailsResponseDto> getStockDetails(Long warehouseId,Long productId);
     List<StockMutationRequestResponseDto> getStockMutationRequest();
     List<GetProductAndStockAvailabilityDto> getProductAndStockAvailability(Long warehouseId);
     List<GetWarehouseAndStockAvailabilityResponseDto> getWarehouseAndStockAvailability(Long warehouseId, Long productId);

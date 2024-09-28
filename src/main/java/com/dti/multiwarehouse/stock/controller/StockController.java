@@ -30,6 +30,15 @@ public class StockController {
         return Response.success("Successfully retrieved stocks", res);
     }
 
+    @GetMapping("/details")
+    public ResponseEntity<?> getStockDetails(
+            @RequestParam Long warehouseId,
+            @RequestParam Long productId
+    ) {
+        var res = stockService.getStockDetails(warehouseId, productId);
+        return Response.success("Successfully retrieved stock details", res);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductAndStockAvailability(@PathVariable("id") Long id) {
         var res = stockService.getProductAndStockAvailability(id);

@@ -4,6 +4,7 @@ import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.response.RetrieveProductAndStockAvailabilityDto;
 import com.dti.multiwarehouse.stock.dto.response.RetrieveStock;
+import com.dti.multiwarehouse.stock.dto.response.RetrieveStockDetails;
 import com.dti.multiwarehouse.stock.dto.response.RetrieveWarehouseAndStockAvailabilityDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -88,4 +89,36 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             """, nativeQuery = true
     )
     List<RetrieveWarehouseAndStockAvailabilityDto> retrieveWarehouseAndStockAvailability(@Param("warehouseId") Long warehouseId, @Param("productId") Long productId);
+    @Query(
+            value = """
+            SELECT created_at, -(quantity) as quantity, 'order' AS source, order_data.id AS note
+            FROM (
+                SELECT o.id, oi.quantity, o.created_at
+                FROM order_item AS oi
+                JOIN orders AS o ON oi.order_id = o.id
+                WHERE oi.product_id = :productId
+            ) AS order_data
+            
+            UNION
+            
+            SELECT created_at, quantity, 'restock' AS source, 0 AS note
+            FROM stock_mutation
+            WHERE product_id = :productId AND warehouse_to_id = :warehouseId AND warehouse_from_id is null
+            
+            UNION
+            
+            SELECT created_at, quantity, 'mutation_in' AS source, warehouse_from_id AS note
+            FROM stock_mutation
+            WHERE product_id = :productId AND warehouse_to_id = :warehouseId AND warehouse_from_id is not null
+            
+            UNION
+            
+            SELECT created_at, -(quantity) as quantity, 'mutation_out' AS source, warehouse_to_id AS note
+            FROM stock_mutation
+            WHERE product_id = :productId AND warehouse_from_id = :warehouseId
+            
+            ORDER BY created_at;
+            """, nativeQuery = true
+    )
+    List<RetrieveStockDetails> retrieveStockDetails(@Param("warehouseId") Long warehouseId, @Param("productId") Long productId);
 }
