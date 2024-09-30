@@ -1,0 +1,22 @@
+services:
+  multi-warehouse-web:
+    build:
+      context: ./MultiWarehouseWeb
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./MultiWarehouseWeb/.env
+
+  multi-warehouse:
+    build:
+      context: ./MultiWarehouse
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+    env_file:
+      - ./MultiWarehouse/.env
