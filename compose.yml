@@ -1,10 +1,22 @@
 services:
-  backend-app:
-    container_name: alpha-march
+  multi-warehouse-web:
     build:
-      context: .
+      context: ./MultiWarehouseWeb
       dockerfile: Dockerfile
     ports:
-      - 8080:8080
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
     env_file:
-      - .env
+      - ./MultiWarehouseWeb/.env
+
+  multi-warehouse:
+    build:
+      context: ./MultiWarehouse
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+    env_file:
+      - ./MultiWarehouse/.env
