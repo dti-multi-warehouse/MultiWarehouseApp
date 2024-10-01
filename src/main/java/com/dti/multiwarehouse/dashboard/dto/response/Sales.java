@@ -6,11 +6,11 @@ import java.time.LocalDate;
 
 @Data
 public class Sales {
-    LocalDate salesDate;
+    LocalDate saleDate;
     int revenue;
 
     public Sales(RetrieveTotalSales dto) {
-        this.salesDate = dto.getSaleDate();
+        this.saleDate = dto.getSaleDate();
         this.revenue = dto.getRevenue();
     }
 
