@@ -97,28 +97,40 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 FROM order_item AS oi
                 JOIN orders AS o ON oi.order_id = o.id
                 WHERE oi.product_id = :productId
+                AND date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
+                AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp))
             ) AS order_data
             
             UNION
             
             SELECT created_at, quantity, 'restock' AS source, 0 AS note
             FROM stock_mutation
-            WHERE product_id = :productId AND warehouse_to_id = :warehouseId AND warehouse_from_id is null
+            WHERE product_id = :productId
+            AND warehouse_to_id = :warehouseId AND warehouse_from_id is null
+            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
             
             UNION
             
             SELECT created_at, quantity, 'mutation_in' AS source, warehouse_from_id AS note
             FROM stock_mutation
-            WHERE product_id = :productId AND warehouse_to_id = :warehouseId AND warehouse_from_id is not null
+            WHERE product_id = :productId
+            AND warehouse_to_id = :warehouseId
+            AND warehouse_from_id is not null
+            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
             
             UNION
             
             SELECT created_at, quantity as quantity, 'mutation_out' AS source, warehouse_to_id AS note
             FROM stock_mutation
-            WHERE product_id = :productId AND warehouse_from_id = :warehouseId
+            WHERE product_id = :productId
+            AND warehouse_from_id = :warehouseId
+            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
             
             ORDER BY created_at;
             """, nativeQuery = true
     )
-    List<RetrieveStockDetails> retrieveStockDetails(@Param("warehouseId") Long warehouseId, @Param("productId") Long productId);
+    List<RetrieveStockDetails> retrieveStockDetails(@Param("warehouseId") Long warehouseId, @Param("productId") Long productId, @Param("date") LocalDate date);
 }

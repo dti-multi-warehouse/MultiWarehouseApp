@@ -126,8 +126,8 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public GetStockDetailsResponseDto getStockDetails(Long warehouseId, Long productId) {
-        var movements = stockRepository.retrieveStockDetails(warehouseId, productId)
+    public GetStockDetailsResponseDto getStockDetails(Long warehouseId, Long productId, LocalDate date) {
+        var movements = stockRepository.retrieveStockDetails(warehouseId, productId, date)
                 .stream()
                 .map(StockMovement::fromDto)
                 .toList();

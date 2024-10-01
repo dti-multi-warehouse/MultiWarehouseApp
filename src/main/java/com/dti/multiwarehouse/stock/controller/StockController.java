@@ -33,9 +33,13 @@ public class StockController {
     @GetMapping("/details")
     public ResponseEntity<?> getStockDetails(
             @RequestParam Long warehouseId,
-            @RequestParam Long productId
+            @RequestParam Long productId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        var res = stockService.getStockDetails(warehouseId, productId);
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        var res = stockService.getStockDetails(warehouseId, productId, date);
         return Response.success("Successfully retrieved stock details", res);
     }
 
