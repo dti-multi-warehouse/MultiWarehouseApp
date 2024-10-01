@@ -9,14 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GetMonthlySalesReportResponseDto {
-    Long id;
+public class GetProductCategorySalesReportResponseDto {
     String name;
     int revenue;
 
-    public static GetMonthlySalesReportResponseDto fromDto(RetrieveMonthlySalesReport dto) {
-        return GetMonthlySalesReportResponseDto.builder()
-                .id(dto.getId())
+    public static GetProductCategorySalesReportResponseDto fromDto(RetrieveProductCategorySales dto) {
+        return GetProductCategorySalesReportResponseDto.builder()
                 .name(dto.getName())
                 .revenue(dto.getRevenue())
                 .build();

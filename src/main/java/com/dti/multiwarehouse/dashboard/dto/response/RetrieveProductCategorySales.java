@@ -1,7 +1,6 @@
 package com.dti.multiwarehouse.dashboard.dto.response;
 
-public interface RetrieveMonthlySalesReport {
-    Long getId();
+public interface RetrieveProductCategorySales {
     String getName();
     int getRevenue();
 }
