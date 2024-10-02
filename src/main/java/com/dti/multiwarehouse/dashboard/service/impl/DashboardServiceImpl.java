@@ -1,9 +1,6 @@
 package com.dti.multiwarehouse.dashboard.service.impl;
 
-import com.dti.multiwarehouse.dashboard.dto.response.GetProductCategorySalesReportResponseDto;
-import com.dti.multiwarehouse.dashboard.dto.response.GetMonthlyStockSummaryResponseDto;
-import com.dti.multiwarehouse.dashboard.dto.response.GetTotalSalesResponseDto;
-import com.dti.multiwarehouse.dashboard.dto.response.Sales;
+import com.dti.multiwarehouse.dashboard.dto.response.*;
 import com.dti.multiwarehouse.dashboard.service.DashboardService;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
@@ -34,18 +31,18 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<GetProductCategorySalesReportResponseDto> getMonthlyProductSalesReport(Long warehouseId, Date currentDate) {
+    public List<GetProductSalesReportResponseDto> getMonthlyProductSalesReport(Long warehouseId, Date currentDate) {
         var res = orderRepository.getMonthlyProductSalesReport(warehouseId, currentDate);
         return res.stream()
-                .map(GetProductCategorySalesReportResponseDto::fromDto)
+                .map(GetProductSalesReportResponseDto::new)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<GetProductCategorySalesReportResponseDto> getMonthlyCategorySalesReport(Long warehouseId, Date currentDate) {
+    public List<GetCategorySalesReportResponseDto> getMonthlyCategorySalesReport(Long warehouseId, Date currentDate) {
         var res = orderRepository.getMonthlyCategorySalesReport(warehouseId, currentDate);
         return res.stream()
-                .map(GetProductCategorySalesReportResponseDto::fromDto)
+                .map(GetCategorySalesReportResponseDto::new)
                 .collect(Collectors.toList());
     }
 
