@@ -12,6 +12,7 @@ import com.dti.multiwarehouse.user.repository.WarehouseAdminRepository;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.dto.AssignWarehouseAdminDTO;
 import com.dti.multiwarehouse.warehouse.dto.WarehouseDTO;
+import com.dti.multiwarehouse.warehouse.dto.WarehouseListResponseDto;
 import com.dti.multiwarehouse.warehouse.mapper.WarehouseMapper;
 import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
@@ -161,5 +162,13 @@ public class WarehouseServiceImpl implements WarehouseService {
         warehouseAdmin.setWarehouse(warehouse);
 
         warehouseAdminRepository.save(warehouseAdmin);
+    }
+
+    @Override
+    public List<WarehouseListResponseDto> getWarehouseList() {
+        var warehouses = warehouseRepository.findAll();
+        return warehouses.stream()
+                .map(WarehouseListResponseDto::fromEntity)
+                .toList();
     }
 }

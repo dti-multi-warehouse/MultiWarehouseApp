@@ -82,4 +82,10 @@ public class WarehouseController {
             return ResponseEntity.status(404).body(null);
         }
     }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> getWarehouseList() {
+        var res = warehouseService.getWarehouseList();
+        return Response.success("Warehouses retrieved successfully", res);
+    }
 }
