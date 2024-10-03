@@ -83,6 +83,8 @@ public class AuthServiceImpl implements AuthService {
             claimsBuilder
                     .claim("warehouse_id", admin.getWarehouseId())
                     .claim("warehouse_name", admin.getWarehouseName());
+            response.setWarehouseId(admin.getWarehouseId());
+            response.setWarehouseName(admin.getWarehouseName());
         }
 
 //        if admin, find the first warehouse and add to claims
@@ -91,6 +93,8 @@ public class AuthServiceImpl implements AuthService {
             claimsBuilder
                     .claim("warehouse_id", warehouse.getId())
                     .claim("warehouse_name", warehouse.getName());
+            response.setWarehouseId(warehouse.getId());
+            response.setWarehouseName(warehouse.getName());
         }
 
         JwtClaimsSet claims = claimsBuilder.build();
