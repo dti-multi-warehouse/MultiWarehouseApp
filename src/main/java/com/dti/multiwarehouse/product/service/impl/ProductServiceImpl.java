@@ -64,7 +64,6 @@ public class ProductServiceImpl implements ProductService {
                 .groupBy("category")
                 .groupLimit(6);
         var searchResult = typeSense.client().collections(PRODUCT_KEY).documents().search(searchParameters);
-        searchResult.getGroupedHits().forEach(System.out::println);
         return new ProductGroupedSearchResponseDto(searchResult.getGroupedHits());
     }
 
