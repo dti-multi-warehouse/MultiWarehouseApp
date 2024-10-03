@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findAllByWarehouseId(Long warehouseId);
+    List<Order> findAllByUserId(Long userId);
     @Query(
             value = """
             SELECT COALESCE(SUM(o.price), 0) AS revenue

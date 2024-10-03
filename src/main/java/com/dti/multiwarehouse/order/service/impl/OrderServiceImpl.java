@@ -16,6 +16,7 @@ import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
+import com.dti.multiwarehouse.order.dto.response.GetOrderResponseDto;
 import com.dti.multiwarehouse.order.dto.response.MindtransChargeDto;
 import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
@@ -140,6 +141,23 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
+
+    @Override
+    public List<GetOrderResponseDto> getAdminOrders(Long warehouseId) {
+        var res = orderRepository.findAllByWarehouseId(warehouseId);
+        return res.stream()
+                .map(GetOrderResponseDto::new)
+                .toList();
+    }
+
+    @Override
+    public List<GetOrderResponseDto> getUserOrders(Long userId) {
+        var res = orderRepository.findAllByUserId(userId);
+        return res.stream()
+                .map(GetOrderResponseDto::new)
+                .toList();
+    }
+
     @Override
     public void uploadPaymentProof(Long id, MultipartFile image) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
