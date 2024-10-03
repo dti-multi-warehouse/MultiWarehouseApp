@@ -17,7 +17,6 @@ import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,7 +120,7 @@ public class StockServiceImpl implements StockService {
     public List<GetStockResponseDto> getAllStock(Long warehouseId, LocalDate date) {
         return stockRepository.retrieveStock(warehouseId, date)
                 .stream()
-                .map(GetStockResponseDto::fromDto)
+                .map(GetStockResponseDto::new)
                 .collect(Collectors.toList());
     }
 
@@ -129,7 +128,7 @@ public class StockServiceImpl implements StockService {
     public GetStockDetailsResponseDto getStockDetails(Long warehouseId, Long productId, LocalDate date) {
         var movements = stockRepository.retrieveStockDetails(warehouseId, productId, date)
                 .stream()
-                .map(StockMovement::fromDto)
+                .map(StockMovement::new)
                 .toList();
         return new GetStockDetailsResponseDto(movements);
     }
@@ -142,7 +141,7 @@ public class StockServiceImpl implements StockService {
 //        if they are a superadmin, fetch all
         var activeRequests = stockMutationRepository.findAllActiveRequest();
         return activeRequests.stream()
-                .map(StockMutation::toStockMutationRequestResponseDto)
+                .map(StockMutationRequestResponseDto::new)
                 .collect(Collectors.toList());
     }
 
@@ -150,7 +149,7 @@ public class StockServiceImpl implements StockService {
     public List<GetProductAndStockAvailabilityDto> getProductAndStockAvailability(Long warehouseId) {
         var res = stockRepository.retrieveProductAndStockAvailability(warehouseId);
         return res.stream()
-                .map(GetProductAndStockAvailabilityDto::fromDto)
+                .map(GetProductAndStockAvailabilityDto::new)
                 .collect(Collectors.toList());
     }
 
@@ -158,7 +157,7 @@ public class StockServiceImpl implements StockService {
     public List<GetWarehouseAndStockAvailabilityResponseDto> getWarehouseAndStockAvailability(Long warehouseId, Long productId) {
         var res = stockRepository.retrieveWarehouseAndStockAvailability(warehouseId, productId);
         return res.stream()
-                .map(GetWarehouseAndStockAvailabilityResponseDto::fromDto)
+                .map(GetWarehouseAndStockAvailabilityResponseDto::new)
                 .collect(Collectors.toList());
     }
 

@@ -1,15 +1,15 @@
 package com.dti.multiwarehouse.stock.dto.response;
 
-import lombok.Data;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
-@Data
+@Getter
 public class GetStockDetailsResponseDto {
-    private List<StockMovement> stockMovements;
+    private final List<StockMovement> stockMovements;
     private List<StockMovementChartData> stockMovementChartData;
 
     public GetStockDetailsResponseDto(List<StockMovement> stockMovements) {

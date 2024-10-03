@@ -1,21 +1,25 @@
 package com.dti.multiwarehouse.stock.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.dti.multiwarehouse.stock.dao.StockMutation;
+import lombok.Getter;
 
 import java.time.Instant;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@Getter
 public class StockMutationRequestResponseDto {
-    Long id;
-    Long warehouseFromId;
-    Long warehouseToId;
-    int quantity;
-    String name;
-    Instant createdAt;
+    public final Long id;
+    public final Long warehouseFromId;
+    public final Long warehouseToId;
+    public final int quantity;
+    public final String name;
+    public final Instant createdAt;
+
+    public StockMutationRequestResponseDto(StockMutation stockMutation) {
+        this.id = stockMutation.getId();
+        this.warehouseFromId = stockMutation.getWarehouseFrom().getId();
+        this.warehouseToId = stockMutation.getWarehouseTo().getId();
+        this.quantity = stockMutation.getQuantity();
+        this.name = stockMutation.getProduct().getName();
+        this.createdAt = stockMutation.getCreatedAt();
+    }
 }

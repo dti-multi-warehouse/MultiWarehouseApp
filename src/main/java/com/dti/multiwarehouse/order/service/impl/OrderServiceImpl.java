@@ -114,7 +114,7 @@ public class OrderServiceImpl implements OrderService {
             stockService.processOrder(nearestWarehouse.getId(), cart.getCartItems());
             cartService.deleteCart(sessionId);
 
-            return order.toCreateOrderResponseDto();
+            return new CreateOrderResponseDto(order);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "No shipping options available.");
         }
