@@ -4,7 +4,6 @@ import com.dti.multiwarehouse.cart.dao.Cart;
 import com.dti.multiwarehouse.cart.dto.AddItemDto;
 import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.cart.dto.GetCartResponseDto;
-import com.dti.multiwarehouse.cart.helper.CartMapper;
 import com.dti.multiwarehouse.cart.repository.CartRedisRepository;
 import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.product.service.ProductService;
@@ -12,7 +11,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 
 @RequiredArgsConstructor
@@ -52,7 +50,7 @@ public class CartServiceImpl implements CartService {
         int totalPrice = items.entrySet().stream()
                 .mapToInt(entry -> {
                     var productDetails = productService.getProductDetails(entry.getKey());
-                    var cartItem = CartMapper.toCartItem(productDetails, entry.getValue());
+                    var cartItem = new CartItem(productDetails, entry.getValue());
                     res.addCartItem(cartItem);
                     return cartItem.getPrice() * cartItem.getQuantity();
                 })
