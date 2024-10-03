@@ -1,22 +1,23 @@
 package com.dti.multiwarehouse.product.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.dti.multiwarehouse.product.dao.Product;
 import lombok.Getter;
-import lombok.Setter;
-
-import java.math.BigDecimal;
-import java.util.Set;
 
 @Getter
-@Setter
-@AllArgsConstructor
-@Builder
 public class ProductSummaryResponseDto {
-    private Long id;
-    private String name;
-    private int price;
-    private int stock;
-    private String category;
-    private String thumbnail;
+    private final Long id;
+    private final String name;
+    private final int price;
+    private final int stock;
+    private final String category;
+    private final String thumbnail;
+
+    public ProductSummaryResponseDto(Product product) {
+        this.id = product.getId();
+        this.name = product.getName();
+        this.price = product.getPrice();
+        this.stock = product.getStock();
+        this.category = product.getCategory().getName();
+        this.thumbnail = product.getImageUrls().getFirst();
+    }
 }
