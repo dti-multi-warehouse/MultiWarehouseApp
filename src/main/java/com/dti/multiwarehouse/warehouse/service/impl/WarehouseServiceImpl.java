@@ -171,4 +171,9 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .map(WarehouseListResponseDto::fromEntity)
                 .toList();
     }
+
+    @Override
+    public Warehouse findFirstWarehouse() {
+        return warehouseRepository.findFirstWarehouse();
+    }
 }
