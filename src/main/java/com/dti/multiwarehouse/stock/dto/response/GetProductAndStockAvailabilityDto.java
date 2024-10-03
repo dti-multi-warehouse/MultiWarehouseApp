@@ -1,26 +1,18 @@
 package com.dti.multiwarehouse.stock.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
 public class GetProductAndStockAvailabilityDto {
-    private Long productId;
-    private String name;
-    private int stock;
-    private String thumbnail;
+    private final Long productId;
+    private final String name;
+    private final int stock;
+    private final String thumbnail;
 
-    public static GetProductAndStockAvailabilityDto fromDto(RetrieveProductAndStockAvailabilityDto dto) {
-        return GetProductAndStockAvailabilityDto.builder()
-                .productId(dto.getId())
-                .name(dto.getName())
-                .stock(dto.getStock())
-                .thumbnail(dto.getThumbnail())
-                .build();
+    public GetProductAndStockAvailabilityDto(RetrieveProductAndStockAvailabilityDto dto) {
+        this.productId = dto.getId();
+        this.name = dto.getName();
+        this.stock = dto.getStock();
+        this.thumbnail = dto.getThumbnail();
     }
 }

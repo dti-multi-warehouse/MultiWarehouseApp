@@ -1,24 +1,21 @@
 package com.dti.multiwarehouse.order.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import org.json.JSONObject;
 
-@Data
-public class MindtransChargeDto {
-    private String transactionId;
-    private String currency;
-    private String price;
-    private String transactionTime;
-    private String transactionStatus;
-    private String paymentType;
-    private String bank;
-    private String vaNumber;
-    private String message;
+@Getter
+public class MidtransChargeDto {
+    private final String transactionId;
+    private final String currency;
+    private final String price;
+    private final String transactionTime;
+    private final String transactionStatus;
+    private final String paymentType;
+    private final String bank;
+    private final String vaNumber;
+    private final String message;
 
-    public MindtransChargeDto(JSONObject jsonObject) {
+    public MidtransChargeDto(JSONObject jsonObject) {
         var va = jsonObject.getJSONArray("va_numbers").getJSONObject(0);
         transactionId = jsonObject.getString("transaction_id");
         currency = jsonObject.getString("currency");

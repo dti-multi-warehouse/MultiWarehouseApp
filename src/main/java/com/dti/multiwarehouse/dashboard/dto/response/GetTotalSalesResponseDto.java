@@ -1,15 +1,14 @@
 package com.dti.multiwarehouse.dashboard.dto.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+
 
 import java.util.List;
 
-@Data
+@Getter
 @AllArgsConstructor
 public class GetTotalSalesResponseDto {
-    int totalRevenue;
-    List<Sales> sales;
+    public final int totalRevenue;
+    public final List<Sales> sales;
 }

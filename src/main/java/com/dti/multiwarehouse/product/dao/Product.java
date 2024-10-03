@@ -74,17 +74,6 @@ public class Product {
         imageUrls.remove(imageUrl);
     }
 
-    public ProductSummaryResponseDto toProductSummaryResponseDto() {
-        return ProductSummaryResponseDto.builder()
-                .id(id)
-                .name(name)
-                .price(price)
-                .stock(stock)
-                .category(category.getName())
-                .thumbnail(imageUrls.stream().findFirst().orElse(null))
-                .build();
-    }
-
     public HashMap<String, Object> toDocument() {
         HashMap<String, Object> document = new HashMap<>();
         document.put("id", id.toString());
@@ -96,17 +85,5 @@ public class Product {
         document.put("sold", sold);
         document.put("thumbnail", imageUrls.stream().findFirst().orElse(null));
         return document;
-    }
-
-    public ProductDetailsResponseDto toProductDetailsResponseDto() {
-        return ProductDetailsResponseDto.builder()
-                .id(id)
-                .name(name)
-                .description(description)
-                .price(price)
-                .stock(stock)
-                .category(category.getName())
-                .imageUrls(imageUrls)
-                .build();
     }
 }

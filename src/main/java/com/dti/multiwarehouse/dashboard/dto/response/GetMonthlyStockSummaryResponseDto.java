@@ -1,28 +1,20 @@
 package com.dti.multiwarehouse.dashboard.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@Getter
 public class GetMonthlyStockSummaryResponseDto {
-    private Long id;
-    private String name;
-    private int incoming;
-    private int outgoing;
-    private int stock;
+    private final Long id;
+    private final String name;
+    private final int incoming;
+    private final int outgoing;
+    private final int stock;
 
-    public static GetMonthlyStockSummaryResponseDto fromDto(RetrieveMonthlyStockSummary dto) {
-        return GetMonthlyStockSummaryResponseDto.builder()
-                .id(dto.getId())
-                .name(dto.getName())
-                .incoming(dto.getIncoming())
-                .outgoing(dto.getOutgoing())
-                .stock(dto.getStock())
-                .build();
+    public GetMonthlyStockSummaryResponseDto(RetrieveMonthlyStockSummary dto) {
+        this.id = dto.getId();
+        this.name = dto.getName();
+        this.incoming = dto.getIncoming();
+        this.outgoing = dto.getOutgoing();
+        this.stock = dto.getStock();
     }
 }
