@@ -25,7 +25,7 @@ public class DashboardServiceImpl implements DashboardService {
         var sales = orderRepository
                 .getMonthlySalesReport(warehouseId, currentDate)
                 .stream()
-                .map(Sales::fromDto)
+                .map(Sales::new)
                 .toList();
         return new GetTotalSalesResponseDto(totalRevenue, sales);
     }
@@ -50,7 +50,7 @@ public class DashboardServiceImpl implements DashboardService {
     public List<GetMonthlyStockSummaryResponseDto> getMonthlyStockSummaryReport(Long warehouseId, Date currentDate) {
         var res = stockMutationRepository.getMonthlyStockSummary(warehouseId, currentDate);
         return res.stream()
-                .map(GetMonthlyStockSummaryResponseDto::fromDto)
+                .map(GetMonthlyStockSummaryResponseDto::new)
                 .collect(Collectors.toList());
     }
 }

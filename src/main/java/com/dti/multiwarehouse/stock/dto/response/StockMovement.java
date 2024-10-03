@@ -1,28 +1,20 @@
 package com.dti.multiwarehouse.stock.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.time.Instant;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter
 public class StockMovement {
-    private Instant date;
-    private int quantity;
-    private String source;
-    private int note;
+    private final Instant date;
+    private final int quantity;
+    private final String source;
+    private final int note;
 
-    public static StockMovement fromDto(RetrieveStockDetails dto) {
-        return StockMovement.builder()
-                .date(dto.getCreatedAt())
-                .quantity(dto.getQuantity())
-                .source(dto.getSource())
-                .note(dto.getNote())
-                .build();
+    public StockMovement(RetrieveStockDetails dto) {
+        this.date = dto.getCreatedAt();
+        this.quantity = dto.getQuantity();
+        this.source = dto.getSource();
+        this.note = dto.getNote();
     }
 }

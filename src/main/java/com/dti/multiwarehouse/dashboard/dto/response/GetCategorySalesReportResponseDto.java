@@ -1,12 +1,12 @@
 package com.dti.multiwarehouse.dashboard.dto.response;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class GetCategorySalesReportResponseDto {
-    String name;
-    int revenue;
-    String fill;
+    public final String name;
+    public final int revenue;
+    public final String fill;
 
     public GetCategorySalesReportResponseDto(RetrieveProductCategorySales dto) {
         this.name = dto.getName();
