@@ -23,10 +23,7 @@ import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -162,9 +159,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductSummaryResponseDto> getAllProducts() {
-        return productRepository.findAll().stream()
+        return productRepository.findAllByOrderByIdAsc().stream()
                 .map(Product::toProductSummaryResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
