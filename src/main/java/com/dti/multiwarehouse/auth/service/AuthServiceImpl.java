@@ -61,6 +61,20 @@ public class AuthServiceImpl implements AuthService {
         response.setEmail(authentication.getName());
         response.setRole(scope);
 
+        //        if warehouse admin, find their warehouse and add to response
+        if (Objects.equals(user.getRole(), "warehouse_admin")) {
+            var admin = adminService.getWarehouseAdminById(userId);
+            response.setWarehouseId(admin.getWarehouseId());
+            response.setWarehouseName(admin.getWarehouseName());
+        }
+
+//        if admin, find the first warehouse and add to response
+        if (Objects.equals(user.getRole(), "admin")) {
+            var warehouse = warehouseService.findFirstWarehouse();
+            response.setWarehouseId(warehouse.getId());
+            response.setWarehouseName(warehouse.getName());
+        }
+
         if (existingKey != null) {
             logger.info("Token already exists for user: {}. Returning existing token.", authentication.getName());
             response.setAccessToken(existingKey);
@@ -83,8 +97,6 @@ public class AuthServiceImpl implements AuthService {
             claimsBuilder
                     .claim("warehouse_id", admin.getWarehouseId())
                     .claim("warehouse_name", admin.getWarehouseName());
-            response.setWarehouseId(admin.getWarehouseId());
-            response.setWarehouseName(admin.getWarehouseName());
         }
 
 //        if admin, find the first warehouse and add to claims
@@ -93,8 +105,6 @@ public class AuthServiceImpl implements AuthService {
             claimsBuilder
                     .claim("warehouse_id", warehouse.getId())
                     .claim("warehouse_name", warehouse.getName());
-            response.setWarehouseId(warehouse.getId());
-            response.setWarehouseName(warehouse.getName());
         }
 
         JwtClaimsSet claims = claimsBuilder.build();
