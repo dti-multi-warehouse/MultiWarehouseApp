@@ -128,6 +128,8 @@ public class AdminServiceImpl implements AdminService {
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setAvatar(user.getAvatar());
+        response.setWarehouseId(user.getWarehouseAdmins().getFirst().getWarehouse().getId());
+        response.setWarehouseName(user.getWarehouseAdmins().getFirst().getWarehouse().getName());
         return response;
     }
 

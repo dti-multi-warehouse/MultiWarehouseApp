@@ -62,7 +62,7 @@ public class AdminController {
     }
 
     @GetMapping("/warehouse-admins/{id}")
-    @PreAuthorize("hasRole('admin')")
+//    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> getWarehouseAdminById(@PathVariable Long id) {
         try {
             WarehouseAdminResponse warehouseAdmin = adminService.getWarehouseAdminById(id);

@@ -14,4 +14,13 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
             "(:city IS NULL OR w.warehouseAddress.address.city LIKE %:city%) AND " +
             "(:province IS NULL OR w.warehouseAddress.address.province LIKE %:province%)")
     Page<Warehouse> searchWarehouses(String name, String city, String province, Pageable pageable);
+
+    @Query(
+            value = """
+            SELECT *
+            FROM warehouse
+            LIMIT 1
+            """, nativeQuery = true
+    )
+    Warehouse findFirstWarehouse();
 }

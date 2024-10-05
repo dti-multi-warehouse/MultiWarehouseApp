@@ -7,7 +7,10 @@ import com.dti.multiwarehouse.auth.repository.AuthRedisRepository;
 import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.repository.UserRepository;
+import com.dti.multiwarehouse.user.service.AdminService;
 import com.dti.multiwarehouse.user.service.UserService;
+import com.dti.multiwarehouse.warehouse.service.WarehouseService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -19,8 +22,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+@RequiredArgsConstructor
 @Service
 public class AuthServiceImpl implements AuthService {
     private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
@@ -28,13 +34,8 @@ public class AuthServiceImpl implements AuthService {
     private final AuthRedisRepository authRedisRepository;
     private final UserService userService;
     private final UserRepository userRepository;
-
-    public AuthServiceImpl(JwtEncoder jwtEncoder, AuthRedisRepository authRedisRepository, UserService userService, UserRepository userRepository) {
-        this.jwtEncoder = jwtEncoder;
-        this.authRedisRepository = authRedisRepository;
-        this.userService = userService;
-        this.userRepository = userRepository;
-    }
+    private final AdminService adminService;
+    private final WarehouseService warehouseService;
 
     @Override
     public LoginResponseDto generateToken(Authentication authentication) {
@@ -60,13 +61,27 @@ public class AuthServiceImpl implements AuthService {
         response.setEmail(authentication.getName());
         response.setRole(scope);
 
+        //        if warehouse admin, find their warehouse and add to response
+        if (Objects.equals(user.getRole(), "warehouse_admin")) {
+            var admin = adminService.getWarehouseAdminById(userId);
+            response.setWarehouseId(admin.getWarehouseId());
+            response.setWarehouseName(admin.getWarehouseName());
+        }
+
+//        if admin, find the first warehouse and add to response
+        if (Objects.equals(user.getRole(), "admin")) {
+            var warehouse = warehouseService.findFirstWarehouse();
+            response.setWarehouseId(warehouse.getId());
+            response.setWarehouseName(warehouse.getName());
+        }
+
         if (existingKey != null) {
             logger.info("Token already exists for user: {}. Returning existing token.", authentication.getName());
             response.setAccessToken(existingKey);
             return response;
         }
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
                 .expiresAt(now.plus(10, ChronoUnit.HOURS))
@@ -74,8 +89,25 @@ public class AuthServiceImpl implements AuthService {
                 .claim("scope", scope)
                 .claim("id", userId)
                 .claim("role", user.getRole())
-                .claim("is_social", user.isSocial())
-                .build();
+                .claim("is_social", user.isSocial());
+
+//        if warehouse admin, find their warehouse and add to claims
+        if (Objects.equals(user.getRole(), "warehouse_admin")) {
+            var admin = adminService.getWarehouseAdminById(userId);
+            claimsBuilder
+                    .claim("warehouse_id", admin.getWarehouseId())
+                    .claim("warehouse_name", admin.getWarehouseName());
+        }
+
+//        if admin, find the first warehouse and add to claims
+        if (Objects.equals(user.getRole(), "admin")) {
+            var warehouse = warehouseService.findFirstWarehouse();
+            claimsBuilder
+                    .claim("warehouse_id", warehouse.getId())
+                    .claim("warehouse_name", warehouse.getName());
+        }
+
+        JwtClaimsSet claims = claimsBuilder.build();
 
         var jwt = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
 
