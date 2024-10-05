@@ -22,6 +22,18 @@ public class OrderController {
     private final OrderService orderService;
     private final ShippingService shippingService;
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserOrder(@PathVariable("id") Long id) {
+        var res = orderService.getUserOrders(id);
+        return Response.success("Successfully retrieved order", res);
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<?> getAdminOrder(@PathVariable("id") Long id) {
+        var res = orderService.getAdminOrders(id);
+        return Response.success("Successfully retrieved order", res);
+    }
+
     @PostMapping("/shipping-cost")
     public ResponseEntity<Response<ShippingCostResponseDto>> calculateShippingCost(@RequestBody ShippingCostRequestDto request) {
         ShippingCostResponseDto response = shippingService.calculateShippingCost(request);

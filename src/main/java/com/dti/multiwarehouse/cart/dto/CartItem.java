@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.cart.dto;
 
+import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,4 +21,14 @@ public class CartItem {
     private String category;
     private String imageUrl;
     private Integer quantity;
+
+    public CartItem(ProductDetailsResponseDto dto, int quantity) {
+        this.productId = dto.getId();
+        this.name = dto.getName();
+        this.price = dto.getPrice();
+        this.stock = dto.getStock();
+        this.category = dto.getCategory();
+        this.imageUrl = dto.getImageUrls().getFirst();
+        this.quantity = quantity;
+    }
 }

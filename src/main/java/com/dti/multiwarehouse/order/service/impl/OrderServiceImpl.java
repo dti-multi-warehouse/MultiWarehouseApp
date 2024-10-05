@@ -7,7 +7,6 @@ import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
 import com.dti.multiwarehouse.exceptions.ApplicationException;
 import com.dti.multiwarehouse.exceptions.InsufficientStockException;
-import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.order.dao.Order;
 import com.dti.multiwarehouse.order.dao.OrderItem;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
@@ -16,7 +15,8 @@ import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
 import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.MindtransChargeDto;
+import com.dti.multiwarehouse.order.dto.response.GetOrderResponseDto;
+import com.dti.multiwarehouse.order.dto.response.MidtransChargeDto;
 import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
@@ -27,8 +27,6 @@ import com.dti.multiwarehouse.stock.service.StockService;
 import com.dti.multiwarehouse.user.entity.User;
 import com.dti.multiwarehouse.user.service.UserService;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
-import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
-import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import com.midtrans.httpclient.error.MidtransError;
 import com.midtrans.service.MidtransCoreApi;
 import jakarta.annotation.Resource;
@@ -116,7 +114,7 @@ public class OrderServiceImpl implements OrderService {
             stockService.processOrder(nearestWarehouse.getId(), cart.getCartItems());
             cartService.deleteCart(sessionId);
 
-            return order.toCreateOrderResponseDto();
+            return new CreateOrderResponseDto(order);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "No shipping options available.");
         }
@@ -140,6 +138,23 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
+
+    @Override
+    public List<GetOrderResponseDto> getAdminOrders(Long warehouseId) {
+        var res = orderRepository.findAllByWarehouseId(warehouseId);
+        return res.stream()
+                .map(GetOrderResponseDto::new)
+                .toList();
+    }
+
+    @Override
+    public List<GetOrderResponseDto> getUserOrders(Long userId) {
+        var res = orderRepository.findAllByUserId(userId);
+        return res.stream()
+                .map(GetOrderResponseDto::new)
+                .toList();
+    }
+
     @Override
     public void uploadPaymentProof(Long id, MultipartFile image) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
@@ -220,7 +235,7 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-    private MindtransChargeDto processMidtransPayment(int price, BankTransfer bankTransfer) throws MidtransError {
+    private MidtransChargeDto processMidtransPayment(int price, BankTransfer bankTransfer) throws MidtransError {
         var idRand = UUID.randomUUID();
 
         Map<String, Object> params = new HashMap<>();
@@ -234,7 +249,7 @@ public class OrderServiceImpl implements OrderService {
                         .map(bt -> bt.name().toLowerCase())
                         .orElse("bca")
         ));
-        return new MindtransChargeDto(midtransCoreApi.chargeTransaction(params));
+        return new MidtransChargeDto(midtransCoreApi.chargeTransaction(params));
     }
 
     private Order updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {

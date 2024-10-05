@@ -4,6 +4,7 @@ import com.dti.multiwarehouse.cart.dto.CartItem;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.dto.AssignWarehouseAdminDTO;
 import com.dti.multiwarehouse.warehouse.dto.WarehouseDTO;
+import com.dti.multiwarehouse.warehouse.dto.WarehouseListResponseDto;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -18,4 +19,5 @@ public interface WarehouseService {
     Warehouse getWarehouseById(Long id);
     void assignWarehouseAdmin(AssignWarehouseAdminDTO dto);
     Page<WarehouseDTO> searchWarehouses(String name, String city, String province, int page, int size);
+    List<WarehouseListResponseDto> getWarehouseList();
 }

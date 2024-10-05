@@ -9,7 +9,6 @@ import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
 import com.dti.multiwarehouse.product.dto.response.*;
-import com.dti.multiwarehouse.product.helper.ProductMapper;
 import com.dti.multiwarehouse.product.repository.ProductRepository;
 import com.dti.multiwarehouse.product.service.ProductService;
 import jakarta.annotation.PostConstruct;
@@ -23,11 +22,7 @@ import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -69,7 +64,6 @@ public class ProductServiceImpl implements ProductService {
                 .groupBy("category")
                 .groupLimit(6);
         var searchResult = typeSense.client().collections(PRODUCT_KEY).documents().search(searchParameters);
-        searchResult.getGroupedHits().forEach(System.out::println);
         return new ProductGroupedSearchResponseDto(searchResult.getGroupedHits());
     }
 
@@ -84,13 +78,13 @@ public class ProductServiceImpl implements ProductService {
             searchParameters.filterBy("category:" + category);
         }
         var searchResult = typeSense.client().collections(PRODUCT_KEY).documents().search(searchParameters);
-        return ProductMapper.toSearchResponseDto(searchResult);
+        return new ProductSearchResponseDto(searchResult);
     }
 
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
-        return product.toProductDetailsResponseDto();
+        return new ProductDetailsResponseDto(product);
     }
 
     @Override
@@ -101,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
 
         typeSense.client().collections(PRODUCT_KEY).documents().upsert(product.toDocument());
 
-        return product.toProductSummaryResponseDto();
+        return new ProductSummaryResponseDto(product);
     }
 
     @Override
@@ -144,7 +138,7 @@ public class ProductServiceImpl implements ProductService {
             throw new ApplicationException(e.getMessage());
         }
 
-        return p.toProductSummaryResponseDto();
+        return new ProductSummaryResponseDto(p);
     }
 
     @Override
@@ -162,9 +156,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductSummaryResponseDto> getAllProducts() {
-        return productRepository.findAll().stream()
-                .map(Product::toProductSummaryResponseDto)
-                .collect(Collectors.toList());
+        return productRepository.findAllByOrderByIdAsc().stream()
+                .map(ProductSummaryResponseDto::new)
+                .toList();
     }
 
     @Override

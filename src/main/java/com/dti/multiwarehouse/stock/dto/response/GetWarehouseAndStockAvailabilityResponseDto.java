@@ -1,22 +1,14 @@
 package com.dti.multiwarehouse.stock.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
 public class GetWarehouseAndStockAvailabilityResponseDto {
-    private Long warehouseId;
-    private int stock;
+    private final Long warehouseId;
+    private final int stock;
 
-    public static GetWarehouseAndStockAvailabilityResponseDto fromDto (RetrieveWarehouseAndStockAvailabilityDto dto) {
-        return GetWarehouseAndStockAvailabilityResponseDto.builder()
-                .warehouseId(dto.getWarehouseId())
-                .stock(dto.getStock())
-                .build();
+    public GetWarehouseAndStockAvailabilityResponseDto(RetrieveWarehouseAndStockAvailabilityDto dto) {
+        this.warehouseId = dto.getWarehouseId();
+        this.stock = dto.getStock();
     }
 }

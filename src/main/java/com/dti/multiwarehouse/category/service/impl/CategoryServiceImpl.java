@@ -2,7 +2,7 @@ package com.dti.multiwarehouse.category.service.impl;
 
 import com.dti.multiwarehouse.category.dao.Category;
 import com.dti.multiwarehouse.category.dto.request.CategoryRequestDto;
-import com.dti.multiwarehouse.category.dto.response.CategoryResponseDto;
+import com.dti.multiwarehouse.category.dto.response.GetCategoryResponseDto;
 import com.dti.multiwarehouse.category.repository.CategoryRepository;
 import com.dti.multiwarehouse.category.service.CategoryService;
 import com.dti.multiwarehouse.cloudImageStorage.service.CloudImageStorageService;
@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryResponseDto addCategory(CategoryRequestDto requestDto, MultipartFile logo){
+    public GetCategoryResponseDto addCategory(CategoryRequestDto requestDto, MultipartFile logo){
         var existing = findSimilarCategoryName(requestDto.getName());
         if (existing != null) {
             throw new ApplicationException(String.format("Category with similar name: %s already exists", existing));
@@ -64,20 +64,20 @@ public class CategoryServiceImpl implements CategoryService {
                     .collections(CATEGORY_KEY)
                     .documents()
                     .upsert(category.toDocument());
-            return category.toResponseDto();
+            return new GetCategoryResponseDto(category);
         } catch (Exception e) {
             throw new ApplicationException("Failed to create category: " + e.getMessage());
         }
     }
 
     @Override
-    public List<CategoryResponseDto> getAllCategories() {
-        var categories = categoryRepository.findAll();
-        return categories.stream().map(Category::toResponseDto).toList();
+    public List<GetCategoryResponseDto> getAllCategories() {
+        var categories = categoryRepository.findAllByOrderByIdAsc();
+        return categories.stream().map(GetCategoryResponseDto::new).toList();
     }
 
     @Override
-    public CategoryResponseDto updateCategory(Long id, CategoryRequestDto requestDto, MultipartFile file) {
+    public GetCategoryResponseDto updateCategory(Long id, CategoryRequestDto requestDto, MultipartFile file) {
         var prevCategory = categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("Category with id: %s not found", id)));
 
         try {
@@ -92,7 +92,7 @@ public class CategoryServiceImpl implements CategoryService {
                     .collections(CATEGORY_KEY)
                     .documents()
                     .upsert(category.toDocument());
-            return category.toResponseDto();
+            return new GetCategoryResponseDto(category);
         } catch (Exception e) {
             throw new ApplicationException(e.getMessage());
         }

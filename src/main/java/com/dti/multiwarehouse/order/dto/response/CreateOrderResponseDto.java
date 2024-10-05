@@ -1,23 +1,27 @@
 package com.dti.multiwarehouse.order.dto.response;
 
+import com.dti.multiwarehouse.order.dao.Order;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@Getter
 public class CreateOrderResponseDto {
-    private int price;
-    private String accountNumber;
-    private BankTransfer bankTransfer;
-    private PaymentMethod paymentMethod;
-    private Instant paymentExpiredAt;
-    private int shippingCost;
+    private final int price;
+    private final String accountNumber;
+    private final BankTransfer bankTransfer;
+    private final PaymentMethod paymentMethod;
+    private final Instant paymentExpiredAt;
+    private final int shippingCost;
+
+    public CreateOrderResponseDto(Order order) {
+        this.price = order.getPrice();
+        this.accountNumber = order.getAccountNumber();
+        this.bankTransfer = order.getBank();
+        this.paymentMethod = order.getPaymentMethod();
+        this.paymentExpiredAt = order.getPaymentExpiredAt();
+        this.shippingCost = order.getShippingCost();
+    }
 }
