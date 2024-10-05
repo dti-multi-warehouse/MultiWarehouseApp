@@ -42,7 +42,7 @@ public class User {
     @JsonManagedReference
     private List<WarehouseAdmin> warehouseAdmins;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<UserAddress> userAddresses;
 
