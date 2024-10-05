@@ -20,4 +20,5 @@ public interface WarehouseService {
     void assignWarehouseAdmin(AssignWarehouseAdminDTO dto);
     Page<WarehouseDTO> searchWarehouses(String name, String city, String province, int page, int size);
     List<WarehouseListResponseDto> getWarehouseList();
+    Warehouse findFirstWarehouse();
 }
