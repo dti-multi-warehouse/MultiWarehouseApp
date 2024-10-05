@@ -12,5 +12,5 @@ RUN echo "done"
 FROM openjdk:22-slim
 WORKDIR /app
 COPY ./target/*.jar app.jar
-EXPOSE ${APP_PORT}
+EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]
