@@ -152,14 +152,18 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         Warehouse warehouse = warehouseOpt.get();
         User user = userOpt.get();
+
+        warehouseAdminRepository.deleteByWarehouse(warehouse);
+
         if (!user.getRole().equalsIgnoreCase("warehouse_admin")) {
             throw new IllegalArgumentException("Only users with 'warehouse_admin' role can be assigned to a warehouse.");
         }
-        
-        WarehouseAdmin warehouseAdmin = new WarehouseAdmin();
-        warehouseAdmin.setUser(user);
-        warehouseAdmin.setWarehouse(warehouse);
 
-        warehouseAdminRepository.save(warehouseAdmin);
+        WarehouseAdmin newAdmin = new WarehouseAdmin();
+        newAdmin.setUser(user);
+        newAdmin.setWarehouse(warehouse);
+
+        warehouseAdminRepository.save(newAdmin);
     }
+
 }

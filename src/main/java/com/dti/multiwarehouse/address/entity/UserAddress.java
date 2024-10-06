@@ -2,6 +2,7 @@ package com.dti.multiwarehouse.address.entity;
 
 import com.dti.multiwarehouse.user.entity.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import com.dti.multiwarehouse.address.entity.Address;
@@ -24,11 +25,12 @@ public class UserAddress {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("user-address")
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "address_id", nullable = false)
+    @JsonManagedReference("address-user")
     private Address address;
 
     private boolean isPrimary;
