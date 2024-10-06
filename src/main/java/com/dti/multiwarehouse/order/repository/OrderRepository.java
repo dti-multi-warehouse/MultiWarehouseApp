@@ -54,7 +54,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             group by p.name
             """, nativeQuery = true
     )
-    List<RetrieveProductCategorySales> getMonthlyProductSalesReport(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
+    List<RetrieveProductCategorySales> getMonthlyProductSalesReport(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date);
 
     @Query(
             value = """
@@ -70,7 +70,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             group by c.name
             """, nativeQuery = true
     )
-    List<RetrieveProductCategorySales> getMonthlyCategorySalesReport(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
+    List<RetrieveProductCategorySales> getMonthlyCategorySalesReport(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date);
 
     @Query(
             value = """

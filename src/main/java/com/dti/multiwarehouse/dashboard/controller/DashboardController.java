@@ -24,26 +24,8 @@ public class DashboardController {
             @RequestParam Long warehouseId,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date
             ) {
-        var res =  dashboardService.getMonthlyTotalSalesReport(warehouseId, date);
+        var res =  dashboardService.getSalesReport(warehouseId, date);
         return Response.success("Successfully retrieved monthly total sales report", res);
-    }
-
-    @GetMapping("/product")
-    public ResponseEntity<?> getMonthlyProductSalesReport(
-            @RequestParam Long warehouseId,
-            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date date
-    ) {
-        var res =  dashboardService.getMonthlyProductSalesReport(warehouseId, date);
-        return Response.success("Successfully retrieved monthly product sales report", res);
-    }
-
-    @GetMapping("/category")
-    public ResponseEntity<?> getMonthlyCategorySalesReport(
-            @RequestParam Long warehouseId,
-            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date date
-    ) {
-        var res =  dashboardService.getMonthlyCategorySalesReport(warehouseId, date);
-        return Response.success("Successfully retrieved monthly category sales", res);
     }
 
     @GetMapping("/stock")
