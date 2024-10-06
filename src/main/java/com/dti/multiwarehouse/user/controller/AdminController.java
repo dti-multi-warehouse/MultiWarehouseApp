@@ -64,12 +64,8 @@ public class AdminController {
     @GetMapping("/warehouse-admins/{id}")
 //    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> getWarehouseAdminById(@PathVariable Long id) {
-        try {
-            WarehouseAdminResponse warehouseAdmin = adminService.getWarehouseAdminById(id);
-            return Response.success("Warehouse admin retrieved successfully", warehouseAdmin);
-        } catch (ResourceNotFoundException e) {
-            return Response.failed("Warehouse admin not found.");
-        }
+        WarehouseAdminResponse warehouseAdmin = adminService.getWarehouseAdminById(id);
+        return Response.success("Warehouse admin retrieved successfully", warehouseAdmin);
     }
 
     @PostMapping("/warehouse-admins")

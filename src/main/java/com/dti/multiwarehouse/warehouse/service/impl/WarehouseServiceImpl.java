@@ -45,7 +45,7 @@ public class WarehouseServiceImpl implements WarehouseService {
         return warehouses.map(this::mapToWarehouseDTO);
     }
 
-    private WarehouseDTO mapToWarehouseDTO(Warehouse warehouse) {
+    public WarehouseDTO mapToWarehouseDTO(Warehouse warehouse) {
         WarehouseDTO dto = new WarehouseDTO();
         dto.setId(warehouse.getId());
         dto.setName(warehouse.getName());
@@ -54,13 +54,8 @@ public class WarehouseServiceImpl implements WarehouseService {
         dto.setProvince(warehouse.getWarehouseAddress().getAddress().getProvince());
         dto.setLatitude(warehouse.getWarehouseAddress().getAddress().getLatitude());
         dto.setLongitude(warehouse.getWarehouseAddress().getAddress().getLongitude());
+        dto.setAdminUsername(warehouse.getWarehouseAdmins().isEmpty() ? "Unassigned" : warehouse.getWarehouseAdmins().get(0).getUser().getUsername());
 
-        Optional<WarehouseAdmin> warehouseAdmin = warehouseAdminRepository.findByWarehouse(warehouse);
-        if (warehouseAdmin.isPresent()) {
-            dto.setAdminUsername(warehouseAdmin.get().getUser().getUsername());
-        } else {
-            dto.setAdminUsername("Unassigned");
-        }
         return dto;
     }
 
@@ -153,15 +148,18 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         Warehouse warehouse = warehouseOpt.get();
         User user = userOpt.get();
+
+        warehouseAdminRepository.deleteByWarehouse(warehouse);
+
         if (!user.getRole().equalsIgnoreCase("warehouse_admin")) {
             throw new IllegalArgumentException("Only users with 'warehouse_admin' role can be assigned to a warehouse.");
         }
-        
-        WarehouseAdmin warehouseAdmin = new WarehouseAdmin();
-        warehouseAdmin.setUser(user);
-        warehouseAdmin.setWarehouse(warehouse);
 
-        warehouseAdminRepository.save(warehouseAdmin);
+        WarehouseAdmin newAdmin = new WarehouseAdmin();
+        newAdmin.setUser(user);
+        newAdmin.setWarehouse(warehouse);
+
+        warehouseAdminRepository.save(newAdmin);
     }
 
     @Override

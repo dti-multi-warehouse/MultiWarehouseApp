@@ -42,8 +42,8 @@ public class User {
     @JsonManagedReference
     private List<WarehouseAdmin> warehouseAdmins;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-address")
     private List<UserAddress> userAddresses;
 
     @PrePersist
