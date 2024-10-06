@@ -1,7 +1,6 @@
 package com.dti.multiwarehouse.stock.repository;
 
 import com.dti.multiwarehouse.dashboard.dto.response.RetrieveMonthlyStockSummary;
-import com.dti.multiwarehouse.dashboard.dto.response.RetrieveProductStockDetails;
 import com.dti.multiwarehouse.stock.dao.StockMutation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -77,29 +76,4 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
             """, nativeQuery = true
     )
     List<RetrieveMonthlyStockSummary> getMonthlyStockSummary(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
-
-    @Query(
-            value = """
-            SELECT id, quantity, created_at
-            FROM stock_mutation
-            WHERE product_id = :productId
-            AND warehouse_to_id = :warehouseId
-            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
-            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
-            AND status = 'COMPLETED'
-            """, nativeQuery = true
-    )
-    List<RetrieveProductStockDetails> getMonthlyStockIncoming(@Param("productId") Long product_id, @Param("warehouseId") Long warehouseId, @Param("date") Date date);
-    @Query(
-            value = """
-            SELECT id, quantity, created_at
-            FROM stock_mutation
-            WHERE product_id = :productId
-            AND warehouse_from_id = :warehouseId
-            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
-            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
-            AND status = 'COMPLETED'
-            """, nativeQuery = true
-    )
-    List<RetrieveProductStockDetails> getMonthlyStockOutgoing(@Param("productId") Long product_id, @Param("warehouseId") Long warehouseId, @Param("date") Date date);
 }
