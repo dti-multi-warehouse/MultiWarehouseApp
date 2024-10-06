@@ -1,9 +1,11 @@
 package com.dti.multiwarehouse.address.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -28,6 +30,10 @@ public class Address {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "address", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference("address-user")
+    private List<UserAddress> userAddresses;
 
     @PrePersist
     protected void onCreate() {

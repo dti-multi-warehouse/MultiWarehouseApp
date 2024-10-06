@@ -43,7 +43,7 @@ public class User {
     private List<WarehouseAdmin> warehouseAdmins;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference("user-address")
     private List<UserAddress> userAddresses;
 
     @PrePersist

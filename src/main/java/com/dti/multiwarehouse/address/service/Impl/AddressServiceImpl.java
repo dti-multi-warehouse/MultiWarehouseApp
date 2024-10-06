@@ -83,6 +83,7 @@ public class AddressServiceImpl implements AddressService {
         Address associatedAddress = userAddress.getAddress();
 
         userAddressRepository.deleteById(id);
+        userAddressRepository.flush();
 
         long addressUsageCount = userAddressRepository.countByAddressId(associatedAddress.getId());
 
