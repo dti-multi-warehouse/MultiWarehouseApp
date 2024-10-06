@@ -1,9 +1,7 @@
 package com.dti.multiwarehouse.order.dao;
 
 import com.dti.multiwarehouse.product.dao.Product;
-import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

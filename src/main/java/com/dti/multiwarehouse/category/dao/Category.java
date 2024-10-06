@@ -1,6 +1,5 @@
 package com.dti.multiwarehouse.category.dao;
 
-import com.dti.multiwarehouse.category.dto.response.CategoryResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,13 +44,5 @@ public class Category {
         document.put("name",name);
         document.put("logoUrl",logoUrl);
         return document;
-    }
-
-    public CategoryResponseDto toResponseDto() {
-        return CategoryResponseDto.builder()
-                .id(id)
-                .name(name)
-                .logoUrl(logoUrl)
-                .build();
     }
 }

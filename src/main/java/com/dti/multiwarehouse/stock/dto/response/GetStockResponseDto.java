@@ -1,18 +1,22 @@
 package com.dti.multiwarehouse.stock.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@Getter
 public class GetStockResponseDto {
-    private Long id;
-    private Long warehouseId;
-    private String thumbnail;
-    private String name;
-    private int stock;
+    private final Long id;
+    private final String name;
+    private final int stock;
+    private final String thumbnail;
+    private final int incoming;
+    private final int outgoing;
+
+    public GetStockResponseDto(RetrieveStock dto) {
+        this.id = dto.getId();
+        this.name = dto.getName();
+        this.stock = dto.getStock();
+        this.thumbnail = dto.getThumbnail();
+        this.incoming = dto.getIncoming();
+        this.outgoing = dto.getOutgoing();
+    }
 }

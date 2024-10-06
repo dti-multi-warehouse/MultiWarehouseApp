@@ -79,7 +79,13 @@ public class WarehouseController {
             Warehouse warehouse = warehouseService.findWarehouseById(id);
             return ResponseEntity.ok(warehouse);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(null);
+            return ResponseEntity.status(404).body("Warehouse not found");
         }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> getWarehouseList() {
+        var res = warehouseService.getWarehouseList();
+        return Response.success("Warehouses retrieved successfully", res);
     }
 }

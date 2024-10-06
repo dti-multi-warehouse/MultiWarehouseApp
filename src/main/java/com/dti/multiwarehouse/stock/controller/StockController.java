@@ -6,8 +6,11 @@ import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
 import com.dti.multiwarehouse.stock.service.StockService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RequiredArgsConstructor
 @RestController
@@ -16,9 +19,40 @@ public class StockController {
     private final StockService stockService;
 
     @GetMapping
-    public ResponseEntity<?> getAllStocks() {
-        var res = stockService.getAllStock();
+    public ResponseEntity<?> getAllStocks(
+            @RequestParam Long warehouseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        var res = stockService.getAllStock(warehouseId, date);
         return Response.success("Successfully retrieved stocks", res);
+    }
+
+    @GetMapping("/details")
+    public ResponseEntity<?> getStockDetails(
+            @RequestParam Long warehouseId,
+            @RequestParam Long productId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        var res = stockService.getStockDetails(warehouseId, productId, date);
+        return Response.success("Successfully retrieved stock details", res);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProductAndStockAvailability(@PathVariable("id") Long id) {
+        var res = stockService.getProductAndStockAvailability(id);
+        return Response.success("Successfully retrieved stock", res);
+    }
+
+    @GetMapping("/warehouse")
+    public ResponseEntity<?> getWarehouseAndStockAvailability(@RequestParam Long warehouseId, @RequestParam Long productId) {
+        var res = stockService.getWarehouseAndStockAvailability(warehouseId, productId);
+        return Response.success("Successfully retrieved stock", res);
     }
 
     @PostMapping("/restock")
@@ -33,19 +67,25 @@ public class StockController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/accept/{id}")
+    @GetMapping("/mutation")
+    public ResponseEntity<?> getActiveMutationRequests() {
+        var res = stockService.getStockMutationRequest();
+        return Response.success("Successfully retrieved stock mutation requests", res);
+    }
+
+    @PutMapping("/mutation/{id}/accept")
     public ResponseEntity<?> acceptMutation(@PathVariable Long id) {
         stockService.acceptStockMutation(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/reject/{id}")
+    @PutMapping("/mutation/{id}/reject")
     public ResponseEntity<?> rejectMutation(@PathVariable Long id) {
         stockService.rejectStockMutation(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/mutation/cancel/{id}")
+    @PutMapping("/mutation/{id}/cancel")
     public ResponseEntity<?> cancelMutation(@PathVariable Long id) {
         stockService.cancelStockMutation(id);
         return ResponseEntity.ok().build();

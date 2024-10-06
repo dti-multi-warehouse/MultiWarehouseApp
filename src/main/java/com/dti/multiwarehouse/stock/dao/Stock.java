@@ -2,6 +2,7 @@ package com.dti.multiwarehouse.stock.dao;
 
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
 import jakarta.persistence.Column;
@@ -30,6 +31,7 @@ public class Stock {
     @MapsId("warehouse")
     @ManyToOne
     @JoinColumn(name = "warehouse_id")
+    @JsonBackReference
     private Warehouse warehouse;
 
     @CreationTimestamp
@@ -62,15 +64,5 @@ public class Stock {
     @Override
     public final int hashCode() {
         return Objects.hash(id);
-    }
-
-    public GetStockResponseDto toGetStockResponseDto() {
-        return GetStockResponseDto.builder()
-                .id(id.getProduct().getId())
-                .warehouseId(id.getWarehouse().getId())
-                .thumbnail(id.getProduct().getImageUrls().stream().findFirst().orElse(null))
-                .name(id.getProduct().getName())
-                .stock(stock)
-                .build();
     }
 }

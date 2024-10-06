@@ -8,4 +8,6 @@ public class WarehouseAdminResponse {
     private String username;
     private String email;
     private String avatar;
+    private Long warehouseId;
+    private String warehouseName;
 }

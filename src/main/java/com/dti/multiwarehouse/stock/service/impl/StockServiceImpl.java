@@ -8,7 +8,7 @@ import com.dti.multiwarehouse.stock.dao.enums.StockMutStatus;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.stock.dto.request.RequestMutationRequestDto;
 import com.dti.multiwarehouse.stock.dto.request.RestockRequestDto;
-import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
+import com.dti.multiwarehouse.stock.dto.response.*;
 import com.dti.multiwarehouse.stock.repository.StockMutationRepository;
 import com.dti.multiwarehouse.stock.repository.StockRepository;
 import com.dti.multiwarehouse.stock.service.StockService;
@@ -17,10 +17,10 @@ import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -87,9 +87,7 @@ public class StockServiceImpl implements StockService {
         var closestWarehouse = warehouseService.findWarehouseById(warehouseId);
         Map<Long, Integer> productQuantities = new HashMap<>();
 
-//        other warehouses, assume that they are sorted by closest distance
         var warehouses = warehouseService.getAllWarehouses();
-        warehouses.removeFirst();
 
         for (var item : cartItems) {
             productQuantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
@@ -119,9 +117,47 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<GetStockResponseDto> getAllStock() {
-        return stockRepository.findAll().stream()
-                .map(Stock::toGetStockResponseDto)
+    public List<GetStockResponseDto> getAllStock(Long warehouseId, LocalDate date) {
+        return stockRepository.retrieveStock(warehouseId, date)
+                .stream()
+                .map(GetStockResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public GetStockDetailsResponseDto getStockDetails(Long warehouseId, Long productId, LocalDate date) {
+        var movements = stockRepository.retrieveStockDetails(warehouseId, productId, date)
+                .stream()
+                .map(StockMovement::new)
+                .toList();
+        return new GetStockDetailsResponseDto(movements);
+    }
+
+    @Override
+    public List<StockMutationRequestResponseDto> getStockMutationRequest() {
+//        determine the warehouse that they are responsible for
+//        var warehouseId = ???
+//        var activeRequests = stockMutationRepository.findAllActiveRequestByWarehouseId(warehouseId)
+//        if they are a superadmin, fetch all
+        var activeRequests = stockMutationRepository.findAllActiveRequest();
+        return activeRequests.stream()
+                .map(StockMutationRequestResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GetProductAndStockAvailabilityDto> getProductAndStockAvailability(Long warehouseId) {
+        var res = stockRepository.retrieveProductAndStockAvailability(warehouseId);
+        return res.stream()
+                .map(GetProductAndStockAvailabilityDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GetWarehouseAndStockAvailabilityResponseDto> getWarehouseAndStockAvailability(Long warehouseId, Long productId) {
+        var res = stockRepository.retrieveWarehouseAndStockAvailability(warehouseId, productId);
+        return res.stream()
+                .map(GetWarehouseAndStockAvailabilityResponseDto::new)
                 .collect(Collectors.toList());
     }
 

@@ -3,6 +3,8 @@ package com.dti.multiwarehouse.warehouse.dao;
 import com.dti.multiwarehouse.address.entity.WarehouseAddress;
 import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.user.entity.WarehouseAdmin;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "warehouse")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "warehouse_id_gen")
@@ -44,8 +47,10 @@ public class Warehouse {
     private WarehouseAddress warehouseAddress;
 
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<WarehouseAdmin> warehouseAdmins;
 
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Stock> stocks;
 }

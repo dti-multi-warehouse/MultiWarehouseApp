@@ -1,11 +1,15 @@
-FROM maven:3.9.8-sapmachine-21 as build
+# Stage 1: Build the application
+FROM maven:3.9.7-sapmachine-22 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn package -DskipTests
+RUN echo "done"
 
-FROM openjdk:21-slim
+# Stage 2: Run the application
+FROM openjdk:22-slim
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar","/app/app.jar"]
+EXPOSE ${APP_PORT}
+ENTRYPOINT ["java","-jar","app.jar"]

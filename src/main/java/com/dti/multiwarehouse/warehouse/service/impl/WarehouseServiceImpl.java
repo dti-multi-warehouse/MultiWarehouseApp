@@ -12,6 +12,7 @@ import com.dti.multiwarehouse.user.repository.WarehouseAdminRepository;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import com.dti.multiwarehouse.warehouse.dto.AssignWarehouseAdminDTO;
 import com.dti.multiwarehouse.warehouse.dto.WarehouseDTO;
+import com.dti.multiwarehouse.warehouse.dto.WarehouseListResponseDto;
 import com.dti.multiwarehouse.warehouse.mapper.WarehouseMapper;
 import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
@@ -44,7 +45,7 @@ public class WarehouseServiceImpl implements WarehouseService {
         return warehouses.map(this::mapToWarehouseDTO);
     }
 
-    private WarehouseDTO mapToWarehouseDTO(Warehouse warehouse) {
+    public WarehouseDTO mapToWarehouseDTO(Warehouse warehouse) {
         WarehouseDTO dto = new WarehouseDTO();
         dto.setId(warehouse.getId());
         dto.setName(warehouse.getName());
@@ -53,13 +54,8 @@ public class WarehouseServiceImpl implements WarehouseService {
         dto.setProvince(warehouse.getWarehouseAddress().getAddress().getProvince());
         dto.setLatitude(warehouse.getWarehouseAddress().getAddress().getLatitude());
         dto.setLongitude(warehouse.getWarehouseAddress().getAddress().getLongitude());
+        dto.setAdminUsername(warehouse.getWarehouseAdmins().isEmpty() ? "Unassigned" : warehouse.getWarehouseAdmins().get(0).getUser().getUsername());
 
-        Optional<WarehouseAdmin> warehouseAdmin = warehouseAdminRepository.findByWarehouse(warehouse);
-        if (warehouseAdmin.isPresent()) {
-            dto.setAdminUsername(warehouseAdmin.get().getUser().getUsername());
-        } else {
-            dto.setAdminUsername("Unassigned");
-        }
         return dto;
     }
 
@@ -166,4 +162,16 @@ public class WarehouseServiceImpl implements WarehouseService {
         warehouseAdminRepository.save(newAdmin);
     }
 
+    @Override
+    public List<WarehouseListResponseDto> getWarehouseList() {
+        var warehouses = warehouseRepository.findAll();
+        return warehouses.stream()
+                .map(WarehouseListResponseDto::fromEntity)
+                .toList();
+    }
+
+    @Override
+    public Warehouse findFirstWarehouse() {
+        return warehouseRepository.findFirstWarehouse();
+    }
 }
