@@ -3,7 +3,6 @@ package com.dti.multiwarehouse.stock.dao;
 import com.dti.multiwarehouse.stock.dao.key.StockCompositeKey;
 import com.dti.multiwarehouse.warehouse.dao.Warehouse;
 import jakarta.persistence.*;
-import com.dti.multiwarehouse.stock.dto.response.GetStockResponseDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;

@@ -3,10 +3,7 @@ package com.dti.multiwarehouse.product.service;
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
-import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductGroupedSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
+import com.dti.multiwarehouse.product.dto.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -23,4 +20,5 @@ public interface ProductService {
     List<ProductSummaryResponseDto> getAllProducts();
     int getProductPrice(Long productId);
     void updateSoldAndStock(Long id);
+    FilteredProductIdDto filterProduct(String query, List<String> category, int page, int perPage) throws Exception;
 }

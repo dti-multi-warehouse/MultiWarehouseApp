@@ -60,11 +60,12 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 GROUP BY
                     p.id
                 ) sm ON p.id = sm.product_id
+            WHERE p.id IN :productIds
             ORDER BY
                 p.id;
             """, nativeQuery = true
     )
-    List<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date);
+    List<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date, @Param("productIds") List<Long> productIds);
 
     @Query(
             value = """

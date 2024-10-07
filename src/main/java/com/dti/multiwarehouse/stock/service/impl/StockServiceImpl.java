@@ -117,11 +117,13 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<GetStockResponseDto> getAllStock(Long warehouseId, LocalDate date) {
-        return stockRepository.retrieveStock(warehouseId, date)
+    public GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, List<String> category, int page, int perPage) throws Exception {
+        var filterProducts = productService.filterProduct(query, category, page, perPage);
+        var stocks = stockRepository.retrieveStock(warehouseId, date, filterProducts.getIds())
                 .stream()
-                .map(GetStockResponseDto::new)
-                .collect(Collectors.toList());
+                .map(StockDto::new)
+                .toList();
+        return new GetStockResponseDto(filterProducts.getPage(), filterProducts.getTotalPage(), stocks);
     }
 
     @Override

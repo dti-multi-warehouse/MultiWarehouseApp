@@ -228,4 +228,18 @@ public class ProductServiceImpl implements ProductService {
             throw new ApplicationException(e.getMessage());
         }
     }
+
+    @Override
+    public FilteredProductIdDto filterProduct(String query, List<String> category, int page, int perPage) throws Exception {
+        var searchParameters = new SearchParameters()
+                .q(query)
+                .queryBy("name")
+                .page(page)
+                .perPage(perPage);
+        if (!category.isEmpty()) {
+            searchParameters.filterBy("category:" + category);
+        }
+        var searchResult = typeSense.client().collections(PRODUCT_KEY).documents().search(searchParameters);
+        return new FilteredProductIdDto(searchResult);
+    }
 }
