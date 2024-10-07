@@ -134,12 +134,8 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<StockMutationRequestResponseDto> getStockMutationRequest() {
-//        determine the warehouse that they are responsible for
-//        var warehouseId = ???
-//        var activeRequests = stockMutationRepository.findAllActiveRequestByWarehouseId(warehouseId)
-//        if they are a superadmin, fetch all
-        var activeRequests = stockMutationRepository.findAllActiveRequest();
+    public List<StockMutationRequestResponseDto> getStockMutationRequest(Long warehouseId) {
+        var activeRequests = stockMutationRepository.findAllActiveRequestByWarehouseId(warehouseId);
         return activeRequests.stream()
                 .map(StockMutationRequestResponseDto::new)
                 .collect(Collectors.toList());
