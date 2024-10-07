@@ -25,6 +25,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 p.id,
                 p.name,
                 s.stock,
+                COALESCE(i.image_urls, '') AS thumbnail,
                 COALESCE(sm.incoming, 0) AS incoming,
                 COALESCE(sm.outgoing, 0) AS outgoing
             FROM
@@ -64,7 +65,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 GROUP BY
                     p.id
                 ) sm ON p.id = sm.product_id
-            WHERE p.name ilike :query
+            WHERE p.name ILIKE :query
             ORDER BY
                 p.id;
             """, nativeQuery = true
