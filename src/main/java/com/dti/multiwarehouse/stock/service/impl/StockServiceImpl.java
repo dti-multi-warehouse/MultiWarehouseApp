@@ -17,6 +17,7 @@ import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,13 +118,13 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, List<String> category, int page, int perPage) throws Exception {
-        var filterProducts = productService.filterProduct(query, category, page, perPage);
-        var stocks = stockRepository.retrieveStock(warehouseId, date, filterProducts.getIds())
+    public GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, int page, int perPage) {
+        var res = stockRepository.retrieveStock(warehouseId, date, "%" + query + "%", PageRequest.of(page, perPage));
+        var stocks = res
                 .stream()
                 .map(StockDto::new)
                 .toList();
-        return new GetStockResponseDto(filterProducts.getPage(), filterProducts.getTotalPage(), stocks);
+        return new GetStockResponseDto(page, res.getTotalPages(), stocks);
     }
 
     @Override

@@ -23,15 +23,14 @@ public class StockController {
     public ResponseEntity<?> getAllStocks(
             @RequestParam Long warehouseId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "*") String query,
-            @RequestParam(defaultValue = "") List<String> category,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int perPage
-    ) throws Exception {
+    ) {
         if (date == null) {
             date = LocalDate.now();
         }
-        var res = stockService.getAllStock(warehouseId, date, query, category, page, perPage);
+        var res = stockService.getAllStock(warehouseId, date, query, page, perPage);
         return Response.success("Successfully retrieved stocks", res);
     }
 

@@ -24,7 +24,7 @@ public interface StockService {
     void rejectStockMutation(Long stockMutationId);
     @Transactional
     void processOrder(Long warehouseId, List<CartItem> cartItems);
-    GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, List<String> category, int page, int perPage) throws Exception;
+    GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, int page, int perPage);
     GetStockDetailsResponseDto getStockDetails(Long warehouseId, Long productId, LocalDate date);
     List<StockMutationRequestResponseDto> getStockMutationRequest(Long warehouseId);
     List<GetProductAndStockAvailabilityDto> getProductAndStockAvailability(Long warehouseId);

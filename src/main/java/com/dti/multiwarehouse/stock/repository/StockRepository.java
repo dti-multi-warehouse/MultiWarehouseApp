@@ -6,6 +6,8 @@ import com.dti.multiwarehouse.stock.dto.response.RetrieveProductAndStockAvailabi
 import com.dti.multiwarehouse.stock.dto.response.RetrieveStock;
 import com.dti.multiwarehouse.stock.dto.response.RetrieveStockDetails;
 import com.dti.multiwarehouse.stock.dto.response.RetrieveWarehouseAndStockAvailabilityDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -60,12 +62,12 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 GROUP BY
                     p.id
                 ) sm ON p.id = sm.product_id
-            WHERE p.id IN :productIds
+            WHERE p.name ilike :query
             ORDER BY
                 p.id;
             """, nativeQuery = true
     )
-    List<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date, @Param("productIds") List<Long> productIds);
+    Page<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date, @Param("query") String query, Pageable pageable);
 
     @Query(
             value = """

@@ -20,5 +20,4 @@ public interface ProductService {
     List<ProductSummaryResponseDto> getAllProducts();
     int getProductPrice(Long productId);
     void updateSoldAndStock(Long id);
-    FilteredProductIdDto filterProduct(String query, List<String> category, int page, int perPage) throws Exception;
 }
