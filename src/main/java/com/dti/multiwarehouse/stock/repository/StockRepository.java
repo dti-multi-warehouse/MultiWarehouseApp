@@ -25,16 +25,18 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 p.id,
                 p.name,
                 s.stock,
-                (SELECT i.image_urls
-                 FROM product_image_urls i
-                 WHERE i.product_id = p.id
-                 LIMIT 1) AS thumbnail,
                 COALESCE(sm.incoming, 0) AS incoming,
                 COALESCE(sm.outgoing, 0) AS outgoing
             FROM
                 stock s
             JOIN
                 product p ON p.id = s.product_id AND s.warehouse_id = :warehouseId
+            LEFT JOIN LATERAL (
+                SELECT i.image_urls
+                FROM product_image_urls i
+                WHERE i.product_id = p.id
+                LIMIT 1
+            ) i ON true
             LEFT JOIN
                 (SELECT
                     p.id AS product_id,
