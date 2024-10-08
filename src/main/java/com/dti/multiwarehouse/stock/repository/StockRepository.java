@@ -88,7 +88,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
 
     @Query(
             value = """
-            SELECT s.stock, w.id AS warehouseId
+            SELECT s.stock, w.id AS warehouseId, w.name as warehouseName
             FROM stock AS s
             JOIN warehouse AS w ON s.warehouse_id = w.id
             WHERE w.id != :warehouseId AND s.product_id = :productId
