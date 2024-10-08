@@ -72,8 +72,8 @@ public class StockController {
     }
 
     @GetMapping("/mutation/{id}")
-    public ResponseEntity<?> getActiveMutationRequests(@PathVariable Long id) {
-        var res = stockService.getStockMutationRequest(id);
+    public ResponseEntity<?> getActiveMutationRequests(@PathVariable Long warehouseId) {
+        var res = stockService.getStockMutationRequest(warehouseId);
         return Response.success("Successfully retrieved stock mutation requests", res);
     }
 
