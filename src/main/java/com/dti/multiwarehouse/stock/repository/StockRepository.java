@@ -109,6 +109,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 FROM order_item AS oi
                 JOIN orders AS o ON oi.order_id = o.id
                 WHERE oi.product_id = :productId
+                AND o.warehouse_id = :warehouseId
+                AND o.status != 'CANCELLED'
                 AND date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
                 AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp))
             ) AS order_data
@@ -118,6 +120,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             SELECT created_at, quantity, 'restock' AS source, '' AS note
             FROM stock_mutation
             WHERE product_id = :productId
+            AND status = 'COMPLETED'
             AND warehouse_to_id = :warehouseId AND warehouse_from_id is null
             AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
             AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
@@ -128,6 +131,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             FROM stock_mutation AS sm
             JOIN warehouse AS w ON sm.warehouse_from_id = w.id
             WHERE sm.product_id = :productId
+            AND sm.status = 'COMPLETED'
             AND sm.warehouse_to_id = :warehouseId
             AND sm.warehouse_from_id is not null
             AND date_trunc('month', sm.created_at) = date_trunc('month', CAST(:date AS timestamp))
@@ -139,6 +143,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             FROM stock_mutation AS sm
             JOIN warehouse AS w ON sm.warehouse_to_id = w.id
             WHERE sm.product_id = :productId
+            AND sm.status = 'COMPLETED'
             AND sm.warehouse_from_id = :warehouseId
             AND date_trunc('month', sm.created_at) = date_trunc('month', CAST(:date AS timestamp))
             AND date_trunc('year', sm.created_at) = date_trunc('year', CAST(:date AS timestamp))
