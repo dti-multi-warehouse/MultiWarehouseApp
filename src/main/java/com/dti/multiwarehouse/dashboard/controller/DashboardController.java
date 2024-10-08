@@ -26,13 +26,4 @@ public class DashboardController {
         var res =  dashboardService.getSalesReport(warehouseId, date);
         return Response.success("Successfully retrieved monthly total sales report", res);
     }
-
-    @GetMapping("/stock")
-    public ResponseEntity<?> getMonthlyStockSalesReport(
-            @RequestParam Long warehouseId,
-            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date
-    ) {
-        var res = dashboardService.getMonthlyStockSummaryReport(warehouseId, date);
-        return Response.success("Successfully retrieved monthly stock summary", res);
-    }
 }

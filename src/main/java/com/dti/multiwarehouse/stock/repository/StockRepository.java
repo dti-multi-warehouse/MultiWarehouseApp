@@ -24,50 +24,56 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             SELECT
                 p.id,
                 p.name,
-                s.stock,
                 COALESCE(i.image_urls, '') AS thumbnail,
-                COALESCE(sm.incoming, 0) AS incoming,
-                COALESCE(sm.outgoing, 0) AS outgoing
-            FROM
-                stock s
-            JOIN
-                product p ON p.id = s.product_id AND s.warehouse_id = :warehouseId
+                COALESCE(sm_in.incoming, 0) AS incoming,
+                COALESCE(sm_out.outgoing, 0) + COALESCE(o_out.outgoing, 0) AS outgoing,
+                warehouse_stock.stock
+            FROM product AS p
             LEFT JOIN LATERAL (
                 SELECT i.image_urls
                 FROM product_image_urls i
                 WHERE i.product_id = p.id
                 LIMIT 1
             ) i ON true
-            LEFT JOIN
-                (SELECT
-                    p.id AS product_id,
-                    SUM(CASE WHEN sm.warehouse_to_id = :warehouseId AND sm.status = 'COMPLETED' THEN sm.quantity ELSE 0 END) AS incoming,
-                    SUM(CASE WHEN sm.warehouse_from_id = :warehouseId AND sm.status = 'COMPLETED' THEN sm.quantity ELSE 0 END) +
-                    SUM(CASE WHEN o.warehouse_id = :warehouseId AND o.status != 'CANCELLED' THEN oi.quantity ELSE 0 END) AS outgoing
-                FROM
-                    product p
-                LEFT JOIN
-                    stock_mutation sm ON p.id = sm.product_id
-                LEFT JOIN
-                    order_item oi ON p.id = oi.product_id
-                LEFT JOIN
-                    orders o ON oi.order_id = o.id
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) AS incoming
+                FROM stock_mutation
                 WHERE
-                    (sm.created_at is null OR
-                        (date_trunc('month', sm.created_at) = date_trunc('month', CAST(:date AS timestamp))
-                        AND date_trunc('year', sm.created_at) = date_trunc('year', CAST(:date AS timestamp)))
-                    )
-                    AND
-                    (o.created_at is null OR
-                        (date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
-                        AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp)))
-                    )
-                GROUP BY
-                    p.id
-                ) sm ON p.id = sm.product_id
+                    warehouse_to_id = :warehouseId
+                    AND status = 'COMPLETED'
+                    AND (date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
+                    AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp)))
+                GROUP BY product_id
+            ) AS sm_in ON p.id = sm_in.product_id
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) AS outgoing
+                FROM stock_mutation
+                WHERE
+                    warehouse_from_id = :warehouseId
+                    AND status = 'COMPLETED'
+                    AND (date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
+                    AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp)))
+                GROUP BY product_id
+            ) AS sm_out ON p.id = sm_out.product_id
+            LEFT JOIN (
+                SELECT oi.product_id, SUM(oi.quantity) AS outgoing
+                FROM order_item AS oi
+                JOIN orders AS o ON oi.order_id = o.id
+                WHERE
+                    o.warehouse_id = :warehouseId AND o.status != 'CANCELLED'
+                    AND (date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
+                    AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp)))
+                GROUP BY oi.product_id
+                ) AS o_out ON p.id = o_out.product_id
+            JOIN (
+                SELECT
+                    s.product_id,
+                    s.stock
+                FROM stock AS s
+                WHERE s.warehouse_id = 3
+                    ) AS warehouse_stock ON p.id = warehouse_stock.product_id
             WHERE p.name ILIKE :query
-            ORDER BY
-                p.id;
+            ORDER BY p.id
             """, nativeQuery = true
     )
     Page<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date, @Param("query") String query, Pageable pageable);
@@ -97,7 +103,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     List<RetrieveWarehouseAndStockAvailabilityDto> retrieveWarehouseAndStockAvailability(@Param("warehouseId") Long warehouseId, @Param("productId") Long productId);
     @Query(
             value = """
-            SELECT created_at, quantity as quantity, 'order' AS source, order_data.id AS note
+            SELECT created_at, quantity as quantity, 'order' AS source, order_data.id::varchar AS note
             FROM (
                 SELECT o.id, oi.quantity, o.created_at
                 FROM order_item AS oi
@@ -109,7 +115,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             
             UNION
             
-            SELECT created_at, quantity, 'restock' AS source, 0 AS note
+            SELECT created_at, quantity, 'restock' AS source, '' AS note
             FROM stock_mutation
             WHERE product_id = :productId
             AND warehouse_to_id = :warehouseId AND warehouse_from_id is null
@@ -118,22 +124,24 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             
             UNION
             
-            SELECT created_at, quantity, 'mutation_in' AS source, warehouse_from_id AS note
-            FROM stock_mutation
-            WHERE product_id = :productId
-            AND warehouse_to_id = :warehouseId
-            AND warehouse_from_id is not null
-            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
-            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
+            SELECT sm.created_at, sm.quantity, 'mutation_in' AS source, w.name AS note
+            FROM stock_mutation AS sm
+            JOIN warehouse AS w ON sm.warehouse_from_id = w.id
+            WHERE sm.product_id = :productId
+            AND sm.warehouse_to_id = :warehouseId
+            AND sm.warehouse_from_id is not null
+            AND date_trunc('month', sm.created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', sm.created_at) = date_trunc('year', CAST(:date AS timestamp))
             
             UNION
             
-            SELECT created_at, quantity as quantity, 'mutation_out' AS source, warehouse_to_id AS note
-            FROM stock_mutation
-            WHERE product_id = :productId
-            AND warehouse_from_id = :warehouseId
-            AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
-            AND date_trunc('year', created_at) = date_trunc('year', CAST(:date AS timestamp))
+            SELECT sm.created_at, sm.quantity as quantity, 'mutation_out' AS source, w.name AS note
+            FROM stock_mutation AS sm
+            JOIN warehouse AS w ON sm.warehouse_to_id = w.id
+            WHERE sm.product_id = :productId
+            AND sm.warehouse_from_id = :warehouseId
+            AND date_trunc('month', sm.created_at) = date_trunc('month', CAST(:date AS timestamp))
+            AND date_trunc('year', sm.created_at) = date_trunc('year', CAST(:date AS timestamp))
             
             ORDER BY created_at;
             """, nativeQuery = true

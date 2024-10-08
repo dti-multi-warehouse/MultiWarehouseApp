@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface DashboardService {
     GetSalesReportDto getSalesReport(Long warehouseId, LocalDate date);
-    List<GetMonthlyStockSummaryResponseDto> getMonthlyStockSummaryReport(Long warehouseId, LocalDate currentDate);
 }

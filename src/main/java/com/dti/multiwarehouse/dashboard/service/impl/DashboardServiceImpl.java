@@ -49,12 +49,4 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(GetCategorySalesReportResponseDto::new)
                 .collect(Collectors.toList());
     }
-
-    @Override
-    public List<GetMonthlyStockSummaryResponseDto> getMonthlyStockSummaryReport(Long warehouseId, LocalDate currentDate) {
-        var res = stockMutationRepository.getMonthlyStockSummary(warehouseId, currentDate);
-        return res.stream()
-                .map(GetMonthlyStockSummaryResponseDto::new)
-                .collect(Collectors.toList());
-    }
 }
