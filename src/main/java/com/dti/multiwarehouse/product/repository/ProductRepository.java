@@ -12,13 +12,12 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    List<Product> findAllByOrderByIdAsc();
-
     @Query(
             value = """
             SELECT *
             FROM product
             WHERE name ILIKE CONCAT('%',:name,'%')
+            ORDER BY id
             """, nativeQuery = true
     )
     Page<Product> retrieveDashboardProducts(String name, Pageable pageable);
