@@ -70,7 +70,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                     s.product_id,
                     s.stock
                 FROM stock AS s
-                WHERE s.warehouse_id = 3
+                WHERE s.warehouse_id = :warehouseId
                     ) AS warehouse_stock ON p.id = warehouse_stock.product_id
             WHERE p.name ILIKE :query
             ORDER BY p.id
