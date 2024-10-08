@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface StockMutationRepository extends JpaRepository<StockMutation, Long> {
@@ -85,5 +85,5 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
                 ) AS o_out ON p.id = o_out.product_id
             """, nativeQuery = true
     )
-    List<RetrieveMonthlyStockSummary> getMonthlyStockSummary(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
+    List<RetrieveMonthlyStockSummary> getMonthlyStockSummary(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date);
 }

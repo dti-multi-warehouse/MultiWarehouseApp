@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +51,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<GetMonthlyStockSummaryResponseDto> getMonthlyStockSummaryReport(Long warehouseId, Date currentDate) {
+    public List<GetMonthlyStockSummaryResponseDto> getMonthlyStockSummaryReport(Long warehouseId, LocalDate currentDate) {
         var res = stockMutationRepository.getMonthlyStockSummary(warehouseId, currentDate);
         return res.stream()
                 .map(GetMonthlyStockSummaryResponseDto::new)
