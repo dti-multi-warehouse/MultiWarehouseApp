@@ -2,6 +2,8 @@ package com.dti.multiwarehouse.product.repository;
 
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.response.SoldAndStockUpdateResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +13,16 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByOrderByIdAsc();
+
+    @Query(
+            value = """
+            SELECT *
+            FROM product
+            WHERE name ILIKE CONCAT('%',:name,'%')
+            """, nativeQuery = true
+    )
+    Page<Product> retrieveDashboardProducts(String name, Pageable pageable);
+
     @Modifying
     @Query(
             value = """

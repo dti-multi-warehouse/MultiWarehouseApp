@@ -51,8 +51,11 @@ public class ProductController {
     }
 
     @GetMapping("/dashboard")
-    public ResponseEntity<?> getProductDashboard() {
-        var res = productService.getAllProducts();
+    public ResponseEntity<?> getProductDashboard(
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        var res = productService.getAllProducts(query, page);
         return Response.success("Products successfully retrieved", res);
     }
 
