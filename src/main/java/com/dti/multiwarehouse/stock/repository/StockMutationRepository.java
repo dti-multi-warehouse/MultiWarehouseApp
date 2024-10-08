@@ -46,15 +46,6 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
 
     @Query(
             value = """
-            SELECT *
-            FROM stock_mutation
-            WHERE status = 'AWAITING_CONFIRMATION'
-            """, nativeQuery = true
-    )
-    List<StockMutation> findAllActiveRequest();
-
-    @Query(
-            value = """
             SELECT
                 p.id,
                 p.name,
@@ -96,10 +87,3 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
     )
     List<RetrieveMonthlyStockSummary> getMonthlyStockSummary(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
 }
-
-//WHERE
-//        (date_trunc('month', s.created_at) = date_trunc('month', CAST(:date AS timestamp))
-//AND date_trunc('year', s.created_at) = date_trunc('year', CAST(:date AS timestamp)))
-//OR
-//        (date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
-//AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp)))
