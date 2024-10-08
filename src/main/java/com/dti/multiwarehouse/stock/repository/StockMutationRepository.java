@@ -55,25 +55,51 @@ public interface StockMutationRepository extends JpaRepository<StockMutation, Lo
 
     @Query(
             value = """
-            SELECT p.id,
-            p.name,
-            sum(CASE WHEN s.warehouse_to_id = :warehouseId AND s.status = 'COMPLETED' THEN s.quantity ELSE 0 END) AS incoming,
-            sum(CASE WHEN s.warehouse_from_id = :warehouseId AND s.status = 'COMPLETED' THEN s.quantity ELSE 0 END) +
-            sum(CASE WHEN o.warehouse_id = :warehouseId AND o.status != 'CANCELLED' THEN oi.quantity ELSE 0 END)
-              AS outgoing,
-            p.stock
-            FROM stock_mutation AS s
-            JOIN product AS p ON s.product_id = p.id
-            JOIN order_item AS oi ON s.product_id = oi.product_id
-            JOIN orders AS o ON oi.order_id = o.id
-            WHERE
-              (date_trunc('month', s.created_at) = date_trunc('month', CAST(:date AS timestamp))
-            AND date_trunc('year', s.created_at) = date_trunc('year', CAST(:date AS timestamp)))
-              OR
-              (date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
-            AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp)))
-            GROUP BY p.id
+            SELECT
+                p.id,
+                p.name,
+                COALESCE(sm_in.incoming, 0) AS incoming,
+                COALESCE(sm_out.outgoing, 0) + COALESCE(o_out.outgoing, 0) AS outgoing,
+                p.stock
+            FROM product AS p
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) AS incoming
+                FROM stock_mutation
+                WHERE
+                    warehouse_to_id = :warehouseId
+                    AND status = 'COMPLETED'
+                    AND (date_trunc('month', created_at) = date_trunc('month', :date::timestamp)
+                    AND date_trunc('year', created_at) = date_trunc('year', :date::timestamp))
+                GROUP BY product_id
+            ) AS sm_in ON p.id = sm_in.product_id
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) AS outgoing
+                FROM stock_mutation
+                WHERE
+                    warehouse_from_id = :warehouseId
+                    AND status = 'COMPLETED'
+                    AND (date_trunc('month', created_at) = date_trunc('month', :date::timestamp)
+                    AND date_trunc('year', created_at) = date_trunc('year', :date::timestamp))
+                GROUP BY product_id
+            ) AS sm_out ON p.id = sm_out.product_id
+            LEFT JOIN (
+                SELECT oi.product_id, SUM(oi.quantity) AS outgoing
+                FROM order_item AS oi
+                JOIN orders AS o ON oi.order_id = o.id
+                WHERE
+                    o.warehouse_id = :warehouseId AND o.status != 'CANCELLED'
+                    AND (date_trunc('month', o.created_at) = date_trunc('month', :date::timestamp)
+                    AND date_trunc('year', o.created_at) = date_trunc('year', :date::timestamp))
+                GROUP BY oi.product_id
+                ) AS o_out ON p.id = o_out.product_id
             """, nativeQuery = true
     )
     List<RetrieveMonthlyStockSummary> getMonthlyStockSummary(@Param("warehouseId") Long warehouseId, @Param("date") Date date);
 }
+
+//WHERE
+//        (date_trunc('month', s.created_at) = date_trunc('month', CAST(:date AS timestamp))
+//AND date_trunc('year', s.created_at) = date_trunc('year', CAST(:date AS timestamp)))
+//OR
+//        (date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
+//AND date_trunc('year', o.created_at) = date_trunc('year', CAST(:date AS timestamp)))
