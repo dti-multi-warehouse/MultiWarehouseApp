@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,14 +56,8 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public WarehouseAdminResponse getWarehouseAdminById(Long id) {
-        User warehouseAdmin = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse admin not found"));
-
-        if (!warehouseAdmin.getRole().equals("warehouse_admin")) {
-            throw new ResourceNotFoundException("User is not a warehouse admin");
-        }
-
-        return mapToResponse(warehouseAdmin);
+        Optional<User> warehouseAdmin = userRepository.findById(id);
+        return mapToResponse(warehouseAdmin.get());
     }
 
     @Override
