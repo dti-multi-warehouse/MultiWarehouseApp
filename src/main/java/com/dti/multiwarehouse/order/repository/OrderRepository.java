@@ -3,6 +3,8 @@ package com.dti.multiwarehouse.order.repository;
 import com.dti.multiwarehouse.dashboard.dto.response.RetrieveProductCategorySales;
 import com.dti.multiwarehouse.dashboard.dto.response.RetrieveTotalSales;
 import com.dti.multiwarehouse.order.dao.Order;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,8 +13,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findAllByWarehouseId(Long warehouseId);
-    List<Order> findAllByUserId(Long userId);
+    Page<Order> findAllByWarehouseIdOrderByCreatedAtDesc(Long warehouseId, Pageable pageable);
+    Page<Order> findAllByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     @Query(
             value = """
             SELECT COALESCE(SUM(o.price), 0) AS revenue

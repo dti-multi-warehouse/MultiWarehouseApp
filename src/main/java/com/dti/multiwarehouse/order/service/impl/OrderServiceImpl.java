@@ -14,10 +14,7 @@ import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
-import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.GetOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.MidtransChargeDto;
-import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
+import com.dti.multiwarehouse.order.dto.response.*;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
 import com.dti.multiwarehouse.order.service.ShippingService;
@@ -33,6 +30,8 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -140,19 +139,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<GetOrderResponseDto> getAdminOrders(Long warehouseId) {
-        var res = orderRepository.findAllByWarehouseId(warehouseId);
-        return res.stream()
-                .map(GetOrderResponseDto::new)
+    public GetOrderResponseDto getAdminOrders(Long warehouseId, int page) {
+        var res = orderRepository.findAllByWarehouseIdOrderByCreatedAtDesc(warehouseId, PageRequest.of(page, 10));
+        var orders = res.getContent()
+                .stream()
+                .map(OrderResponseDto::new)
                 .toList();
+        return new GetOrderResponseDto(res.getTotalPages(), orders);
     }
 
     @Override
-    public List<GetOrderResponseDto> getUserOrders(Long userId) {
-        var res = orderRepository.findAllByUserId(userId);
-        return res.stream()
-                .map(GetOrderResponseDto::new)
+    public GetOrderResponseDto getUserOrders(Long userId, int page) {
+        var res = orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, 10));
+        var orders = res.getContent()
+                .stream()
+                .map(OrderResponseDto::new)
                 .toList();
+        return new GetOrderResponseDto(res.getTotalPages(), orders);
     }
 
     @Override

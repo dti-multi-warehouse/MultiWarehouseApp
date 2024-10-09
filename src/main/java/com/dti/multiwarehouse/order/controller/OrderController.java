@@ -23,14 +23,20 @@ public class OrderController {
     private final ShippingService shippingService;
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<?> getUserOrder(@PathVariable("id") Long id) {
-        var res = orderService.getUserOrders(id);
+    public ResponseEntity<?> getUserOrder(
+            @PathVariable("id") Long id,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        var res = orderService.getUserOrders(id, page);
         return Response.success("Successfully retrieved order", res);
     }
 
     @GetMapping("/admin/{id}")
-    public ResponseEntity<?> getAdminOrder(@PathVariable("id") Long id) {
-        var res = orderService.getAdminOrders(id);
+    public ResponseEntity<?> getAdminOrder(
+            @PathVariable("id") Long id,
+            @RequestParam(defaultValue = "0") int page
+            ) {
+        var res = orderService.getAdminOrders(id, page);
         return Response.success("Successfully retrieved order", res);
     }
 
