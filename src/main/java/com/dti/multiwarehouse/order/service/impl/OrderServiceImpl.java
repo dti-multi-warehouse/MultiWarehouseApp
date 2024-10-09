@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -263,5 +264,25 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setStatus(status);
         return orderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<GetOrderResponseDto> getUserOrdersByStatus(Long userId, String status) {
+        OrderStatus orderStatus;
+        try {
+            orderStatus = OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid order status: " + status);
+        }
+
+        List<Order> orders = orderRepository.findAllByUserIdAndStatus(userId, orderStatus);
+        if (orders.isEmpty()) {
+            throw new EntityNotFoundException("No orders found for user with status: " + status);
+        }
+
+        return orders.stream()
+                .map(GetOrderResponseDto::new)
+                .collect(Collectors.toList());
     }
 }

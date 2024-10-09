@@ -17,4 +17,5 @@ public interface OrderService {
     void confirmPayment(Long id);
     void sendOrder(Long id);
     void finalizeOrder(Long id);
+    List<GetOrderResponseDto> getUserOrdersByStatus(Long userId, String status);
 }

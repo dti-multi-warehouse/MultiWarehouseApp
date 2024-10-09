@@ -4,6 +4,7 @@ import com.dti.multiwarehouse.dashboard.dto.response.RetrieveProductCategorySale
 import com.dti.multiwarehouse.dashboard.dto.response.RetrieveProductStockDetails;
 import com.dti.multiwarehouse.dashboard.dto.response.RetrieveTotalSales;
 import com.dti.multiwarehouse.order.dao.Order;
+import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,8 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findAllByWarehouseId(Long warehouseId);
     List<Order> findAllByUserId(Long userId);
+    List<Order> findAllByUserIdAndStatus(Long userId, OrderStatus status);
+
     @Query(
             value = """
             SELECT COALESCE(SUM(o.price), 0) AS revenue
