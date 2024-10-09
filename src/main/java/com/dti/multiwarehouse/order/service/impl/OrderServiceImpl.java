@@ -285,4 +285,11 @@ public class OrderServiceImpl implements OrderService {
                 .map(GetOrderResponseDto::new)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public GetOrderResponseDto getOrderDetailsById(Long orderId) {
+        var order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + orderId));
+        return new GetOrderResponseDto(order);
+    }
 }

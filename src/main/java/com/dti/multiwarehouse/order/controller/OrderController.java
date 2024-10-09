@@ -87,4 +87,9 @@ public class OrderController {
         return Response.success("Successfully retrieved order", orders);
     }
 
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrderDetailsById(@PathVariable("orderId") Long orderId) {
+        var orderDetails = orderService.getOrderDetailsById(orderId);
+        return Response.success("Successfully retrieved order details", orderDetails);
+    }
 }

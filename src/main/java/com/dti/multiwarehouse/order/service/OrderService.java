@@ -18,4 +18,5 @@ public interface OrderService {
     void sendOrder(Long id);
     void finalizeOrder(Long id);
     List<GetOrderResponseDto> getUserOrdersByStatus(Long userId, String status);
+    GetOrderResponseDto getOrderDetailsById(Long orderId);
 }
