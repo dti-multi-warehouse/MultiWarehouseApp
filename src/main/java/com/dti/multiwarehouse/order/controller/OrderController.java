@@ -57,31 +57,31 @@ public class OrderController {
         return Response.success("Successfully placed order", res);
     }
 
-    @PostMapping("/payment/{id}")
+    @PostMapping("/{id}/payment")
     public ResponseEntity<?> createPayment(@PathVariable("id") Long id, MultipartFile paymentProof) {
         orderService.uploadPaymentProof(id, paymentProof);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/cancel/{id}")
+    @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable("id") Long id) {
         orderService.cancelOrder(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/confirm/{id}")
+    @PutMapping("/{id}/confirm")
     public ResponseEntity<?> confirmPayment(@PathVariable("id") Long id) {
         orderService.confirmPayment(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/send/{id}")
+    @PutMapping("/{id}/send")
     public ResponseEntity<?> sendOrder(@PathVariable("id") Long id) {
         orderService.sendOrder(id);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/finalize/{id}")
+    @PutMapping("/{id}/finalize")
     public ResponseEntity<?> finalizeOrder(@PathVariable("id") Long id) {
         orderService.finalizeOrder(id);
         return ResponseEntity.ok().build();
