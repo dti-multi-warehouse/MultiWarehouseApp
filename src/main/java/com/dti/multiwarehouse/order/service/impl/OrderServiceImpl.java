@@ -14,10 +14,7 @@ import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
-import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.GetOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.MidtransChargeDto;
-import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
+import com.dti.multiwarehouse.order.dto.response.*;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
 import com.dti.multiwarehouse.order.service.ShippingService;
@@ -268,7 +265,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<GetOrderResponseDto> getUserOrdersByStatus(Long userId, String status) {
+    public List<OrderDetailsResponseDto> getUserOrdersByStatus(Long userId, String status) {
         OrderStatus orderStatus;
         try {
             orderStatus = OrderStatus.valueOf(status.toUpperCase());
@@ -282,14 +279,12 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return orders.stream()
-                .map(GetOrderResponseDto::new)
+                .map(OrderDetailsResponseDto::new)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public GetOrderResponseDto getOrderDetailsById(Long orderId) {
-        var order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + orderId));
-        return new GetOrderResponseDto(order);
+    public Optional<OrderDetailsResponseDto> getOrderDetailsById(Long orderId) {
+        return orderRepository.findById(orderId).map(OrderDetailsResponseDto::new);
     }
 }
