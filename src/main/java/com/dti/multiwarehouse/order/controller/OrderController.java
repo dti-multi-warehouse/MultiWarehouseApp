@@ -87,4 +87,15 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/user/{id}/status/{status}")
+    public ResponseEntity<?> getUserOrderByStatus(@PathVariable("id") Long userId, @PathVariable("status") String status) {
+        var orders = orderService.getUserOrdersByStatus(userId, status);
+        return Response.success("Successfully retrieved order", orders);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrderDetails(@PathVariable("orderId") Long orderId) {
+        var orderDetails = orderService.getOrderDetailsById(orderId);
+        return Response.success("Successfully retrieved order details", orderDetails);
+    }
 }
