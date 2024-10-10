@@ -224,7 +224,7 @@ public class OrderServiceImpl implements OrderService {
                 .price(price)
                 .status(OrderStatus.AWAITING_CONFIRMATION)
                 .paymentMethod(paymentMethod)
-                .orderItems(new HashSet<>())
+                .orderItems(new ArrayList<>())
                 .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.DAYS))
                 .build();
 

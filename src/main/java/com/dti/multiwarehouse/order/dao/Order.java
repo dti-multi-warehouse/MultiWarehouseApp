@@ -12,7 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -61,7 +61,7 @@ public class Order {
     private String accountNumber;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<OrderItem> orderItems;
+    private List<OrderItem> orderItems;
 
     @CreationTimestamp
     @Column(name = "createdAt")
