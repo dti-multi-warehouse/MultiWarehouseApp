@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -21,12 +22,15 @@ public class StockController {
     @GetMapping
     public ResponseEntity<?> getAllStocks(
             @RequestParam Long warehouseId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int perPage
     ) {
         if (date == null) {
             date = LocalDate.now();
         }
-        var res = stockService.getAllStock(warehouseId, date);
+        var res = stockService.getAllStock(warehouseId, date, query, page, perPage);
         return Response.success("Successfully retrieved stocks", res);
     }
 
@@ -67,9 +71,9 @@ public class StockController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/mutation")
-    public ResponseEntity<?> getActiveMutationRequests() {
-        var res = stockService.getStockMutationRequest();
+    @GetMapping("/mutation/{id}")
+    public ResponseEntity<?> getActiveMutationRequests(@PathVariable Long id) {
+        var res = stockService.getStockMutationRequest(id);
         return Response.success("Successfully retrieved stock mutation requests", res);
     }
 

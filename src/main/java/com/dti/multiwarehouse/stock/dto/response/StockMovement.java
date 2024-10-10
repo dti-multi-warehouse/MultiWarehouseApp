@@ -9,7 +9,7 @@ public class StockMovement {
     private final Instant date;
     private final int quantity;
     private final String source;
-    private final int note;
+    private final String note;
 
     public StockMovement(RetrieveStockDetails dto) {
         this.date = dto.getCreatedAt();

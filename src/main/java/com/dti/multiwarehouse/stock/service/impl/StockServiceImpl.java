@@ -17,6 +17,7 @@ import com.dti.multiwarehouse.warehouse.repository.WarehouseRepository;
 import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,11 +118,13 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<GetStockResponseDto> getAllStock(Long warehouseId, LocalDate date) {
-        return stockRepository.retrieveStock(warehouseId, date)
+    public GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, int page, int perPage) {
+        var res = stockRepository.retrieveStock(warehouseId, date, "%" + query + "%", PageRequest.of(page, perPage));
+        var stocks = res
                 .stream()
-                .map(GetStockResponseDto::new)
-                .collect(Collectors.toList());
+                .map(StockDto::new)
+                .toList();
+        return new GetStockResponseDto(page, res.getTotalPages(), stocks);
     }
 
     @Override
@@ -134,12 +137,8 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<StockMutationRequestResponseDto> getStockMutationRequest() {
-//        determine the warehouse that they are responsible for
-//        var warehouseId = ???
-//        var activeRequests = stockMutationRepository.findAllActiveRequestByWarehouseId(warehouseId)
-//        if they are a superadmin, fetch all
-        var activeRequests = stockMutationRepository.findAllActiveRequest();
+    public List<StockMutationRequestResponseDto> getStockMutationRequest(Long warehouseId) {
+        var activeRequests = stockMutationRepository.findAllActiveRequestByWarehouseId(warehouseId);
         return activeRequests.stream()
                 .map(StockMutationRequestResponseDto::new)
                 .collect(Collectors.toList());

@@ -30,6 +30,8 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
             int shippingCost = costs.get(0).getCost().get(0).getValue();
             var totalPrice = cart.getTotalPrice() + shippingCost;
 
-            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart);
+            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart, userAddress);
             order.setShippingCost(shippingCost);
 
             if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
@@ -138,19 +140,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<GetOrderResponseDto> getAdminOrders(Long warehouseId) {
-        var res = orderRepository.findAllByWarehouseId(warehouseId);
-        return res.stream()
-                .map(GetOrderResponseDto::new)
+    public GetOrderResponseDto getAdminOrders(Long warehouseId, int page) {
+        var res = orderRepository.findAllByWarehouseIdOrderByCreatedAtDesc(warehouseId, PageRequest.of(page, 10));
+        var orders = res.getContent()
+                .stream()
+                .map(OrderResponseDto::new)
                 .toList();
+        return new GetOrderResponseDto(res.getTotalPages(), orders);
     }
 
     @Override
-    public List<GetOrderResponseDto> getUserOrders(Long userId) {
-        var res = orderRepository.findAllByUserId(userId);
-        return res.stream()
-                .map(GetOrderResponseDto::new)
+    public GetOrderResponseDto getUserOrders(Long userId, int page) {
+        var res = orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, 10));
+        var orders = res.getContent()
+                .stream()
+                .map(OrderResponseDto::new)
                 .toList();
+        return new GetOrderResponseDto(res.getTotalPages(), orders);
     }
 
     @Override
@@ -211,14 +217,15 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart) {
+    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart, UserAddress shippingAddress) {
         var order = Order.builder()
                 .user(user)
                 .warehouse(warehouse)
+                .shippingAddress(shippingAddress)
                 .price(price)
                 .status(OrderStatus.AWAITING_CONFIRMATION)
                 .paymentMethod(paymentMethod)
-                .orderItems(new HashSet<>())
+                .orderItems(new ArrayList<>())
                 .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.DAYS))
                 .build();
 
