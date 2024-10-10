@@ -97,7 +97,7 @@ public class OrderServiceImpl implements OrderService {
             int shippingCost = costs.get(0).getCost().get(0).getValue();
             var totalPrice = cart.getTotalPrice() + shippingCost;
 
-            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart);
+            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart, userAddress);
             order.setShippingCost(shippingCost);
 
             if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
@@ -216,10 +216,11 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart) {
+    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart, UserAddress shippingAddress) {
         var order = Order.builder()
                 .user(user)
                 .warehouse(warehouse)
+                .shippingAddress(shippingAddress)
                 .price(price)
                 .status(OrderStatus.AWAITING_CONFIRMATION)
                 .paymentMethod(paymentMethod)

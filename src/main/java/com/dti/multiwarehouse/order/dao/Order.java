@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.order.dao;
 
+import com.dti.multiwarehouse.address.entity.UserAddress;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
@@ -33,6 +34,10 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false, updatable = false)
     private Warehouse warehouse;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipping_address")
+    private UserAddress shippingAddress;
 
     @Column(name = "price", nullable = false)
     private int price;
