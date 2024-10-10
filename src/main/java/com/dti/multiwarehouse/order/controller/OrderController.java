@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.order.controller;
 
 import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
+import com.dti.multiwarehouse.order.dto.request.PaymentNotification;
 import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
 import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
 import com.dti.multiwarehouse.order.service.OrderService;
@@ -14,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @RestController
@@ -97,5 +100,18 @@ public class OrderController {
     public ResponseEntity<?> getOrderDetails(@PathVariable("orderId") Long orderId) {
         var orderDetails = orderService.getOrderDetailsById(orderId);
         return Response.success("Successfully retrieved order details", orderDetails);
+    }
+
+    @PostMapping("/notification")
+    public void handlePaymentNotification(@RequestBody PaymentNotification paymentNotification) {
+        if (!Objects.equals(paymentNotification.getFraudStatus(), "accept")){
+            return;
+        }
+        if (Objects.equals(paymentNotification.getTransactionStatus(), "settlement") ||
+                Objects.equals(paymentNotification.getTransactionStatus(), "capture")
+        ) {
+            orderService.handlePaymentNotification(paymentNotification.getTransactionId());
+        }
+
     }
 }

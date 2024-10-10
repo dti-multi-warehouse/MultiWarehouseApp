@@ -12,12 +12,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllByWarehouseIdOrderByCreatedAtDesc(Long warehouseId, Pageable pageable);
     Page<Order> findAllByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     List<Order> findAllByUserIdAndStatus(Long userId, OrderStatus status);
-
+    Optional<Order> findByMidtransId(String midtransId);
     @Query(
             value = """
             SELECT COALESCE(SUM(o.price), 0) AS revenue

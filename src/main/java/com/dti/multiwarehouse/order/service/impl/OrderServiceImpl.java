@@ -105,6 +105,7 @@ public class OrderServiceImpl implements OrderService {
                 var res = processMidtransPayment(totalPrice, requestDto.getBankTransfer());
                 order.setBank(BankTransfer.valueOf(res.getBank().toUpperCase()));
                 order.setAccountNumber(res.getVaNumber());
+                order.setMidtransId(res.getTransactionId());
             } else {
                 order.setBank(BankTransfer.BCA);
                 order.setAccountNumber(UUID.randomUUID().toString());
@@ -217,13 +218,20 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+    @Override
+    public void handlePaymentNotification(String midtransId) {
+        var order = orderRepository.findByMidtransId(midtransId).orElseThrow(() -> new EntityNotFoundException("Order with id " + midtransId + " not found"));
+        order.setStatus(OrderStatus.PROCESSING);
+        orderRepository.save(order);
+    }
+
     private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart, UserAddress shippingAddress) {
         var order = Order.builder()
                 .user(user)
                 .warehouse(warehouse)
                 .shippingAddress(shippingAddress)
                 .price(price)
-                .status(OrderStatus.AWAITING_CONFIRMATION)
+                .status(OrderStatus.AWAITING_PAYMENT)
                 .paymentMethod(paymentMethod)
                 .orderItems(new ArrayList<>())
                 .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.DAYS))

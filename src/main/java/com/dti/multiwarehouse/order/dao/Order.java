@@ -60,6 +60,9 @@ public class Order {
     @Column(name = "accountNumber", nullable = false)
     private String accountNumber;
 
+    @Column(name = "midtransId", nullable = true)
+    private String midtransId;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;
 
