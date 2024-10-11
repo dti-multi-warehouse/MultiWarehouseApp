@@ -149,7 +149,16 @@ public class WarehouseServiceImpl implements WarehouseService {
         Warehouse warehouse = warehouseOpt.get();
         User user = userOpt.get();
 
-        warehouseAdminRepository.deleteByWarehouse(warehouse);
+        Optional<WarehouseAdmin> existingAdminForUserOpt = warehouseAdminRepository.findByUser(user);
+        if (existingAdminForUserOpt.isPresent() &&
+                !existingAdminForUserOpt.get().getWarehouse().getId().equals(dto.getWarehouseId())) {
+            throw new IllegalArgumentException("This user is already assigned to another warehouse.");
+        }
+
+        Optional<WarehouseAdmin> existingAdminForWarehouseOpt = warehouseAdminRepository.findByWarehouse(warehouse);
+        if (existingAdminForWarehouseOpt.isPresent()) {
+            warehouseAdminRepository.delete(existingAdminForWarehouseOpt.get());
+        }
 
         if (!user.getRole().equalsIgnoreCase("warehouse_admin")) {
             throw new IllegalArgumentException("Only users with 'warehouse_admin' role can be assigned to a warehouse.");
