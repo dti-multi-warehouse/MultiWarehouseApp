@@ -64,8 +64,12 @@ public class AdminController {
     @GetMapping("/warehouse-admins/{id}")
 //    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> getWarehouseAdminById(@PathVariable Long id) {
-        WarehouseAdminResponse warehouseAdmin = adminService.getWarehouseAdminById(id);
-        return Response.success("Warehouse admin retrieved successfully", warehouseAdmin);
+        try {
+            WarehouseAdminResponse warehouseAdmin = adminService.getWarehouseAdminById(id);
+            return Response.success("Warehouse admin retrieved successfully", warehouseAdmin);
+        } catch (ResourceNotFoundException e) {
+            return Response.failed("Warehouse admin not found.");
+        }
     }
 
     @PostMapping("/warehouse-admins")
@@ -86,7 +90,7 @@ public class AdminController {
             WarehouseAdminResponse response = adminService.createWarehouseAdmin(request);
             return Response.success("Warehouse admin created successfully", response);
         } catch (ApplicationException e) {
-            return Response.failed("Failed to create warehouse admin.");
+            return Response.failed(e.getMessage());
         }
     }
 
