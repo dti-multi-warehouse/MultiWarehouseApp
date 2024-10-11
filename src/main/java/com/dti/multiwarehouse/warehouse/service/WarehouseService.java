@@ -21,4 +21,5 @@ public interface WarehouseService {
     Page<WarehouseDTO> searchWarehouses(String name, String city, String province, int page, int size);
     List<WarehouseListResponseDto> getWarehouseList();
     Warehouse findFirstWarehouse();
+    List<Warehouse> findNearbyWarehouses(Long warehouseId, double longitude, double latitude);
 }

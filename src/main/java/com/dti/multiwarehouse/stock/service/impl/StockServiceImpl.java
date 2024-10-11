@@ -88,7 +88,11 @@ public class StockServiceImpl implements StockService {
         var closestWarehouse = warehouseService.findWarehouseById(warehouseId);
         Map<Long, Integer> productQuantities = new HashMap<>();
 
-        var warehouses = warehouseService.getAllWarehouses();
+        var warehouses = warehouseService.findNearbyWarehouses(
+                closestWarehouse.getId(),
+                closestWarehouse.getWarehouseAddress().getAddress().getLongitude(),
+                closestWarehouse.getWarehouseAddress().getAddress().getLatitude()
+        );
 
         for (var item : cartItems) {
             productQuantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);

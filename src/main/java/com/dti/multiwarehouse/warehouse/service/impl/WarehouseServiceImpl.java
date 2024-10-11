@@ -174,4 +174,9 @@ public class WarehouseServiceImpl implements WarehouseService {
     public Warehouse findFirstWarehouse() {
         return warehouseRepository.findFirstWarehouse();
     }
+
+    @Override
+    public List<Warehouse> findNearbyWarehouses(Long warehouseId, double longitude, double latitude) {
+        return warehouseRepository.findNearbyWarehouses(warehouseId, longitude, latitude);
+    }
 }
