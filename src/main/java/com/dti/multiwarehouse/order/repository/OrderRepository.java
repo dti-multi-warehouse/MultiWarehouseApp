@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByMidtransId(String midtransId);
     @Query(
             value = """
-            SELECT COALESCE(SUM(o.price), 0) AS revenue
+            SELECT COALESCE(SUM((o.price - o.shipping_cost)), 0) AS revenue
             FROM orders as o
             WHERE o.warehouse_id = :warehouseId
             AND date_trunc('month', o.created_at) = date_trunc('month', CAST(:date AS timestamp))
@@ -33,7 +33,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query(
             value = """
-            SELECT created_at::date AS sale_date, SUM(price) AS revenue
+            SELECT created_at::date AS sale_date, SUM((price - shipping_cost)) AS revenue
             from orders
             WHERE warehouse_id = :warehouseId
             AND date_trunc('month', created_at) = date_trunc('month', CAST(:date AS timestamp))
