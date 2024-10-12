@@ -106,6 +106,7 @@ public class OrderServiceImpl implements OrderService {
                 order.setAccountNumber(res.getVaNumber());
                 order.setMidtransId(res.getTransactionId());
             } else {
+                order.setPaymentMethod(PaymentMethod.MANUAL);
                 order.setBank(BankTransfer.BCA);
                 order.setAccountNumber(UUID.randomUUID().toString());
             }
