@@ -150,7 +150,8 @@ public class StockController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long id
     ) {
-        stockService.acceptStockMutation(id, jwt.getClaim("warehouse_id"), jwt.getClaim("role"));
+        var isAdmin = jwt.getClaim("role").equals("admin");
+        stockService.acceptStockMutation(id, jwt.getClaim("warehouse_id"), isAdmin);
         return ResponseEntity.ok().build();
     }
 
@@ -159,7 +160,8 @@ public class StockController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long id
     ) {
-        stockService.rejectStockMutation(id, jwt.getClaim("warehouse_id"), jwt.getClaim("role"));
+        var isAdmin = jwt.getClaim("role").equals("admin");
+        stockService.rejectStockMutation(id, jwt.getClaim("warehouse_id"), isAdmin);
         return ResponseEntity.ok().build();
     }
 
@@ -168,7 +170,8 @@ public class StockController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long id
     ) {
-        stockService.cancelStockMutation(id, jwt.getClaim("warehouse_id"), jwt.getClaim("role"));
+        var isAdmin = jwt.getClaim("role").equals("admin");
+        stockService.cancelStockMutation(id, jwt.getClaim("warehouse_id"), isAdmin);
         return ResponseEntity.ok().build();
     }
 }
