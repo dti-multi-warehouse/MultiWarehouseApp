@@ -129,9 +129,19 @@ public class StockController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/mutation/{id}")
-    public ResponseEntity<?> getActiveMutationRequests(@PathVariable Long id) {
-        var res = stockService.getStockMutationRequest(id);
+    @GetMapping("/mutation/{warehouseId}")
+    public ResponseEntity<?> getActiveMutationRequests(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long warehouseId
+    ) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
+        var res = stockService.getStockMutationRequest(warehouseId);
         return Response.success("Successfully retrieved stock mutation requests", res);
     }
 
