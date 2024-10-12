@@ -27,10 +27,19 @@ public class OrderController {
     private final ShippingService shippingService;
 
     @GetMapping("/user/{id}")
+    @PreAuthorize("hasRole('user')")
     public ResponseEntity<?> getUserOrder(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") Long id,
             @RequestParam(defaultValue = "0") int page
     ) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("id") == null ||
+                        !jwt.getClaim("id").equals(id)
+        ) {
+            return Response.failed("Invalid authority");
+        }
         var res = orderService.getUserOrders(id, page);
         return Response.success("Successfully retrieved order", res);
     }
@@ -42,7 +51,11 @@ public class OrderController {
             @PathVariable("id") Long id,
             @RequestParam(defaultValue = "0") int page
             ) {
-        if (jwt == null || jwt.getClaim("warehouse_id") == null || !jwt.getClaim("warehouse_id").equals(id)) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(id) && !jwt.getClaim("role").equals("admin"))
+        ) {
             return Response.failed("Invalid authority");
         }
         var res = orderService.getAdminOrders(id, page);
@@ -61,40 +74,65 @@ public class OrderController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('user')")
     public ResponseEntity<?> createOrder(@AuthenticationPrincipal Jwt jwt, @RequestBody CreateOrderRequestDto requestDto) throws MidtransError {
         var res = orderService.createOrder(jwt.getTokenValue(), jwt.getSubject(), requestDto);
         return Response.success("Successfully placed order", res);
     }
 
     @PostMapping("/{id}/payment")
-    public ResponseEntity<?> createPayment(@PathVariable("id") Long id, MultipartFile paymentProof) {
-        orderService.uploadPaymentProof(id, paymentProof);
+    @PreAuthorize("hasRole('user')")
+    public ResponseEntity<?> createPayment(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("id") Long id,
+            MultipartFile paymentProof
+    ) {
+        orderService.uploadPaymentProof(id, paymentProof, jwt.getClaim("id"));
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable("id") Long id) {
-        orderService.cancelOrder(id);
+    public ResponseEntity<?> cancelOrder(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("id") Long id
+    ) {
+        var userId = jwt.getClaim("id");
+        var warehouseId = jwt.getClaim("warehouse_id");
+        var isUser = jwt.getClaim("role").equals("user");
+        var isAdmin = jwt.getClaim("role").equals("admin");
+        orderService.cancelOrder(id, (Long) userId, (Long) warehouseId, isUser, isAdmin);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
-    public ResponseEntity<?> confirmPayment(@PathVariable("id") Long id) {
-        orderService.confirmPayment(id);
+    public ResponseEntity<?> confirmPayment(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("id") Long id
+    ) {
+        var isAdmin = jwt.getClaim("role").equals("admin");
+        orderService.confirmPayment(id, jwt.getClaim("warehouse_id"), isAdmin);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/send")
     @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
-    public ResponseEntity<?> sendOrder(@PathVariable("id") Long id) {
-        orderService.sendOrder(id);
+    public ResponseEntity<?> sendOrder(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("id") Long id
+    ) {
+        var isAdmin = jwt.getClaim("role").equals("admin");
+        orderService.sendOrder(id, jwt.getClaim("warehouse_id"), isAdmin);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/finalize")
-    public ResponseEntity<?> finalizeOrder(@PathVariable("id") Long id) {
-        orderService.finalizeOrder(id);
+    @PreAuthorize("hasRole('user')")
+    public ResponseEntity<?> finalizeOrder(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("id") Long id
+    ) {
+        orderService.finalizeOrder(id, jwt.getClaim("id"));
         return ResponseEntity.ok().build();
     }
 

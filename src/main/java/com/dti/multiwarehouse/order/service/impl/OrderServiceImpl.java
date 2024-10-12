@@ -160,8 +160,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void uploadPaymentProof(Long id, MultipartFile image) {
+    public void uploadPaymentProof(Long id, MultipartFile image, Long userId) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+        if (Instant.now().isAfter(order.getPaymentExpiredAt())) {
+            throw new ApplicationException("Payment is already expired.");
+        }
+        if (!order.getUser().getId().equals(userId)) {
+            throw new ApplicationException("Invalid user");
+        }
         try {
            var url = cloudImageStorageService.uploadImage(image, "payment_proof");
            order.setPaymentProof(url);
@@ -173,48 +179,63 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void cancelOrder(Long id) {
+    public void cancelOrder(Long id, Long userId, Long warehouseId, boolean isUser, boolean isAdmin) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
 
         if (order.getStatus() == OrderStatus.DELIVERING || order.getStatus() == OrderStatus.COMPLETED) {
            throw new ApplicationException("Order can no longer be cancelled at this stage");
         }
+        if ((isUser && order.getUser().getId().equals(userId)) || (isAdmin || order.getWarehouse().getId().equals(warehouseId))) {
+            order.setStatus(OrderStatus.CANCELLED);
+            var res = orderRepository.save(order);
+            res.getOrderItems().forEach(orderItem -> productService.updateSoldAndStock(orderItem.getProduct().getId()));
+        } else {
+            throw new ApplicationException("Invalid authority");
+        }
 
-        order.setStatus(OrderStatus.CANCELLED);
-        var res = orderRepository.save(order);
-        res.getOrderItems().forEach(orderItem -> productService.updateSoldAndStock(orderItem.getProduct().getId()));
     }
 
     @Override
-    public void confirmPayment(Long id) {
+    public void confirmPayment(Long id, Long warehouseId, boolean isAdmin) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
 
         if (order.getStatus() != OrderStatus.AWAITING_CONFIRMATION) {
             throw new ApplicationException("Order can't be processed");
         }
-
-        order.setStatus(OrderStatus.PROCESSING);
-        orderRepository.save(order);
+        if (isAdmin || order.getWarehouse().getId().equals(warehouseId)) {
+            order.setStatus(OrderStatus.PROCESSING);
+            orderRepository.save(order);
+        } else {
+            throw new ApplicationException("Invalid authority");
+        }
     }
 
     @Override
-    public void sendOrder(Long id) {
+    public void sendOrder(Long id, Long warehouseId, boolean isAdmin) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
 
         if (order.getStatus() != OrderStatus.PROCESSING) {
             throw new ApplicationException("Order can't be delivered");
         }
+        if (isAdmin || order.getWarehouse().getId().equals(warehouseId)) {
+            order.setStatus(OrderStatus.DELIVERING);
+            orderRepository.save(order);
+        } else {
+            throw new ApplicationException("Invalid authority");
+        }
 
-        order.setStatus(OrderStatus.DELIVERING);
-        orderRepository.save(order);
     }
 
     @Override
-    public void finalizeOrder(Long id) {
+    public void finalizeOrder(Long id, Long userId) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
 
         if (order.getStatus() != OrderStatus.DELIVERING) {
             throw new ApplicationException("Order can't be completed");
+        }
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new ApplicationException("Invalid user");
         }
 
         order.setStatus(OrderStatus.COMPLETED);
