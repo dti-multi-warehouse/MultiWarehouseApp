@@ -30,7 +30,6 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -175,47 +174,51 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancelOrder(Long id) {
-        var res = updateOrderStatus(
-                id,
-                OrderStatus.CANCELLED,
-                null,
-                List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED),
-                "Order can no longer be cancelled at this stage"
-        );
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() == OrderStatus.DELIVERING || order.getStatus() == OrderStatus.COMPLETED) {
+           throw new ApplicationException("Order can no longer be cancelled at this stage");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        var res = orderRepository.save(order);
         res.getOrderItems().forEach(orderItem -> productService.updateSoldAndStock(orderItem.getProduct().getId()));
     }
 
     @Override
     public void confirmPayment(Long id) {
-        updateOrderStatus(
-                id,
-                OrderStatus.PROCESSING,
-                OrderStatus.AWAITING_CONFIRMATION,
-                null,
-                "Order can't be processed"
-        );
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() != OrderStatus.AWAITING_CONFIRMATION) {
+            throw new ApplicationException("Order can't be processed");
+        }
+
+        order.setStatus(OrderStatus.PROCESSING);
+        orderRepository.save(order);
     }
 
     @Override
     public void sendOrder(Long id) {
-        updateOrderStatus(
-                id,
-                OrderStatus.DELIVERING,
-                OrderStatus.PROCESSING,
-                null,
-                "Order can't be delivered"
-        );
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() != OrderStatus.PROCESSING) {
+            throw new ApplicationException("Order can't be delivered");
+        }
+
+        order.setStatus(OrderStatus.DELIVERING);
+        orderRepository.save(order);
     }
 
     @Override
     public void finalizeOrder(Long id) {
-        updateOrderStatus(
-                id,
-                OrderStatus.COMPLETED,
-                OrderStatus.DELIVERING,
-                null,
-                "Order can't be completed"
-        );
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() != OrderStatus.DELIVERING) {
+            throw new ApplicationException("Order can't be completed");
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
+        orderRepository.save(order);
     }
 
     @Override
@@ -263,19 +266,6 @@ public class OrderServiceImpl implements OrderService {
                         .orElse("bca")
         ));
         return new MidtransChargeDto(midtransCoreApi.chargeTransaction(params));
-    }
-
-    private Order updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
-        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
-        if (invalidStatuses != null && invalidStatuses.contains(order.getStatus())) {
-            throw new ApplicationException(errorMessage);
-        }
-
-        if (expectedStatus != null && order.getStatus() != expectedStatus) {
-            throw new ApplicationException(errorMessage);
-        }
-        order.setStatus(status);
-        return orderRepository.save(order);
     }
 
     @Transactional(readOnly = true)
