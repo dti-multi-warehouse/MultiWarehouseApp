@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -20,6 +22,7 @@ public class StockController {
 
     @GetMapping
     public ResponseEntity<?> getAllStocks(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam Long warehouseId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "") String query,
@@ -29,12 +32,20 @@ public class StockController {
         if (date == null) {
             date = LocalDate.now();
         }
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
         var res = stockService.getAllStock(warehouseId, date, query, page, perPage);
         return Response.success("Successfully retrieved stocks", res);
     }
 
     @GetMapping("/details")
     public ResponseEntity<?> getStockDetails(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam Long warehouseId,
             @RequestParam Long productId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
@@ -42,30 +53,78 @@ public class StockController {
         if (date == null) {
             date = LocalDate.now();
         }
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
         var res = stockService.getStockDetails(warehouseId, productId, date);
         return Response.success("Successfully retrieved stock details", res);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getProductAndStockAvailability(@PathVariable("id") Long id) {
-        var res = stockService.getProductAndStockAvailability(id);
+    @GetMapping("/{warehouseId}")
+    public ResponseEntity<?> getProductAndStockAvailability(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("warehouseId") Long warehouseId
+    ) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
+        var res = stockService.getProductAndStockAvailability(warehouseId);
         return Response.success("Successfully retrieved stock", res);
     }
 
     @GetMapping("/warehouse")
-    public ResponseEntity<?> getWarehouseAndStockAvailability(@RequestParam Long warehouseId, @RequestParam Long productId) {
+    public ResponseEntity<?> getWarehouseAndStockAvailability(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam Long warehouseId,
+            @RequestParam Long productId
+    ) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
         var res = stockService.getWarehouseAndStockAvailability(warehouseId, productId);
         return Response.success("Successfully retrieved stock", res);
     }
 
     @PostMapping("/restock")
-    public ResponseEntity<?> restock(@Valid @RequestBody RestockRequestDto requestDto) {
+    public ResponseEntity<?> restock(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody RestockRequestDto requestDto
+    ) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(requestDto.getWarehouseToId()) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
         stockService.restock(requestDto);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/mutation")
-    public ResponseEntity<?> requestMutation(@Valid @RequestBody RequestMutationRequestDto requestDto) {
+    public ResponseEntity<?> requestMutation(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody RequestMutationRequestDto requestDto
+    ) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(requestDto.getWarehouseToId()) && !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
         stockService.requestStockMutation(requestDto);
         return ResponseEntity.ok().build();
     }

@@ -28,7 +28,12 @@ public class DashboardController {
             @RequestParam Long warehouseId,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date
             ) {
-        if (jwt == null || jwt.getClaim("warehouse_id") == null || !jwt.getClaim("warehouse_id").equals(warehouseId)) {
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) &&
+                        !jwt.getClaim("role").equals("admin"))
+        ) {
             return Response.failed("Invalid authority");
         }
         var res =  dashboardService.getSalesReport(warehouseId, date);
