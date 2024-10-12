@@ -146,20 +146,29 @@ public class StockController {
     }
 
     @PutMapping("/mutation/{id}/accept")
-    public ResponseEntity<?> acceptMutation(@PathVariable Long id) {
-        stockService.acceptStockMutation(id);
+    public ResponseEntity<?> acceptMutation(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id
+    ) {
+        stockService.acceptStockMutation(id, jwt.getClaim("warehouse_id"), jwt.getClaim("role"));
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/mutation/{id}/reject")
-    public ResponseEntity<?> rejectMutation(@PathVariable Long id) {
-        stockService.rejectStockMutation(id);
+    public ResponseEntity<?> rejectMutation(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id
+    ) {
+        stockService.rejectStockMutation(id, jwt.getClaim("warehouse_id"), jwt.getClaim("role"));
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/mutation/{id}/cancel")
-    public ResponseEntity<?> cancelMutation(@PathVariable Long id) {
-        stockService.cancelStockMutation(id);
+    public ResponseEntity<?> cancelMutation(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id
+    ) {
+        stockService.cancelStockMutation(id, jwt.getClaim("warehouse_id"), jwt.getClaim("role"));
         return ResponseEntity.ok().build();
     }
 }
