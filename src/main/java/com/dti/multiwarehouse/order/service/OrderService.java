@@ -14,11 +14,11 @@ public interface OrderService {
     CreateOrderResponseDto createOrder(String sessionId, String email, CreateOrderRequestDto requestDto) throws MidtransError;
     GetOrderResponseDto getAdminOrders(Long warehouseId, int page);
     GetOrderResponseDto getUserOrders(Long userId, int page);
-    void uploadPaymentProof(Long id, MultipartFile image);
-    void cancelOrder(Long id);
-    void confirmPayment(Long id);
-    void sendOrder(Long id);
-    void finalizeOrder(Long id);
+    void uploadPaymentProof(Long id, MultipartFile image, Long userId);
+    void cancelOrder(Long id, Long userId, Long warehouseId, boolean isUser, boolean isAdmin);
+    void confirmPayment(Long id, Long warehouseId, boolean isAdmin);
+    void sendOrder(Long id, Long warehouseId, boolean isAdmin);
+    void finalizeOrder(Long id, Long userId);
     void handlePaymentNotification(String midtransId);
     List<OrderDetailsResponseDto> getUserOrdersByStatus(Long userId, String status);
     Optional<OrderDetailsResponseDto> getOrderDetailsById(Long orderId);
