@@ -6,6 +6,7 @@ import com.dti.multiwarehouse.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +26,7 @@ public class CategoryController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> createCategory(
             @Valid @RequestPart CategoryRequestDto requestDto,
             @RequestPart MultipartFile logo
@@ -34,6 +36,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> updateCategory(
             @PathVariable Long id,
             @Valid @RequestPart CategoryRequestDto requestDto,
@@ -44,6 +47,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return Response.success("Category successfully deleted");

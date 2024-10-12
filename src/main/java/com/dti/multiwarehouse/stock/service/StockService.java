@@ -17,11 +17,11 @@ public interface StockService {
     @Transactional
     void requestStockMutation(RequestMutationRequestDto requestDto);
     @Transactional
-    void acceptStockMutation(Long stockMutationId);
+    void acceptStockMutation(Long stockMutationId, Long warehouseId, boolean isAdmin);
     @Transactional
-    void cancelStockMutation(Long stockMutationId);
+    void cancelStockMutation(Long stockMutationId, Long warehouseId, boolean isAdmin);
     @Transactional
-    void rejectStockMutation(Long stockMutationId);
+    void rejectStockMutation(Long stockMutationId, Long warehouseId, boolean isAdmin);
     @Transactional
     void processOrder(Long warehouseId, List<CartItem> cartItems);
     GetStockResponseDto getAllStock(Long warehouseId, LocalDate date, String query, int page, int perPage);

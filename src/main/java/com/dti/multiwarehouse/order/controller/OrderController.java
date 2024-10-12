@@ -11,6 +11,7 @@ import com.midtrans.httpclient.error.MidtransError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -35,10 +36,15 @@ public class OrderController {
     }
 
     @GetMapping("/admin/{id}")
+    @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
     public ResponseEntity<?> getAdminOrder(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") Long id,
             @RequestParam(defaultValue = "0") int page
             ) {
+        if (jwt == null || jwt.getClaim("warehouse_id") == null || !jwt.getClaim("warehouse_id").equals(id)) {
+            return Response.failed("Invalid authority");
+        }
         var res = orderService.getAdminOrders(id, page);
         return Response.success("Successfully retrieved order", res);
     }
@@ -73,12 +79,14 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
     public ResponseEntity<?> confirmPayment(@PathVariable("id") Long id) {
         orderService.confirmPayment(id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/send")
+    @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
     public ResponseEntity<?> sendOrder(@PathVariable("id") Long id) {
         orderService.sendOrder(id);
         return ResponseEntity.ok().build();

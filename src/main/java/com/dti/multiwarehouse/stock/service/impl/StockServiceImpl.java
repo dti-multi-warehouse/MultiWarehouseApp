@@ -1,6 +1,7 @@
 package com.dti.multiwarehouse.stock.service.impl;
 
 import com.dti.multiwarehouse.cart.dto.CartItem;
+import com.dti.multiwarehouse.exceptions.ApplicationException;
 import com.dti.multiwarehouse.product.service.ProductService;
 import com.dti.multiwarehouse.stock.dao.Stock;
 import com.dti.multiwarehouse.stock.dao.StockMutation;
@@ -18,6 +19,8 @@ import com.dti.multiwarehouse.warehouse.service.WarehouseService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,18 +73,18 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public void acceptStockMutation(Long stockMutationId) {
-        mutateStock(stockMutationId, StockMutStatus.COMPLETED);
+    public void acceptStockMutation(Long stockMutationId, Long warehouseId, boolean isAdmin) {
+        mutateStock(stockMutationId, StockMutStatus.COMPLETED, warehouseId, isAdmin);
     }
 
     @Override
-    public void cancelStockMutation(Long stockMutationId) {
-        mutateStock(stockMutationId, StockMutStatus.CANCELLED);
+    public void cancelStockMutation(Long stockMutationId, Long warehouseId, boolean isAdmin) {
+        mutateStock(stockMutationId, StockMutStatus.CANCELLED, warehouseId, isAdmin);
     }
 
     @Override
-    public void rejectStockMutation(Long stockMutationId) {
-        mutateStock(stockMutationId, StockMutStatus.REJECTED);
+    public void rejectStockMutation(Long stockMutationId, Long warehouseId, boolean isAdmin) {
+        mutateStock(stockMutationId, StockMutStatus.REJECTED, warehouseId, isAdmin);
     }
 
     public void processOrder(Long warehouseId, List<CartItem> cartItems) {
@@ -210,14 +213,16 @@ public class StockServiceImpl implements StockService {
         }
     }
 
-    private void mutateStock(Long stockMutationId, StockMutStatus status) {
+    private void mutateStock(Long stockMutationId, StockMutStatus status, Long warehouseId, boolean isAdmin) {
         var stockMutation = stockMutationRepository
                 .findById(stockMutationId)
                 .orElseThrow(() -> new EntityNotFoundException("Stock mutation with id " + stockMutationId + " not found"));
-        stockMutation.setStatus(status);
-        stockMutationRepository.save(stockMutation);
-        calculateWarehouseStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId());
-        calculateWarehouseStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseFrom().getId());
+        if (isAdmin || stockMutation.getWarehouseFrom().getId().equals(warehouseId)) {
+            stockMutation.setStatus(status);
+            stockMutationRepository.save(stockMutation);
+            calculateWarehouseStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseTo().getId());
+            calculateWarehouseStock(stockMutation.getProduct().getId(), stockMutation.getWarehouseFrom().getId());
+        } else {throw new ApplicationException("Invalid authority");}
     }
 
     private void calculateWarehouseStock(Long productId, Long warehouseId) {
