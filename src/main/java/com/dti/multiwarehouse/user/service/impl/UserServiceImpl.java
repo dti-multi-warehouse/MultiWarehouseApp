@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
 
     private void sendVerificationEmail(User user) {
         String token = generateToken(user);
-        String verificationUrl = "http://localhost:3000?token=" + token;
+        String verificationUrl = "https://dev.alphamarch.shop?token=" + token;
         System.out.println("verification "+verificationUrl);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
