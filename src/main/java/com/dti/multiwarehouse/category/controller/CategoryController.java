@@ -46,7 +46,7 @@ public class CategoryController {
     public ResponseEntity<?> updateCategory(
             @PathVariable Long id,
             @Valid @RequestPart CategoryRequestDto requestDto,
-            @RequestPart MultipartFile logo
+            @RequestPart(required = false) MultipartFile logo
     ) throws Exception {
         var res = categoryService.updateCategory(id, requestDto, logo);
         return Response.success("Category successfully updated", res);

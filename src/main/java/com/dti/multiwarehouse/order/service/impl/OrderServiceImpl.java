@@ -220,6 +220,7 @@ public class OrderServiceImpl implements OrderService {
         }
         if (isAdmin || order.getWarehouse().getId().equals(warehouseId)) {
             order.setStatus(OrderStatus.DELIVERING);
+            order.setDeliveredAt(Instant.now());
             orderRepository.save(order);
         } else {
             throw new ApplicationException("Invalid authority");
@@ -313,5 +314,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Optional<OrderDetailsResponseDto> getOrderDetailsById(Long orderId) {
         return orderRepository.findById(orderId).map(OrderDetailsResponseDto::new);
+    }
+
+    @Override
+    public void autoFinalizeOrder() {
+        var sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        orderRepository.finalizeOrders(sevenDaysAgo, OrderStatus.DELIVERING, OrderStatus.COMPLETED);
+    }
+
+    @Override
+    public void autoCancelOrder() {
+        orderRepository.cancelExpiredOrders(Instant.now(), OrderStatus.AWAITING_PAYMENT, OrderStatus.CANCELLED);
     }
 }

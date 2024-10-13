@@ -7,9 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -75,4 +78,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             """, nativeQuery = true
     )
     List<RetrieveProductCategorySales> getMonthlyCategorySalesReport(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Order o SET o.status = :newStatus WHERE o.deliveredAt <= :sevenDaysAgo AND o.status = :currentStatus")
+    void finalizeOrders(@Param("sevenDaysAgo") Instant sevenDaysAgo, @Param("currentStatus") OrderStatus currentStatus, @Param("newStatus") OrderStatus newStatus);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Order o SET o.status = :newStatus WHERE o.paymentExpiredAt < :now AND o.status = :currentStatus")
+    void cancelExpiredOrders(@Param("now") Instant now, @Param("currentStatus") OrderStatus currentStatus, @Param("newStatus") OrderStatus newStatus);
 }
