@@ -5,9 +5,8 @@ import com.dti.multiwarehouse.cart.service.CartService;
 import com.dti.multiwarehouse.response.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +18,9 @@ public class CartController {
 
     @GetMapping
     public ResponseEntity<?> getCartItems(@AuthenticationPrincipal Jwt jwt) {
+        if (jwt == null) {
+            throw new AuthenticationCredentialsNotFoundException("Invalid token");
+        }
         var res = cartService.getCart(jwt.getTokenValue());
         return Response.success("Cart retrieved successfully", res);
     }

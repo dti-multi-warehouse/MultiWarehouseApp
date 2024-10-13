@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableConfigurationProperties({
         CloudinaryConfigProperties.class,
@@ -17,6 +18,7 @@ import org.springframework.cache.annotation.EnableCaching;
 })
 @SpringBootApplication
 @EnableCaching
+@EnableScheduling
 public class MultiWarehouseApplication {
 
     public static void main(String[] args) {

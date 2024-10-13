@@ -7,6 +7,7 @@ import com.dti.multiwarehouse.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> addProduct(
             @Valid @RequestPart AddProductRequestDto product,
             @RequestPart(required = true) List<MultipartFile> images
@@ -51,6 +53,7 @@ public class ProductController {
     }
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> getProductDashboard(
             @RequestParam(defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page
@@ -60,9 +63,9 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
                                            @RequestPart UpdateProductRequestDto product,
-//                                           @RequestPart(required = false) Set<String> prevImages,
                                            @RequestPart(required = false) List<MultipartFile> images
     ) throws Exception {
         var res = productService.updateProduct(id, product, images);
@@ -70,6 +73,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return Response.success("Product successfully deleted", id);
