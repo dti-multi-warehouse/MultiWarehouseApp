@@ -260,7 +260,7 @@ public class OrderServiceImpl implements OrderService {
                 .status(OrderStatus.AWAITING_PAYMENT)
                 .paymentMethod(paymentMethod)
                 .orderItems(new ArrayList<>())
-                .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.DAYS))
+                .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.HOURS))
                 .build();
 
         for (var item : cart.getCartItems()) {
