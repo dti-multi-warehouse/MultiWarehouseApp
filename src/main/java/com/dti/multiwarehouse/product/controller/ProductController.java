@@ -53,7 +53,7 @@ public class ProductController {
     }
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
     public ResponseEntity<?> getProductDashboard(
             @RequestParam(defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page
