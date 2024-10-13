@@ -14,10 +14,7 @@ import com.dti.multiwarehouse.order.dto.request.CreateOrderRequestDto;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dto.request.ShippingCostRequestDto;
-import com.dti.multiwarehouse.order.dto.response.CreateOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.GetOrderResponseDto;
-import com.dti.multiwarehouse.order.dto.response.MidtransChargeDto;
-import com.dti.multiwarehouse.order.dto.response.ShippingCostResponseDto;
+import com.dti.multiwarehouse.order.dto.response.*;
 import com.dti.multiwarehouse.order.repository.OrderRepository;
 import com.dti.multiwarehouse.order.service.OrderService;
 import com.dti.multiwarehouse.order.service.ShippingService;
@@ -33,6 +30,7 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +40,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -98,14 +97,16 @@ public class OrderServiceImpl implements OrderService {
             int shippingCost = costs.get(0).getCost().get(0).getValue();
             var totalPrice = cart.getTotalPrice() + shippingCost;
 
-            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart);
+            var order = createNewOrder(user, nearestWarehouse, totalPrice, requestDto.getPaymentMethod(), cart, userAddress);
             order.setShippingCost(shippingCost);
 
             if (requestDto.getPaymentMethod() == PaymentMethod.MIDTRANS) {
                 var res = processMidtransPayment(totalPrice, requestDto.getBankTransfer());
                 order.setBank(BankTransfer.valueOf(res.getBank().toUpperCase()));
                 order.setAccountNumber(res.getVaNumber());
+                order.setMidtransId(res.getTransactionId());
             } else {
+                order.setPaymentMethod(PaymentMethod.MANUAL);
                 order.setBank(BankTransfer.BCA);
                 order.setAccountNumber(UUID.randomUUID().toString());
             }
@@ -140,24 +141,34 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<GetOrderResponseDto> getAdminOrders(Long warehouseId) {
-        var res = orderRepository.findAllByWarehouseId(warehouseId);
-        return res.stream()
-                .map(GetOrderResponseDto::new)
+    public GetOrderResponseDto getAdminOrders(Long warehouseId, int page) {
+        var res = orderRepository.findAllByWarehouseIdOrderByCreatedAtDesc(warehouseId, PageRequest.of(page, 10));
+        var orders = res.getContent()
+                .stream()
+                .map(OrderResponseDto::new)
                 .toList();
+        return new GetOrderResponseDto(res.getTotalPages(), orders);
     }
 
     @Override
-    public List<GetOrderResponseDto> getUserOrders(Long userId) {
-        var res = orderRepository.findAllByUserId(userId);
-        return res.stream()
-                .map(GetOrderResponseDto::new)
+    public GetOrderResponseDto getUserOrders(Long userId, int page) {
+        var res = orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, 10));
+        var orders = res.getContent()
+                .stream()
+                .map(OrderResponseDto::new)
                 .toList();
+        return new GetOrderResponseDto(res.getTotalPages(), orders);
     }
 
     @Override
-    public void uploadPaymentProof(Long id, MultipartFile image) {
+    public void uploadPaymentProof(Long id, MultipartFile image, Long userId) {
         var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+        if (Instant.now().isAfter(order.getPaymentExpiredAt())) {
+            throw new ApplicationException("Payment is already expired.");
+        }
+        if (!order.getUser().getId().equals(userId)) {
+            throw new ApplicationException("Invalid user");
+        }
         try {
            var url = cloudImageStorageService.uploadImage(image, "payment_proof");
            order.setPaymentProof(url);
@@ -169,58 +180,86 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void cancelOrder(Long id) {
-        var res = updateOrderStatus(
-                id,
-                OrderStatus.CANCELLED,
-                null,
-                List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED),
-                "Order can no longer be cancelled at this stage"
-        );
-        res.getOrderItems().forEach(orderItem -> productService.updateSoldAndStock(orderItem.getProduct().getId()));
+    public void cancelOrder(Long id, Long userId, Long warehouseId, boolean isUser, boolean isAdmin) {
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() == OrderStatus.DELIVERING || order.getStatus() == OrderStatus.COMPLETED) {
+           throw new ApplicationException("Order can no longer be cancelled at this stage");
+        }
+        if ((isUser && order.getUser().getId().equals(userId)) || (isAdmin || order.getWarehouse().getId().equals(warehouseId))) {
+            order.setStatus(OrderStatus.CANCELLED);
+            var res = orderRepository.save(order);
+            res.getOrderItems().forEach(orderItem -> productService.updateSoldAndStock(orderItem.getProduct().getId()));
+        } else {
+            throw new ApplicationException("Invalid authority");
+        }
+
     }
 
     @Override
-    public void confirmPayment(Long id) {
-        updateOrderStatus(
-                id,
-                OrderStatus.PROCESSING,
-                OrderStatus.AWAITING_CONFIRMATION,
-                null,
-                "Order can't be processed"
-        );
+    public void confirmPayment(Long id, Long warehouseId, boolean isAdmin) {
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() != OrderStatus.AWAITING_CONFIRMATION) {
+            throw new ApplicationException("Order can't be processed");
+        }
+        if (isAdmin || order.getWarehouse().getId().equals(warehouseId)) {
+            order.setStatus(OrderStatus.PROCESSING);
+            orderRepository.save(order);
+        } else {
+            throw new ApplicationException("Invalid authority");
+        }
     }
 
     @Override
-    public void sendOrder(Long id) {
-        updateOrderStatus(
-                id,
-                OrderStatus.DELIVERING,
-                OrderStatus.PROCESSING,
-                null,
-                "Order can't be delivered"
-        );
+    public void sendOrder(Long id, Long warehouseId, boolean isAdmin) {
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() != OrderStatus.PROCESSING) {
+            throw new ApplicationException("Order can't be delivered");
+        }
+        if (isAdmin || order.getWarehouse().getId().equals(warehouseId)) {
+            order.setStatus(OrderStatus.DELIVERING);
+            order.setDeliveredAt(Instant.now());
+            orderRepository.save(order);
+        } else {
+            throw new ApplicationException("Invalid authority");
+        }
+
     }
 
     @Override
-    public void finalizeOrder(Long id) {
-        updateOrderStatus(
-                id,
-                OrderStatus.COMPLETED,
-                OrderStatus.DELIVERING,
-                null,
-                "Order can't be completed"
-        );
+    public void finalizeOrder(Long id, Long userId) {
+        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
+
+        if (order.getStatus() != OrderStatus.DELIVERING) {
+            throw new ApplicationException("Order can't be completed");
+        }
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new ApplicationException("Invalid user");
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
+        orderRepository.save(order);
     }
 
-    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart) {
+    @Override
+    public void handlePaymentNotification(String midtransId) {
+        var order = orderRepository.findByMidtransId(midtransId).orElseThrow(() -> new EntityNotFoundException("Order with id " + midtransId + " not found"));
+        order.setStatus(OrderStatus.PROCESSING);
+        orderRepository.save(order);
+    }
+
+    private Order createNewOrder(User user, Warehouse warehouse, int price, PaymentMethod paymentMethod, GetCartResponseDto cart, UserAddress shippingAddress) {
         var order = Order.builder()
                 .user(user)
                 .warehouse(warehouse)
+                .shippingAddress(shippingAddress)
                 .price(price)
-                .status(OrderStatus.AWAITING_CONFIRMATION)
+                .status(OrderStatus.AWAITING_PAYMENT)
                 .paymentMethod(paymentMethod)
-                .orderItems(new HashSet<>())
+                .orderItems(new ArrayList<>())
                 .paymentExpiredAt(Instant.now().plus(1, ChronoUnit.DAYS))
                 .build();
 
@@ -252,16 +291,39 @@ public class OrderServiceImpl implements OrderService {
         return new MidtransChargeDto(midtransCoreApi.chargeTransaction(params));
     }
 
-    private Order updateOrderStatus(Long id, OrderStatus status, OrderStatus expectedStatus, List<OrderStatus> invalidStatuses, String errorMessage) {
-        var order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order with id " + id + " not found"));
-        if (invalidStatuses != null && invalidStatuses.contains(order.getStatus())) {
-            throw new ApplicationException(errorMessage);
+    @Transactional(readOnly = true)
+    @Override
+    public List<OrderDetailsResponseDto> getUserOrdersByStatus(Long userId, String status) {
+        OrderStatus orderStatus;
+        try {
+            orderStatus = OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid order status: " + status);
         }
 
-        if (expectedStatus != null && order.getStatus() != expectedStatus) {
-            throw new ApplicationException(errorMessage);
+        List<Order> orders = orderRepository.findAllByUserIdAndStatus(userId, orderStatus);
+        if (orders.isEmpty()) {
+            throw new EntityNotFoundException("No orders found for user with status: " + status);
         }
-        order.setStatus(status);
-        return orderRepository.save(order);
+
+        return orders.stream()
+                .map(OrderDetailsResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<OrderDetailsResponseDto> getOrderDetailsById(Long orderId) {
+        return orderRepository.findById(orderId).map(OrderDetailsResponseDto::new);
+    }
+
+    @Override
+    public void autoFinalizeOrder() {
+        var sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        orderRepository.finalizeOrders(sevenDaysAgo, OrderStatus.DELIVERING, OrderStatus.COMPLETED);
+    }
+
+    @Override
+    public void autoCancelOrder() {
+        orderRepository.cancelExpiredOrders(Instant.now(), OrderStatus.AWAITING_PAYMENT, OrderStatus.CANCELLED);
     }
 }

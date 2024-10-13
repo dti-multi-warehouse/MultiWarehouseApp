@@ -1,5 +1,6 @@
 package com.dti.multiwarehouse.order.dao;
 
+import com.dti.multiwarehouse.address.entity.UserAddress;
 import com.dti.multiwarehouse.order.dao.enums.BankTransfer;
 import com.dti.multiwarehouse.order.dao.enums.OrderStatus;
 import com.dti.multiwarehouse.order.dao.enums.PaymentMethod;
@@ -11,7 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,6 +35,10 @@ public class Order {
     @JoinColumn(name = "warehouse_id", nullable = false, updatable = false)
     private Warehouse warehouse;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipping_address")
+    private UserAddress shippingAddress;
+
     @Column(name = "price", nullable = false)
     private int price;
 
@@ -55,8 +60,11 @@ public class Order {
     @Column(name = "accountNumber", nullable = false)
     private String accountNumber;
 
+    @Column(name = "midtransId", nullable = true)
+    private String midtransId;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<OrderItem> orderItems;
+    private List<OrderItem> orderItems;
 
     @CreationTimestamp
     @Column(name = "createdAt")
@@ -65,6 +73,9 @@ public class Order {
     @UpdateTimestamp
     @Column(name = "updatedAt")
     private Instant updatedAt;
+
+    @Column(name = "deliveredAt")
+    private Instant deliveredAt;
 
     @Column(name = "paymentExpiredAt", nullable = false)
     private Instant paymentExpiredAt;

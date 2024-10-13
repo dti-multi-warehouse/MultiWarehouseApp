@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +19,14 @@ public class DashboardServiceImpl implements DashboardService {
     private final StockMutationRepository stockMutationRepository;
 
     @Override
-    public GetTotalSalesResponseDto getMonthlyTotalSalesReport(Long warehouseId, LocalDate currentDate) {
+    public GetSalesReportDto getSalesReport(Long warehouseId, LocalDate date) {
+        var totalSales = getMonthlyTotalSalesReport(warehouseId, date);
+        var productSales = getMonthlyProductSalesReport(warehouseId, date);
+        var categorySales = getMonthlyCategorySalesReport(warehouseId, date);
+        return new GetSalesReportDto(totalSales, productSales, categorySales);
+    }
+
+    private GetTotalSalesResponseDto getMonthlyTotalSalesReport(Long warehouseId, LocalDate currentDate) {
         var totalRevenue = orderRepository.getMonthlyTotalSalesReport(warehouseId, currentDate);
         var sales = orderRepository
                 .getMonthlySalesReport(warehouseId, currentDate)
@@ -30,27 +36,17 @@ public class DashboardServiceImpl implements DashboardService {
         return new GetTotalSalesResponseDto(totalRevenue, sales);
     }
 
-    @Override
-    public List<GetProductSalesReportResponseDto> getMonthlyProductSalesReport(Long warehouseId, Date currentDate) {
+    private List<GetProductSalesReportResponseDto> getMonthlyProductSalesReport(Long warehouseId, LocalDate currentDate) {
         var res = orderRepository.getMonthlyProductSalesReport(warehouseId, currentDate);
         return res.stream()
                 .map(GetProductSalesReportResponseDto::new)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<GetCategorySalesReportResponseDto> getMonthlyCategorySalesReport(Long warehouseId, Date currentDate) {
+    private List<GetCategorySalesReportResponseDto> getMonthlyCategorySalesReport(Long warehouseId, LocalDate currentDate) {
         var res = orderRepository.getMonthlyCategorySalesReport(warehouseId, currentDate);
         return res.stream()
                 .map(GetCategorySalesReportResponseDto::new)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<GetMonthlyStockSummaryResponseDto> getMonthlyStockSummaryReport(Long warehouseId, Date currentDate) {
-        var res = stockMutationRepository.getMonthlyStockSummary(warehouseId, currentDate);
-        return res.stream()
-                .map(GetMonthlyStockSummaryResponseDto::new)
                 .collect(Collectors.toList());
     }
 }

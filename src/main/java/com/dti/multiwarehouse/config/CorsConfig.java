@@ -14,7 +14,7 @@ public class CorsConfig implements CorsConfigurationSource {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         corsConfiguration.setAllowedOriginPatterns(List.of("http://localhost:8080",
-                "http://localhost:3000"));
+                "http://localhost:3000", "https://alphamarch-816169614036.asia-southeast2.run.app","https://alphamarch.shop", "https://dev.alphamarch.shop"));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PUT", "OPTIONS", "PATCH", "DELETE"));
         corsConfiguration.setAllowCredentials(true);
         corsConfiguration.setExposedHeaders(

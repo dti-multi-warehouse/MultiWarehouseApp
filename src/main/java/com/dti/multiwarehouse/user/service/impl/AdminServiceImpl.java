@@ -2,6 +2,7 @@ package com.dti.multiwarehouse.user.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.dti.multiwarehouse.exceptions.ApplicationException;
 import com.dti.multiwarehouse.exceptions.ResourceNotFoundException;
 import com.dti.multiwarehouse.user.dto.UserProfileDTO;
 import com.dti.multiwarehouse.user.dto.WarehouseAdminRequest;
@@ -36,7 +37,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Page<UserProfileDTO> searchUser(String role, String username, String email, Pageable pageable) {
-        return userRepository. findAllByUsernameEmailAndRole(role, username, email, pageable)
+        return userRepository.findAllByUsernameEmailAndRole(role, username, email, pageable)
                 .map(this::mapToUserProfileDTO);
     }
 
@@ -56,16 +57,20 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public WarehouseAdminResponse getWarehouseAdminById(Long id) {
-        Optional<User> warehouseAdmin = userRepository.findById(id);
-        return mapToResponse(warehouseAdmin.get());
+        User warehouseAdmin = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse admin not found"));
+        return mapToResponse(warehouseAdmin);
     }
 
     @Override
     public WarehouseAdminResponse createWarehouseAdmin(WarehouseAdminRequest request) {
-        User warehouseAdmin = new User();
-        if (request.getUsername() != null){
-            warehouseAdmin.setUsername(request.getUsername());
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            throw new ApplicationException("A user with this email already exists.");
         }
+
+        User warehouseAdmin = new User();
+        warehouseAdmin.setUsername(request.getUsername());
         warehouseAdmin.setEmail(request.getEmail());
         warehouseAdmin.setPassword(passwordEncoder.encode(request.getPassword()));
         warehouseAdmin.setRole("warehouse_admin");
@@ -84,10 +89,10 @@ public class AdminServiceImpl implements AdminService {
         User warehouseAdmin = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse admin not found"));
 
-        if (request.getUsername() != null){
+        if (request.getUsername() != null) {
             warehouseAdmin.setUsername(request.getUsername());
         }
-        if (request.getEmail() != null){
+        if (request.getEmail() != null) {
             warehouseAdmin.setEmail(request.getEmail());
         }
         if (request.getPassword() != null) {
@@ -110,7 +115,7 @@ public class AdminServiceImpl implements AdminService {
 
     private String uploadAvatar(MultipartFile avatar) {
         try {
-            Map uploadResult = cloudinary.uploader().upload(avatar.getBytes(), ObjectUtils.emptyMap());
+            Map<String, Object> uploadResult = cloudinary.uploader().upload(avatar.getBytes(), ObjectUtils.emptyMap());
             return uploadResult.get("url").toString();
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload avatar", e);
@@ -123,8 +128,14 @@ public class AdminServiceImpl implements AdminService {
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setAvatar(user.getAvatar());
-        response.setWarehouseId(user.getWarehouseAdmins().getFirst().getWarehouse().getId());
-        response.setWarehouseName(user.getWarehouseAdmins().getFirst().getWarehouse().getName());
+
+        if (user.getWarehouseAdmins() != null && !user.getWarehouseAdmins().isEmpty()) {
+            response.setWarehouseId(user.getWarehouseAdmins().get(0).getWarehouse().getId());
+            response.setWarehouseName(user.getWarehouseAdmins().get(0).getWarehouse().getName());
+        } else {
+            response.setWarehouseId(null);
+            response.setWarehouseName(null);
+        }
         return response;
     }
 

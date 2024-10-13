@@ -15,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -155,10 +156,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductSummaryResponseDto> getAllProducts() {
-        return productRepository.findAllByOrderByIdAsc().stream()
-                .map(ProductSummaryResponseDto::new)
-                .toList();
+    public GetDashboardProductDto getAllProducts(String query, int page) {
+        var res = productRepository.retrieveDashboardProducts(query, PageRequest.of(page, 10));
+        var products = res.getContent().stream().map(ProductSummaryResponseDto::new).toList();
+        return new GetDashboardProductDto(res.getTotalPages(), products);
     }
 
     @Override

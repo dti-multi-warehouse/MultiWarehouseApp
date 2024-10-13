@@ -3,10 +3,7 @@ package com.dti.multiwarehouse.product.service;
 import com.dti.multiwarehouse.product.dao.Product;
 import com.dti.multiwarehouse.product.dto.request.AddProductRequestDto;
 import com.dti.multiwarehouse.product.dto.request.UpdateProductRequestDto;
-import com.dti.multiwarehouse.product.dto.response.ProductDetailsResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductGroupedSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSearchResponseDto;
-import com.dti.multiwarehouse.product.dto.response.ProductSummaryResponseDto;
+import com.dti.multiwarehouse.product.dto.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -20,7 +17,7 @@ public interface ProductService {
     void deleteProduct(Long id);
     boolean isExist(Long id);
     Product findProductById(Long id);
-    List<ProductSummaryResponseDto> getAllProducts();
+    GetDashboardProductDto getAllProducts(String query, int page);
     int getProductPrice(Long productId);
     void updateSoldAndStock(Long id);
 }

@@ -65,7 +65,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://localhost:8080"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://localhost:8080","https://alphamarch-816169614036.asia-southeast2.run.app","https://alphamarch.shop", "https://dev.alphamarch.shop"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PUT", "OPTIONS", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Content-Type", "*"));
         configuration.setAllowCredentials(true);
@@ -88,6 +88,8 @@ public class SecurityConfig {
                     auth.requestMatchers("/api/v1/product/**").permitAll();
                     auth.requestMatchers("/api/v1/admin/warehouse-admins/**").hasRole("admin");
                     auth.requestMatchers("/api/v1/admin/users/**").authenticated();
+                    auth.requestMatchers("/api/v1/cart/**").hasRole("user");
+                    auth.requestMatchers("/api/v1/stock/**").hasAnyRole("admin", "warehouse_admin");
                     auth.anyRequest().permitAll();
                 })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

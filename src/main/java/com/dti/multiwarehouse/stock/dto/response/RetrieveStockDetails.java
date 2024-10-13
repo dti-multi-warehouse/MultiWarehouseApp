@@ -6,5 +6,5 @@ public interface RetrieveStockDetails {
     Instant getCreatedAt();
     int getQuantity();
     String getSource();
-    int getNote();
+    String getNote();
 }

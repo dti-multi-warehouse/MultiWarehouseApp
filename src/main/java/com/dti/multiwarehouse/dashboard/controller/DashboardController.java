@@ -5,13 +5,15 @@ import com.dti.multiwarehouse.response.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @RequiredArgsConstructor
 @RestController
@@ -20,38 +22,21 @@ public class DashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping()
+    @PreAuthorize("hasAnyRole('admin', 'warehouse_admin')")
     public ResponseEntity<?> getMonthlyTotalSalesReport(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam Long warehouseId,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date
             ) {
-        var res =  dashboardService.getMonthlyTotalSalesReport(warehouseId, date);
+        if (
+                jwt == null ||
+                        jwt.getClaim("warehouse_id") == null ||
+                        (!jwt.getClaim("warehouse_id").equals(warehouseId) &&
+                        !jwt.getClaim("role").equals("admin"))
+        ) {
+            return Response.failed("Invalid authority");
+        }
+        var res =  dashboardService.getSalesReport(warehouseId, date);
         return Response.success("Successfully retrieved monthly total sales report", res);
-    }
-
-    @GetMapping("/product")
-    public ResponseEntity<?> getMonthlyProductSalesReport(
-            @RequestParam Long warehouseId,
-            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date date
-    ) {
-        var res =  dashboardService.getMonthlyProductSalesReport(warehouseId, date);
-        return Response.success("Successfully retrieved monthly product sales report", res);
-    }
-
-    @GetMapping("/category")
-    public ResponseEntity<?> getMonthlyCategorySalesReport(
-            @RequestParam Long warehouseId,
-            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date date
-    ) {
-        var res =  dashboardService.getMonthlyCategorySalesReport(warehouseId, date);
-        return Response.success("Successfully retrieved monthly category sales", res);
-    }
-
-    @GetMapping("/stock")
-    public ResponseEntity<?> getMonthlyStockSalesReport(
-            @RequestParam Long warehouseId,
-            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date date
-    ) {
-        var res = dashboardService.getMonthlyStockSummaryReport(warehouseId, date);
-        return Response.success("Successfully retrieved monthly stock summary", res);
     }
 }
