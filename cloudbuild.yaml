@@ -1,14 +1,14 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/sanguine-willow-436015-k8/alphamarch-be', '.']
+    args: ['build', '-t', 'gcr.io/sanguine-willow-436015-k8/prod-alphamarch-be', '.']
     env:
       - 'DOCKER_BUILDKIT=1'
     id: 'build-image'
 
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/sanguine-willow-436015-k8/alphamarch-be']
+    args: ['push', 'gcr.io/sanguine-willow-436015-k8/prod-alphamarch-be']
     id: 'push-image'
 
   # Deploy container image to Cloud Run
@@ -17,9 +17,9 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'multiwarehouseapp'
+      - 'prod-alphamarch-be'
       - '--image'
-      - 'gcr.io/sanguine-willow-436015-k8/alphamarch-be'
+      - 'gcr.io/sanguine-willow-436015-k8/prod-alphamarch-be'
       - '--region'
       - 'asia-southeast2'
       - '--platform'
@@ -28,4 +28,4 @@ steps:
     id: 'deploy-to-cloud-run'
 
 images:
-  - 'gcr.io/sanguine-willow-436015-k8/alphamarch-be'
+  - 'gcr.io/sanguine-willow-436015-k8/prod-alphamarch-be'
