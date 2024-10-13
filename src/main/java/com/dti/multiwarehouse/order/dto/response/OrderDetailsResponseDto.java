@@ -29,9 +29,7 @@ public class OrderDetailsResponseDto {
     private String createdAt;
     private String paymentExpiredAt;
     private Long invoiceNumber;
-    private List<String> productImages;
-    private String productName;
-    private Integer quantity;
+    private List<OrderItemDto> items; // Change to a list of OrderItemDto
     private Integer totalAmount;
     private String buyerName;
     private String buyerPhoneNumber;
@@ -72,14 +70,12 @@ public class OrderDetailsResponseDto {
     }
 
     private void setOrderItemDetails(Collection<?> orderItems) {
+        this.items = new ArrayList<>();
         if (orderItems != null && !orderItems.isEmpty()) {
-            Object firstItem = orderItems.iterator().next();
-            if (firstItem instanceof OrderItem) {
-                OrderItem item = (OrderItem) firstItem;
-                if (item.getProduct() != null) {
-                    this.productImages = new ArrayList<>(item.getProduct().getImageUrls());
-                    this.productName = item.getProduct().getName();
-                    this.quantity = item.getQuantity();
+            for (Object itemObject : orderItems) {
+                if (itemObject instanceof OrderItem) {
+                    OrderItem item = (OrderItem) itemObject;
+                    this.items.add(new OrderItemDto(item));
                 }
             }
         }
@@ -103,17 +99,6 @@ public class OrderDetailsResponseDto {
             if (warehouseAddress != null) {
                 this.warehouseAddress = warehouseAddress.getAddress();
             }
-        }
-    }
-
-    private Object getFieldValue(Object object, String fieldName) {
-        try {
-            java.lang.reflect.Field field = object.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field.get(object);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            // Log the exception or handle it as appropriate for your application
-            return null;
         }
     }
 }
