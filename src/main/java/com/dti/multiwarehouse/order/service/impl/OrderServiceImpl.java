@@ -220,6 +220,7 @@ public class OrderServiceImpl implements OrderService {
         }
         if (isAdmin || order.getWarehouse().getId().equals(warehouseId)) {
             order.setStatus(OrderStatus.DELIVERING);
+            order.setDeliveredAt(Instant.now());
             orderRepository.save(order);
         } else {
             throw new ApplicationException("Invalid authority");

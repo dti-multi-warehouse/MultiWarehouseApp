@@ -74,6 +74,9 @@ public class Order {
     @Column(name = "updatedAt")
     private Instant updatedAt;
 
+    @Column(name = "deliveredAt")
+    private Instant deliveredAt;
+
     @Column(name = "paymentExpiredAt", nullable = false)
     private Instant paymentExpiredAt;
 
