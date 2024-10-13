@@ -93,7 +93,7 @@ public class UserController {
         String token = userService.generateToken(user);
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
-        String verificationLink = "\"https://alphamarch.shop/email-verification?email=" + encodedEmail + "&token=" + token;
+        String verificationLink = "https://alphamarch.shop/email-verification?email=" + encodedEmail + "&token=" + token;
         System.out.println("verification link: " + verificationLink);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -163,7 +163,7 @@ public class UserController {
     public ResponseEntity<?> verifyEmail(@RequestParam("token") String token, HttpSession session) {
         try {
             userService.verifyEmail(token);
-            String redirectUrl = session.getAttribute("user") != null ? "\"https://alphamarch.shop/my-profile" : "\"https://alphamarch.shop";
+            String redirectUrl = session.getAttribute("user") != null ? "https://alphamarch.shop/my-profile" : "https://alphamarch.shop";
             return ResponseEntity.ok().header("Location", redirectUrl).build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Verification failed: " + e.getMessage());
@@ -226,7 +226,7 @@ public class UserController {
 //        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
 
-        String resetLink = "\"https://alphamarch.shop/reset-password/confirmation?email="+encodedEmail+"&token="+token;
+        String resetLink = "https://alphamarch.shop/reset-password/confirmation?email="+encodedEmail+"&token="+token;
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 
         mailMessage.setTo(email);
