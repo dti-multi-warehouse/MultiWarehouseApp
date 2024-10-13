@@ -22,4 +22,6 @@ public interface OrderService {
     void handlePaymentNotification(String midtransId);
     List<OrderDetailsResponseDto> getUserOrdersByStatus(Long userId, String status);
     Optional<OrderDetailsResponseDto> getOrderDetailsById(Long orderId);
+    void autoFinalizeOrder();
+    void autoCancelOrder();
 }

@@ -315,4 +315,15 @@ public class OrderServiceImpl implements OrderService {
     public Optional<OrderDetailsResponseDto> getOrderDetailsById(Long orderId) {
         return orderRepository.findById(orderId).map(OrderDetailsResponseDto::new);
     }
+
+    @Override
+    public void autoFinalizeOrder() {
+        var sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        orderRepository.finalizeOrders(sevenDaysAgo, OrderStatus.DELIVERING, OrderStatus.COMPLETED);
+    }
+
+    @Override
+    public void autoCancelOrder() {
+        orderRepository.cancelExpiredOrders(Instant.now(), OrderStatus.AWAITING_PAYMENT, OrderStatus.CANCELLED);
+    }
 }
