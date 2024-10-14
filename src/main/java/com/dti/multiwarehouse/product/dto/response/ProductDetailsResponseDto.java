@@ -21,7 +21,7 @@ public class ProductDetailsResponseDto {
         this.description = product.getDescription();
         this.price = product.getPrice();
         this.stock = product.getStock();
-        this.category = product.getCategory().getName();
+        this.category = product.getCategory() != null ? product.getCategory().getName() : "Uncategorized";
         this.imageUrls = product.getImageUrls();
     }
 }
