@@ -86,6 +86,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailsResponseDto getProductDetails(Long id) {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        if (product.getDeletedAt() != null) {
+            throw new EntityNotFoundException("Product with id " + id + " not found");
+        }
         return new ProductDetailsResponseDto(product);
     }
 
@@ -103,6 +106,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductSummaryResponseDto updateProduct(Long id, UpdateProductRequestDto requestDto, List<MultipartFile> images) throws Exception {
         var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        if (product.getDeletedAt() != null) {
+            throw new EntityNotFoundException("Product with id " + id + " not found");
+        }
         EntityUpdateUtil.updateEntityFromDto(product, requestDto);
 
         if (requestDto.getCategoryId() != null) {
@@ -209,12 +215,17 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public boolean isExist(Long id) {
-        return productRepository.existsById(id);
+        var product = productRepository.findById(id);
+        return product.isPresent() && product.get().getDeletedAt() == null;
     }
 
     @Override
     public Product findProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        if (product.getDeletedAt() != null) {
+            throw new EntityNotFoundException("Product with id " + id + " not found");
+        }
+        return product;
     }
 
     @Transactional
