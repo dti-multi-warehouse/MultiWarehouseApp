@@ -6,9 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
