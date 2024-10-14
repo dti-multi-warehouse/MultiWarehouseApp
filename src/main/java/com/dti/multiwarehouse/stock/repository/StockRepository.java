@@ -72,7 +72,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 FROM stock AS s
                 WHERE s.warehouse_id = :warehouseId
                     ) AS warehouse_stock ON p.id = warehouse_stock.product_id
-            WHERE p.name ILIKE :query
+            WHERE p.name ILIKE CONCAT('%',:query,'%')
             ORDER BY p.deleted_at DESC, p.id
             """, nativeQuery = true
     )
