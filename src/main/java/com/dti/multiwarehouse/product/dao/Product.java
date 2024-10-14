@@ -30,7 +30,7 @@ public class Product {
     @SequenceGenerator(name = "product_id_gen", sequenceName = "product_id_seq", allocationSize = 1)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false, unique = false)
     private String name;
 
     @Column(name = "description", nullable = false)

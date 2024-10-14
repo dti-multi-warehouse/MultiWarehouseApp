@@ -73,14 +73,16 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<GetCategoryResponseDto> getAllCategories() {
-        var categories = categoryRepository.findAllByOrderByIdAsc();
+        var categories = categoryRepository.getAllCategories();
         return categories.stream().map(GetCategoryResponseDto::new).toList();
     }
 
     @Override
     public GetCategoryResponseDto updateCategory(Long id, CategoryRequestDto requestDto, MultipartFile file) {
         var prevCategory = categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("Category with id: %s not found", id)));
-
+        if (prevCategory.getDeletedAt() != null) {
+            throw new EntityNotFoundException(String.format("Category with id: %s not found", id));
+        }
         try {
             prevCategory.setName(requestDto.getName());
             if (file != null && !file.isEmpty()) {
@@ -115,7 +117,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category getCategoryById(Long id) {
-        return categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Category with id " + id + " not found"));
+        var category = categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Category with id " + id + " not found"));
+        if (category.getDeletedAt() != null) {
+            throw new EntityNotFoundException(String.format("Category with id: %s not found", id));
+        }
+        return category;
     }
 
     private String  findSimilarCategoryName(String name) {
