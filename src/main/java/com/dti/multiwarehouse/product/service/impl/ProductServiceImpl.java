@@ -23,6 +23,7 @@ import org.typesense.api.FieldTypes;
 import org.typesense.model.*;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -145,7 +146,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProduct(Long id) {
         try {
-            productRepository.deleteById(id);
+            var product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+            product.setDeletedAt(Instant.now());
+            productRepository.save(product);
             typeSense.client().collections(PRODUCT_KEY)
                     .documents(id.toString())
                     .delete();
