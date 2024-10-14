@@ -88,6 +88,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                     LIMIT 1) AS thumbnail
             FROM product p
             LEFT JOIN stock s ON p.id = s.product_id AND s.warehouse_id = :warehouseId
+            WHERE p.deleted_at IS NULL
             ORDER BY p.id;
             """, nativeQuery = true
     )
