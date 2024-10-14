@@ -27,7 +27,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 COALESCE(i.image_urls, '') AS thumbnail,
                 COALESCE(sm_in.incoming, 0) AS incoming,
                 COALESCE(sm_out.outgoing, 0) + COALESCE(o_out.outgoing, 0) AS outgoing,
-                warehouse_stock.stock
+                warehouse_stock.stock,
+                p.deleted_at as deletedAt
             FROM product AS p
             LEFT JOIN LATERAL (
                 SELECT i.image_urls
