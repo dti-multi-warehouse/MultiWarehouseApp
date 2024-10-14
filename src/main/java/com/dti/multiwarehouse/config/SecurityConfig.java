@@ -65,7 +65,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://localhost:8080","https://alphamarch-816169614036.asia-southeast2.run.app","https://alphamarch.shop", "https://dev.alphamarch.shop","https://dev-be.alphamarch.shop","https://be.alphamarch.shop"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://localhost:8080","https://alphamarch-816169614036.asia-southeast2.run.app","https://alphamarch.shop", "https://dev.alphamarch.shop","https://dev-be.alphamarch.shop","https://be.alphamarch.shop","alphamarch.netlify.app","devalphamarch.netlify.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PUT", "OPTIONS", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Content-Type", "*"));
         configuration.setAllowCredentials(true);
