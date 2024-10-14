@@ -20,6 +20,7 @@ import org.typesense.model.Field;
 import org.typesense.model.SearchParameters;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -102,7 +103,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategory(Long id) {
         try {
-            categoryRepository.deleteById(id);
+            var category = categoryRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            category.setDeletedAt(Instant.now());
+            categoryRepository.save(category);
             typeSense.client().collections(CATEGORY_KEY).documents(id.toString()).delete();
         } catch (Exception e) {
             throw new ApplicationException("Failed to delete category");
