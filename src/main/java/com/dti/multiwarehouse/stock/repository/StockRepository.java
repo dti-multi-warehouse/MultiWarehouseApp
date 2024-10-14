@@ -27,7 +27,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 COALESCE(i.image_urls, '') AS thumbnail,
                 COALESCE(sm_in.incoming, 0) AS incoming,
                 COALESCE(sm_out.outgoing, 0) + COALESCE(o_out.outgoing, 0) AS outgoing,
-                warehouse_stock.stock
+                warehouse_stock.stock,
+                p.deleted_at as deletedAt
             FROM product AS p
             LEFT JOIN LATERAL (
                 SELECT i.image_urls
@@ -72,8 +73,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 FROM stock AS s
                 WHERE s.warehouse_id = :warehouseId
                     ) AS warehouse_stock ON p.id = warehouse_stock.product_id
-            WHERE p.name ILIKE :query
-            ORDER BY p.id
+            WHERE p.name ILIKE CONCAT('%',:query,'%')
+            ORDER BY p.deleted_at DESC, p.id
             """, nativeQuery = true
     )
     Page<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date, @Param("query") String query, Pageable pageable);

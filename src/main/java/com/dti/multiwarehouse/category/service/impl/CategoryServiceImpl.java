@@ -18,9 +18,11 @@ import org.typesense.api.FieldTypes;
 import org.typesense.model.CollectionSchema;
 import org.typesense.model.Field;
 import org.typesense.model.SearchParameters;
+import org.typesense.model.UpdateDocumentsParameters;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -109,6 +111,14 @@ public class CategoryServiceImpl implements CategoryService {
             category.setDeletedAt(Instant.now());
             categoryRepository.save(category);
             typeSense.client().collections(CATEGORY_KEY).documents(id.toString()).delete();
+
+            var document = new HashMap<String, Object>();
+            document.put("category", "Uncategorized");
+            var updateDocumentsParameters = new UpdateDocumentsParameters();
+            updateDocumentsParameters.filterBy("category:" + category.getName());
+
+            typeSense.client().collections("products").documents().update(document, updateDocumentsParameters);
+
         } catch (Exception e) {
             throw new ApplicationException("Failed to delete category");
         }
