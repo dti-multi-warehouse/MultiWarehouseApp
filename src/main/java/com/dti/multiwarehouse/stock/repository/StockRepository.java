@@ -73,7 +73,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                 WHERE s.warehouse_id = :warehouseId
                     ) AS warehouse_stock ON p.id = warehouse_stock.product_id
             WHERE p.name ILIKE :query
-            ORDER BY p.id
+            ORDER BY p.deleted_at DESC, p.id
             """, nativeQuery = true
     )
     Page<RetrieveStock> retrieveStock(@Param("warehouseId") Long warehouseId, @Param("date") LocalDate date, @Param("query") String query, Pageable pageable);
