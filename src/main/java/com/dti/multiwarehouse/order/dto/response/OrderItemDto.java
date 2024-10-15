@@ -9,11 +9,13 @@ public class OrderItemDto {
     private final String thumbnail;
     private final String name;
     private final int quantity;
+    private final int price;
 
     public OrderItemDto(OrderItem orderItem) {
         this.id = orderItem.getId();
         this.thumbnail = orderItem.getProduct().getImageUrls().getFirst();
         this.name = orderItem.getProduct().getName();
         this.quantity = orderItem.getQuantity();
+        this.price = orderItem.getProduct().getPrice();
     }
 }

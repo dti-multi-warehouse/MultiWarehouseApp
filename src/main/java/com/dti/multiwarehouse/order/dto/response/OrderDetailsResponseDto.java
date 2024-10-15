@@ -10,8 +10,8 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-
 @Data
 public class OrderDetailsResponseDto {
     private Long id;
@@ -57,7 +57,7 @@ public class OrderDetailsResponseDto {
         this.price = order.getPrice();
 
         setOrderItemDetails(order.getOrderItems());
-        setUserAddressDetails(order.getUser() != null ? order.getUser().getUserAddresses() : null);
+        setUserAddressDetails(order.getShippingAddress());
         setWarehouseAddressDetails(order.getWarehouse());
 
         this.totalAmount = (order.getPrice() != 0 && order.getShippingCost() != 0)
@@ -81,15 +81,11 @@ public class OrderDetailsResponseDto {
         }
     }
 
-    private void setUserAddressDetails(Collection<?> userAddresses) {
-        if (userAddresses != null && !userAddresses.isEmpty()) {
-            Object firstAddress = userAddresses.iterator().next();
-            if (firstAddress instanceof UserAddress) {
-                UserAddress address = (UserAddress) firstAddress;
-                this.buyerName = address.getName();
-                this.buyerPhoneNumber = address.getPhoneNumber();
-                this.buyerAddress = address.getAddress();
-            }
+    private void setUserAddressDetails(UserAddress buyerAddress) {
+        if (buyerAddress != null) {
+            this.buyerName = buyerAddress.getName();
+            this.buyerPhoneNumber = buyerAddress.getPhoneNumber();
+            this.buyerAddress = buyerAddress.getAddress();
         }
     }
 
