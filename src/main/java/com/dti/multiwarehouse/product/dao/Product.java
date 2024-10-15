@@ -81,7 +81,7 @@ public class Product {
         document.put("description", description);
         document.put("price", price);
         document.put("stock", stock);
-        document.put("category", category.getName());
+        document.put("category", category != null ? category.getName() : "Uncategorized");
         document.put("sold", sold);
         document.put("thumbnail", imageUrls.stream().findFirst().orElse(null));
         return document;
