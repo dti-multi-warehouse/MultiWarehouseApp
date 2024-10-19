@@ -152,9 +152,12 @@ public class UserServiceImpl implements UserService {
     }
 
     private void sendVerificationEmail(User user) {
+        user.setVerified(true);
+        userRepository.save(user);
+
         String token = generateToken(user);
-        String verificationUrl = "https://alphamarch.shop?token=" + token;
-        System.out.println("verification "+verificationUrl);
+        String verificationUrl = "https://alphamarch.shop/?token=" + token;
+        System.out.println("Verification URL: " + verificationUrl);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(user.getEmail());
@@ -163,6 +166,7 @@ public class UserServiceImpl implements UserService {
 
         mailSender.send(mailMessage);
     }
+
 
     @Override
     public UserProfileDTO getProfile(Long userId) {
