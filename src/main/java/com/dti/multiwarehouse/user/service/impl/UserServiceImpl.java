@@ -153,7 +153,6 @@ public class UserServiceImpl implements UserService {
 
     private void sendVerificationEmail(User user) {
         user.setVerified(true);
-        userRepository.save(user);
 
         String token = generateToken(user);
         String verificationUrl = "https://alphamarch.shop/?token=" + token;
