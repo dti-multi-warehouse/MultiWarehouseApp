@@ -15,7 +15,7 @@ public interface UserService {
     void resetPassword(String email, String newPassword);
     String generateToken(User user);
     boolean validateToken(String token, User user);
-    User updateUserProfile(Long userId, String username, MultipartFile avatar, String password, String email) throws IOException;
+    User updateUserProfile(Long userId, String username, MultipartFile avatar, String currentPassword, String newPassword, String email) throws IOException;
     void resendVerificationEmail(String email);
     UserProfileDTO getProfile(Long userId);
     void verifyEmail(String token);

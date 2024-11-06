@@ -138,12 +138,15 @@ public class UserController {
             @RequestParam("userId") Long userId,
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar,
-            @RequestParam(value = "password", required = false) String password,
+            @RequestParam(value = "currentPassword") String currentPassword,
+            @RequestParam(value = "newPassword", required = false) String newPassword,
             @RequestParam(value = "email", required = false) String email) {
 
         try {
-            userService.updateUserProfile(userId, username, avatar, password, email);
+            userService.updateUserProfile(userId, username, avatar, currentPassword, newPassword, email);
             return ResponseEntity.ok("Profile updated. Please verify your new email if it was changed.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to update profile: " + e.getMessage());
         }

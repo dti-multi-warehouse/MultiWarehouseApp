@@ -74,22 +74,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUserProfile(Long userId, String username, MultipartFile avatar, String password, String email) throws IOException {
+    public User updateUserProfile(Long userId, String username, MultipartFile avatar, String currentPassword, String newPassword, String email) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if(username != null && !username.isEmpty()){
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect.");
+        }
+
+        if (newPassword != null && passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from the current password.");
+        }
+
+        if (username != null && !username.equals(user.getUsername())) {
             user.setUsername(username);
         }
-        if(avatar != null && !avatar.isEmpty()){
+
+        if (avatar != null && !avatar.isEmpty()) {
             String avatarUrl = uploadAvatar(avatar);
-            System.out.println("Uploaded avatar URL: " + avatarUrl);
             user.setAvatar(avatarUrl);
         }
-        if(password != null && !password.isEmpty() && !user.isSocial()){
-            user.setPassword(passwordEncoder.encode(password));
+
+        if (newPassword != null && !newPassword.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(newPassword));
         }
-        if(email != null && !email.equals(user.getEmail())){
+
+        if (email != null && !email.equals(user.getEmail())) {
             user.setEmail(email.toLowerCase());
             user.setVerified(false);
             sendVerificationEmail(user);

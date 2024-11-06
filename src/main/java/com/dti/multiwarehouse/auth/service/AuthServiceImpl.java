@@ -84,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(10, ChronoUnit.HOURS))
+                .expiresAt(now.plus(1, ChronoUnit.DAYS))
                 .subject(authentication.getName())
                 .claim("scope", scope)
                 .claim("id", userId)
