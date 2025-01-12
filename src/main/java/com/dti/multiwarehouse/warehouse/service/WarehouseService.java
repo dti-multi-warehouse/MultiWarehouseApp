@@ -18,7 +18,7 @@ public interface WarehouseService {
     List<Warehouse> getAllWarehouses();
     Warehouse getWarehouseById(Long id);
     void assignWarehouseAdmin(AssignWarehouseAdminDTO dto);
-    Page<WarehouseDTO> searchWarehouses(String name, String city, String province, int page, int size);
+    Page<WarehouseDTO> searchWarehouses(String name, String city, String province, String sortField, String sortDirection, int page, int size);
     List<WarehouseListResponseDto> getWarehouseList();
     Warehouse findFirstWarehouse();
     List<Warehouse> findNearbyWarehouses(Long warehouseId, double longitude, double latitude);

@@ -12,9 +12,12 @@ import com.dti.multiwarehouse.user.repository.UserRepository;
 import com.dti.multiwarehouse.user.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -36,7 +39,33 @@ public class AdminServiceImpl implements AdminService {
     private Cloudinary cloudinary;
 
     @Override
-    public Page<UserProfileDTO> searchUser(String role, String username, String email, Pageable pageable) {
+    @Transactional
+    public Page<UserProfileDTO> searchUser(String role, String username, String email, String sortField, String sortDirection, int page, int size) {
+        Sort.Direction direction = Sort.Direction.ASC;
+        if ("desc".equalsIgnoreCase(sortDirection)) {
+            direction = Sort.Direction.DESC;
+        }
+
+        String mappedSortField;
+        switch (sortField) {
+            case "username":
+                mappedSortField = "username";
+                break;
+            case "email":
+                mappedSortField = "email";
+                break;
+            case "role":
+                mappedSortField = "role";
+                break;
+            case "verified":
+                mappedSortField = "verified";
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, mappedSortField));
+
         return userRepository.findAllByUsernameEmailAndRole(role, username, email, pageable)
                 .map(this::mapToUserProfileDTO);
     }

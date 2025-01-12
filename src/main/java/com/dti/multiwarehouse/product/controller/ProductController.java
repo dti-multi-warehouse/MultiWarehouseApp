@@ -78,4 +78,10 @@ public class ProductController {
         productService.deleteProduct(id);
         return Response.success("Product successfully deleted", id);
     }
+
+    @PostMapping("/sync-stock")
+    public ResponseEntity<?> syncStockWithTypeSense() {
+        productService.syncStockWithTypeSense();
+        return ResponseEntity.ok("Stock sync with TypeSense completed.");
+    }
 }

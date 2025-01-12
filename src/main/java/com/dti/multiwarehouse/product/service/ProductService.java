@@ -20,4 +20,5 @@ public interface ProductService {
     GetDashboardProductDto getAllProducts(String query, int page);
     int getProductPrice(Long productId);
     void updateSoldAndStock(Long id);
+    void syncStockWithTypeSense();
 }

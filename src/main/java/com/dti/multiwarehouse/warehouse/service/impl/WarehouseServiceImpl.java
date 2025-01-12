@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,9 +40,29 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Override
     @Transactional
-    public Page<WarehouseDTO> searchWarehouses(String name, String city, String province, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-        Page<Warehouse> warehouses = warehouseRepository.searchWarehouses(name, city, province, pageRequest);
+    public Page<WarehouseDTO> searchWarehouses(String name, String city, String province, String sortField, String sortDirection, int page, int size) {
+        Sort.Direction direction = Sort.Direction.ASC;
+        if ("desc".equalsIgnoreCase(sortDirection)) {
+            direction = Sort.Direction.DESC;
+        }
+
+        String mappedSortField;
+        switch (sortField) {
+            case "name":
+                mappedSortField = "name";
+                break;
+            case "city":
+                mappedSortField = "warehouseAddress.address.city";
+                break;
+            case "province":
+                mappedSortField = "warehouseAddress.address.province";
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, mappedSortField));
+        Page<Warehouse> warehouses = warehouseRepository.searchWarehouses(name, city, province, pageable);
 
         return warehouses.map(this::mapToWarehouseDTO);
     }
@@ -140,15 +162,26 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Transactional
     public void assignWarehouseAdmin(AssignWarehouseAdminDTO dto) {
         Optional<Warehouse> warehouseOpt = warehouseRepository.findById(dto.getWarehouseId());
-        Optional<User> userOpt = userRepository.findById(dto.getUserId());
 
-        if (!warehouseOpt.isPresent() || !userOpt.isPresent()) {
-            throw new IllegalArgumentException("Invalid warehouse or user");
+        if (!warehouseOpt.isPresent()) {
+            throw new IllegalArgumentException("Invalid warehouse ID");
         }
 
         Warehouse warehouse = warehouseOpt.get();
-        User user = userOpt.get();
+        if (dto.getUserId() == null) {
+            Optional<WarehouseAdmin> existingAdminForWarehouseOpt = warehouseAdminRepository.findByWarehouse(warehouse);
+            if (existingAdminForWarehouseOpt.isPresent()) {
+                warehouseAdminRepository.delete(existingAdminForWarehouseOpt.get());
+            }
+            return;
+        }
 
+        Optional<User> userOpt = userRepository.findById(dto.getUserId());
+        if (!userOpt.isPresent()) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+
+        User user = userOpt.get();
         Optional<WarehouseAdmin> existingAdminForUserOpt = warehouseAdminRepository.findByUser(user);
         if (existingAdminForUserOpt.isPresent() &&
                 !existingAdminForUserOpt.get().getWarehouse().getId().equals(dto.getWarehouseId())) {
@@ -167,7 +200,6 @@ public class WarehouseServiceImpl implements WarehouseService {
         WarehouseAdmin newAdmin = new WarehouseAdmin();
         newAdmin.setUser(user);
         newAdmin.setWarehouse(warehouse);
-
         warehouseAdminRepository.save(newAdmin);
     }
 

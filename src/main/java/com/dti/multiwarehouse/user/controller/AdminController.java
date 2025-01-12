@@ -42,10 +42,15 @@ public class AdminController {
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "username") String sortField,
+            @RequestParam(defaultValue = "asc") String sortDirection
+    ) {
+        role = (role != null && role.trim().isEmpty()) ? null : role;
+        username = (username != null && username.trim().isEmpty()) ? null : username;
+        email = (email != null && email.trim().isEmpty()) ? null : email;
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<UserProfileDTO> users = adminService.searchUser(role, username, email, pageable);
+        Page<UserProfileDTO> users = adminService.searchUser(role, username, email, sortField, sortDirection, page, size);
 
         return ResponseEntity.ok(users);
     }

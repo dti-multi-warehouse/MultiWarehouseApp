@@ -138,7 +138,7 @@ public class UserController {
             @RequestParam("userId") Long userId,
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar,
-            @RequestParam(value = "currentPassword") String currentPassword,
+            @RequestParam(value = "currentPassword", required = false) String currentPassword,
             @RequestParam(value = "newPassword", required = false) String newPassword,
             @RequestParam(value = "email", required = false) String email) {
 

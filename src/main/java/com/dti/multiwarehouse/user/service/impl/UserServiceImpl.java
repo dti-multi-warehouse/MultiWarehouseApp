@@ -78,14 +78,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect.");
-        }
-
-        if (newPassword != null && passwordEncoder.matches(newPassword, user.getPassword())) {
-            throw new IllegalArgumentException("New password must be different from the current password.");
-        }
-
         if (username != null && !username.equals(user.getUsername())) {
             user.setUsername(username);
         }
@@ -95,14 +87,20 @@ public class UserServiceImpl implements UserService {
             user.setAvatar(avatarUrl);
         }
 
-        if (newPassword != null && !newPassword.isEmpty()) {
-            user.setPassword(passwordEncoder.encode(newPassword));
-        }
-
         if (email != null && !email.equals(user.getEmail())) {
             user.setEmail(email.toLowerCase());
             user.setVerified(false);
             sendVerificationEmail(user);
+        }
+
+        if (newPassword != null && !newPassword.isEmpty()) {
+            if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPassword())) {
+                throw new IllegalArgumentException("Current password is incorrect.");
+            }
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                throw new IllegalArgumentException("New password must be different from the current password.");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
         }
 
         return userRepository.save(user);
@@ -110,11 +108,8 @@ public class UserServiceImpl implements UserService {
 
     private String uploadAvatar(MultipartFile file) throws IOException {
         System.out.println("Uploading file to Cloudinary: " + file.getOriginalFilename());
-
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-
         System.out.println("Cloudinary Upload Result: " + uploadResult);
-
         return uploadResult.get("url").toString();
     }
 

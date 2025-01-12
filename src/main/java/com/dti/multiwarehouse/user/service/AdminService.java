@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface AdminService {
-    Page<UserProfileDTO> searchUser(String role, String username, String email, Pageable pageable);
+    Page<UserProfileDTO> searchUser(String role, String username, String email, String sortField, String sortDirection, int page, int size);
     List<UserProfileDTO> getAllUsers();
     List<WarehouseAdminResponse> getWarehouseAdmins();
     WarehouseAdminResponse getWarehouseAdminById(Long id);

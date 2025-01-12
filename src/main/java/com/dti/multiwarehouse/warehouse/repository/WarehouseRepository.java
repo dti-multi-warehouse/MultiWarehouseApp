@@ -10,11 +10,20 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
-    @Query("SELECT w FROM Warehouse w WHERE " +
-            "(:name IS NULL OR w.name LIKE %:name%) AND " +
-            "(:city IS NULL OR w.warehouseAddress.address.city LIKE %:city%) AND " +
-            "(:province IS NULL OR w.warehouseAddress.address.province LIKE %:province%)")
-    Page<Warehouse> searchWarehouses(String name, String city, String province, Pageable pageable);
+    @Query("SELECT w FROM Warehouse w " +
+            "JOIN w.warehouseAddress wa " +
+            "JOIN wa.address a " +
+            "WHERE " +
+            "(:name IS NOT NULL AND LOWER(CAST(w.name AS string)) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) OR " +
+            "(:city IS NOT NULL AND LOWER(CAST(a.city AS string)) LIKE LOWER(CONCAT('%', CAST(:city AS string), '%'))) OR " +
+            "(:province IS NOT NULL AND LOWER(CAST(a.province AS string)) LIKE LOWER(CONCAT('%', CAST(:province AS string), '%'))) OR " +
+            "(:name IS NULL AND :city IS NULL AND :province IS NULL)")
+    Page<Warehouse> searchWarehouses(
+            @Param("name") String name,
+            @Param("city") String city,
+            @Param("province") String province,
+            Pageable pageable
+    );
 
     @Query(
             value = """

@@ -27,9 +27,15 @@ public class WarehouseController {
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String province,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "asc") String sortDirection
+    ) {
+        name = (name != null && name.trim().isEmpty()) ? null : name;
+        city = (city != null && city.trim().isEmpty()) ? null : city;
+        province = (province != null && province.trim().isEmpty()) ? null : province;
 
-        Page<WarehouseDTO> warehouses = warehouseService.searchWarehouses(name, city, province, page, size);
+        Page<WarehouseDTO> warehouses = warehouseService.searchWarehouses(name, city, province, sortField, sortDirection, page, size);
         return Response.success("Warehouses retrieved successfully", warehouses);
     }
 

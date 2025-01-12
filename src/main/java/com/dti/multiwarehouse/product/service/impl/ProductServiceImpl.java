@@ -15,6 +15,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final CategoryService categoryService;
     private final CloudImageStorageService cloudImageStorageService;
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     String PRODUCT_KEY = "products";
 
@@ -52,6 +55,7 @@ public class ProductServiceImpl implements ProductService {
                     .addFieldsItem(new Field().name("price").type(FieldTypes.FLOAT))
                     .addFieldsItem(new Field().name("category").type(FieldTypes.STRING).facet(true))
                     .addFieldsItem(new Field().name("sold").type(FieldTypes.INT32))
+                    .addFieldsItem(new Field().name("stock").type(FieldTypes.INT32))
                     .addFieldsItem(new Field().name("thumbnail").type(FieldTypes.STRING))
                     .defaultSortingField("sold");
             CollectionResponse collectionResponse = typeSense.client().collections().create(productCollectionSchema);
@@ -242,5 +246,20 @@ public class ProductServiceImpl implements ProductService {
         } catch (Exception e) {
             throw new ApplicationException(e.getMessage());
         }
+    }
+
+    @Override
+    public void syncStockWithTypeSense() {
+        List<Product> products = productRepository.findAll();
+
+        products.forEach(product -> {
+            try {
+                typeSense.client().collections(PRODUCT_KEY).documents().upsert(product.toDocument());
+            } catch (Exception e) {
+                log.error("Failed to sync stock for product with ID {}: {}", product.getId(), e.getMessage());
+            }
+        });
+
+        log.info("Stock sync with TypeSense completed.");
     }
 }
