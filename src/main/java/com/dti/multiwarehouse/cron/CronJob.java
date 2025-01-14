@@ -17,7 +17,5 @@ public class CronJob {
     public void execute() {
         orderService.autoCancelOrder();
         orderService.autoFinalizeOrder();
-
-        productService.syncStockWithTypeSense();
     }
 }

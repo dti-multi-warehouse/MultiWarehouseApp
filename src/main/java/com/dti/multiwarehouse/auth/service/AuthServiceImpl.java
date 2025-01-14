@@ -126,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(10, ChronoUnit.HOURS))
+                .expiresAt(now.plus(1, ChronoUnit.DAYS))
                 .subject(user.getEmail())
                 .claim("userId", user.getId())
                 .claim("email", user.getEmail())
